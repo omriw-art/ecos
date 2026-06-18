@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ecos · מיפוי חברות החלל בישראל</title>
+<meta name="description" content="ecos — הפלטפורמה למיפוי האקוסיסטם של חברות החלל בישראל. הרשמה, חיבור והנגשת כלי צמיחה." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --bg:#05070f; --bg2:#0a1024;
+  --panel:rgba(255,255,255,.045); --panel-2:rgba(255,255,255,.07);
+  --brd:rgba(255,255,255,.10); --brd-2:rgba(255,255,255,.18);
+  --text:#eaf0ff; --muted:#94a3c4; --muted-2:#6c7898;
+  --accent:#3aa0ff; --accent-2:#5eead4; --violet:#8b8bff;
+  --danger:#ff6b6b; --ok:#41d6a3;
+  --radius:18px; --radius-sm:12px;
+  --shadow:0 24px 60px -20px rgba(0,0,0,.7);
+  --maxw:1200px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:'Heebo',system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.bg-wrap{position:fixed;inset:0;z-index:-2;background:
+  radial-gradient(1200px 700px at 80% -10%, rgba(58,160,255,.18), transparent 60%),
+  radial-gradient(1000px 600px at 10% 10%, rgba(139,139,255,.14), transparent 60%),
+  radial-gradient(900px 700px at 50% 110%, rgba(94,234,212,.10), transparent 60%),
+  linear-gradient(180deg,#05070f 0%,#070b1c 40%,#05070f 100%)}
+#stars{position:fixed;inset:0;z-index:-1;pointer-events:none}
+.grid-overlay{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.35;
+  background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);
+  background-size:60px 60px;mask-image:radial-gradient(circle at 50% 30%,#000 0%,transparent 75%)}
+.container{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+section{position:relative}
+.hidden{display:none!important}
+
+/* ---------- Top bar ---------- */
+header.topbar{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);
+  background:linear-gradient(180deg,rgba(5,7,15,.85),rgba(5,7,15,.55));border-bottom:1px solid var(--brd)}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:12px 24px;max-width:var(--maxw);margin:0 auto}
+.brand{display:flex;align-items:center;gap:11px;cursor:pointer;text-decoration:none;color:inherit}
+.mh-mark{width:44px;height:44px;flex:0 0 auto;filter:drop-shadow(0 4px 12px rgba(120,170,230,.4))}
+.brand-lead .bl-title{font-weight:800;font-size:16px;color:#e3ecfb;line-height:1.05}
+.brand-lead .bl-sub{font-size:9px;color:var(--muted);letter-spacing:.6px;text-transform:uppercase}
+.brand-div{width:1px;height:32px;background:var(--brd-2);margin:0 2px}
+.ecos-mark{width:34px;height:34px;flex:0 0 auto;filter:drop-shadow(0 4px 12px rgba(58,160,255,.5))}
+.word{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:25px;letter-spacing:.5px;line-height:1;
+  background:linear-gradient(90deg,#eaf0ff,#7fc4ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand .sub{font-size:10px;color:var(--muted);font-weight:500}
+.nav-links{display:flex;align-items:center;gap:6px}
+.nav-links a{color:var(--muted);text-decoration:none;font-weight:500;font-size:15px;padding:8px 14px;border-radius:10px;transition:.2s;cursor:pointer}
+.nav-links a:hover{color:var(--text);background:var(--panel)}
+.nav-links a.locked{opacity:.5}
+.nav-cta{background:linear-gradient(90deg,var(--accent),var(--violet));color:#fff!important;font-weight:600!important;box-shadow:0 6px 18px -6px rgba(58,160,255,.7)}
+.nav-cta:hover{filter:brightness(1.08)}
+.menu-btn{display:none;background:var(--panel);border:1px solid var(--brd);color:var(--text);border-radius:10px;padding:8px 12px;font-size:18px;cursor:pointer}
+
+/* partners strip */
+.partner-strip{border-bottom:1px solid var(--brd);background:linear-gradient(180deg,rgba(5,7,15,.85),rgba(5,7,15,.55));backdrop-filter:blur(14px)}
+.partner-inner{max-width:var(--maxw);margin:0 auto;padding:10px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;justify-content:center}
+.plabel{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--muted-2);text-transform:uppercase;padding-inline-end:16px;border-inline-end:1px solid var(--brd-2)}
+.plogos{display:flex;align-items:center;gap:18px;flex-wrap:wrap;justify-content:center}
+.pchip{height:36px;background:transparent;border-radius:0;padding:0;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;opacity:.82;transition:.2s}
+.pchip:hover{opacity:1}
+.pchip img{height:28px;width:auto;max-width:130px;object-fit:contain;display:block;filter:brightness(0) invert(1)}
+.pchip.pmono{background:transparent;color:rgba(255,255,255,.6);font-size:11.5px;font-weight:800;min-width:38px;letter-spacing:.3px}
+.pchip.pdark{background:transparent}
+.foot-partners .pchip{height:34px}
+.partners-combined{background:#fff;border-radius:12px;padding:7px 16px;display:inline-flex;align-items:center}
+.partners-combined img{max-height:42px;width:auto;max-width:100%;display:block}
+.partners-chips{display:none;align-items:center;gap:10px;flex-wrap:wrap}
+.plogo{display:flex;align-items:center;gap:7px;opacity:.82;transition:.2s}
+.plogo:hover{opacity:1}
+.pbadge{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-size:9.5px;font-weight:800;color:#cdd8f5;
+  background:linear-gradient(135deg,rgba(58,160,255,.28),rgba(139,139,255,.2));border:1px solid var(--brd);flex:0 0 auto}
+.ptext{display:flex;flex-direction:column;line-height:1.12}
+.ptext b{font-size:10.5px;font-weight:800;color:#aab6d6;letter-spacing:.3px;white-space:nowrap}
+.ptext span{font-size:8px;font-weight:600;letter-spacing:.5px;color:#6b779a;white-space:nowrap}
+/* real-logo (image) variants on white chips so dark logos read on dark theme */
+.partners-img{background:#fff;border-radius:12px;padding:7px 16px;display:flex;align-items:center;flex:1;min-width:0}
+.partners-img img{max-height:42px;width:auto;max-width:100%;height:auto;display:block;object-fit:contain}
+.mh-lockup{display:flex;align-items:center;gap:11px}
+.mh-img{height:46px;width:auto;display:block;background:transparent;border-radius:11px;padding:4px 9px}
+.foot-partners-img{background:#fff;border-radius:12px;padding:8px 16px;max-width:560px}
+.foot-partners-img img{max-height:46px;width:auto;max-width:100%;display:block}
+.gt-badge img.gt-logo-img{width:40px;height:40px;object-fit:contain;display:block}
+
+/* ---------- Hero ---------- */
+.hero{padding:74px 0 44px;text-align:center}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--accent-2);
+  background:rgba(94,234,212,.08);border:1px solid rgba(94,234,212,.25);padding:6px 14px;border-radius:100px;margin-bottom:22px}
+.eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--accent-2);box-shadow:0 0 10px var(--accent-2)}
+.hero h1{font-size:clamp(34px,6vw,62px);line-height:1.05;font-weight:800;margin:0 0 18px;letter-spacing:-.5px}
+.hero h1 .g{background:linear-gradient(90deg,#5eead4,#3aa0ff 55%,#8b8bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p.lead{font-size:clamp(16px,2.3vw,21px);color:var(--muted);max-width:680px;margin:0 auto 34px}
+.hero-cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:10px;border:none;cursor:pointer;font-family:inherit;font-weight:600;font-size:16px;padding:14px 28px;border-radius:14px;transition:.2s;text-decoration:none}
+.btn-primary{background:linear-gradient(90deg,var(--accent),var(--violet));color:#fff;box-shadow:0 14px 30px -10px rgba(58,160,255,.7)}
+.btn-primary:hover{transform:translateY(-2px);filter:brightness(1.07)}
+.btn-ghost{background:var(--panel);color:var(--text);border:1px solid var(--brd-2)}
+.btn-ghost:hover{background:var(--panel-2);border-color:var(--accent)}
+.btn-li{background:#0a66c2;color:#fff;box-shadow:0 14px 30px -12px rgba(10,102,194,.8)}
+.btn-li:hover{transform:translateY(-2px);filter:brightness(1.08)}
+.btn-sm{padding:10px 18px;font-size:14px;border-radius:11px}
+.hero-stats{display:flex;gap:40px;justify-content:center;flex-wrap:wrap;margin-top:54px}
+.stat{text-align:center}
+.stat .n{font-family:'Space Grotesk',sans-serif;font-size:34px;font-weight:700;color:#fff}
+.stat .l{font-size:13px;color:var(--muted);font-weight:500}
+
+/* ---------- Section heading ---------- */
+.sec-head{text-align:center;margin:0 auto 36px;max-width:720px}
+.sec-head h2{font-size:clamp(26px,4vw,40px);font-weight:800;margin:0 0 12px}
+.sec-head p{color:var(--muted);font-size:17px;margin:0}
+.kicker{font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+.page-head{display:flex;justify-content:flex-start;padding:26px 0 6px}
+
+/* ---------- Register ---------- */
+#view-register{padding:10px 0 90px}
+.reg-card{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));border:1px solid var(--brd);
+  border-radius:24px;box-shadow:var(--shadow);max-width:980px;margin:0 auto;overflow:hidden}
+.reg-top{padding:26px 30px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;
+  background:linear-gradient(90deg,rgba(58,160,255,.07),rgba(139,139,255,.05))}
+.reg-top .rt-title{font-size:20px;font-weight:700}
+.reg-top .rt-sub{font-size:13.5px;color:var(--muted)}
+.li-fill{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.li-note{font-size:11px;color:var(--muted-2)}
+.steps{display:flex;gap:6px;padding:18px 30px 0;overflow-x:auto;scrollbar-width:none}
+.steps::-webkit-scrollbar{display:none}
+.step-pill{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:8px 13px;border-radius:100px;font-size:13px;font-weight:600;color:var(--muted);background:var(--panel);border:1px solid transparent;cursor:pointer;transition:.2s;white-space:nowrap}
+.step-pill .num{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:11px;background:rgba(255,255,255,.1);color:var(--muted)}
+.step-pill:hover{color:var(--text)}
+.step-pill.active{color:#fff;background:linear-gradient(90deg,rgba(58,160,255,.22),rgba(139,139,255,.18));border-color:var(--accent)}
+.step-pill.active .num{background:var(--accent);color:#fff}
+.step-pill.done .num{background:var(--ok);color:#05221a}
+.progress{height:4px;background:rgba(255,255,255,.07);margin:16px 30px 0;border-radius:4px;overflow:hidden}
+.progress .bar{height:100%;width:0;background:linear-gradient(90deg,var(--accent-2),var(--accent),var(--violet));transition:width .4s ease;border-radius:4px}
+form#regForm{padding:24px 30px 30px}
+.step-panel{display:none;animation:fade .35s ease}
+.step-panel.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.step-title{font-size:18px;font-weight:700;margin:0 0 4px;display:flex;align-items:center;gap:10px}
+.step-title .ic{font-size:22px}
+.step-desc{color:var(--muted);font-size:14px;margin:0 0 22px}
+.subsec{font-size:13px;font-weight:700;color:var(--accent-2);letter-spacing:.5px;margin:26px 0 14px;padding-bottom:6px;border-bottom:1px solid var(--brd)}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 18px}
+.field{display:flex;flex-direction:column;gap:7px}
+.field.full{grid-column:1/-1}
+.field label{font-size:13.5px;font-weight:600;color:#c4cfe9}
+.field label .req{color:var(--danger);margin-inline-start:3px}
+input,select,textarea{font-family:inherit;font-size:15px;color:var(--text);background:rgba(255,255,255,.04);border:1px solid var(--brd);border-radius:12px;padding:12px 14px;transition:.18s;width:100%;outline:none}
+input::placeholder,textarea::placeholder{color:var(--muted-2)}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);background:rgba(58,160,255,.06);box-shadow:0 0 0 3px rgba(58,160,255,.15)}
+textarea{resize:vertical;min-height:88px}
+select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='%2394a3c4' viewBox='0 0 16 16'><path d='M8 11L3 6h10z'/></svg>");background-repeat:no-repeat;background-position:left 14px center;padding-inline-start:38px}
+.field.invalid input,.field.invalid select,.field.invalid textarea{border-color:var(--danger);box-shadow:0 0 0 3px rgba(255,107,107,.15)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:rgba(255,255,255,.04);border:1px solid var(--brd);border-radius:12px;padding:8px 10px;min-height:48px}
+.chips:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(58,160,255,.15)}
+.chip{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(90deg,rgba(58,160,255,.2),rgba(139,139,255,.16));border:1px solid rgba(58,160,255,.3);color:#dbe7ff;font-size:13px;font-weight:500;padding:5px 10px;border-radius:100px}
+.chip b{cursor:pointer;font-weight:700;color:#9fb6e6;font-size:15px;line-height:1}
+.chip b:hover{color:#fff}
+.chips input{border:none;background:transparent;box-shadow:none!important;flex:1;min-width:120px;padding:6px 4px}
+.checks{display:flex;flex-wrap:wrap;gap:10px}
+.check{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);border:1px solid var(--brd);border-radius:100px;padding:9px 15px;font-size:13.5px;cursor:pointer;transition:.2s;user-select:none}
+.check:hover{border-color:var(--brd-2)}
+.check.on{background:linear-gradient(90deg,rgba(58,160,255,.22),rgba(139,139,255,.16));border-color:var(--accent);color:#fff}
+.check .box{width:16px;height:16px;border-radius:5px;border:1.5px solid var(--muted);display:grid;place-items:center;font-size:11px}
+.check.on .box{background:var(--accent);border-color:var(--accent);color:#fff}
+.filebox{border:1.5px dashed var(--brd-2);border-radius:12px;padding:16px;text-align:center;cursor:pointer;transition:.2s;background:rgba(255,255,255,.02)}
+.filebox:hover{border-color:var(--accent);background:rgba(58,160,255,.05)}
+.filebox input{display:none}
+.filebox .fi{font-size:24px;margin-bottom:4px}
+.filebox .ft{font-size:13.5px;color:var(--muted)}
+.filebox .fname{color:var(--accent-2);font-weight:600;font-size:13px;margin-top:6px;word-break:break-all}
+.logo-preview{width:56px;height:56px;border-radius:12px;object-fit:cover;border:1px solid var(--brd);margin:8px auto 0;display:block}
+.form-nav{display:flex;justify-content:space-between;gap:12px;margin-top:30px;padding-top:22px;border-top:1px solid var(--brd)}
+.form-nav-top{margin-top:0;margin-bottom:20px;padding-top:0;padding-bottom:18px;border-top:none;border-bottom:1px solid var(--brd)}
+.collapse-internal summary{cursor:pointer;font-size:13.5px;font-weight:600;color:var(--muted);list-style:none;display:flex;align-items:center;gap:8px;padding:10px 0}
+.collapse-internal summary::-webkit-details-marker{display:none}
+.collapse-internal summary::before{content:"▸";transition:.2s;color:var(--accent)}
+.collapse-internal[open] summary::before{transform:rotate(90deg)}
+
+/* ---------- Growth page ---------- */
+#view-growth{padding:0 0 90px}
+.growth-hero{text-align:center;max-width:760px;margin:14px auto 40px}
+.gt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:20px;max-width:1120px;margin:0 auto}
+.gt-card{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));border:1px solid var(--brd);border-radius:20px;padding:24px;transition:.2s}
+.gt-card:hover{border-color:var(--brd-2);transform:translateY(-3px)}
+.gt-org{display:flex;align-items:center;gap:13px;margin-bottom:6px}
+.gt-badge{width:50px;height:50px;border-radius:14px;display:grid;place-items:center;flex:0 0 auto;border:1px solid var(--brd)}
+.gt-badge svg{width:30px;height:30px}
+.gt-plate{background:#fff;border-radius:13px;padding:10px 16px;display:inline-flex;align-items:center;margin-bottom:12px;max-width:100%}
+.gt-plate.dark-bg{background:#1a2035}
+.gt-plate.fallback{background:transparent;padding:0;gap:13px}
+.gt-logo-img{height:44px;width:auto;max-width:240px;object-fit:contain;display:block}
+.gt-name{font-size:18px;font-weight:700}
+.gt-org h3{font-size:18px;margin:0;font-weight:700}
+.gt-org .gt-count{font-size:12px;color:var(--muted)}
+.gt-group{margin-top:16px}
+.gt-group .gt-gt{font-size:12px;font-weight:700;color:var(--accent-2);letter-spacing:.5px;margin-bottom:8px;text-transform:uppercase}
+.gt-link{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px;border-radius:11px;background:rgba(255,255,255,.03);border:1px solid transparent;color:var(--text);text-decoration:none;font-size:14px;font-weight:500;margin-bottom:7px;transition:.18s}
+.gt-link:hover{background:rgba(58,160,255,.1);border-color:rgba(58,160,255,.3);transform:translateX(-3px)}
+.gt-link .arrow{color:var(--accent);font-size:15px;flex:0 0 auto}
+
+/* ---------- Directory ---------- */
+#directory{padding:60px 0 80px}
+.dir-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+.dir-card{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));border:1px solid var(--brd);border-radius:18px;padding:20px;transition:.2s}
+.dir-card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:var(--shadow)}
+.dir-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.dir-logo{width:48px;height:48px;border-radius:12px;flex:0 0 auto;display:grid;place-items:center;font-weight:800;font-size:20px;background:linear-gradient(135deg,var(--accent),var(--violet));color:#fff;object-fit:cover;overflow:hidden}
+.dir-logo img{width:100%;height:100%;object-fit:cover}
+.dir-name{font-size:17px;font-weight:700;line-height:1.2}
+.dir-meta{font-size:12.5px;color:var(--muted)}
+.dir-tags{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.dir-tag{font-size:11px;font-weight:600;padding:3px 9px;border-radius:100px;background:rgba(94,234,212,.1);border:1px solid rgba(94,234,212,.25);color:var(--accent-2)}
+.dir-summary{font-size:13.5px;color:var(--muted);margin:8px 0 12px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.dir-links{display:flex;gap:8px}
+.dir-links a{font-size:12.5px;color:var(--accent);text-decoration:none;font-weight:600;padding:5px 10px;border-radius:8px;background:rgba(58,160,255,.08)}
+.dir-links a:hover{background:rgba(58,160,255,.18)}
+.empty{text-align:center;color:var(--muted);padding:50px;border:1px dashed var(--brd);border-radius:18px}
+
+/* ---------- Success ---------- */
+.success-banner{max-width:780px;margin:0 auto;text-align:center;background:linear-gradient(135deg,rgba(65,214,163,.12),rgba(58,160,255,.08));border:1px solid rgba(65,214,163,.3);border-radius:22px;padding:40px 30px}
+.success-banner .check-ring{width:74px;height:74px;border-radius:50%;background:rgba(65,214,163,.15);border:2px solid var(--ok);display:grid;place-items:center;margin:0 auto 18px;font-size:36px;color:var(--ok)}
+.success-banner h2{font-size:30px;margin:0 0 10px}
+.success-banner p{color:var(--muted);font-size:16px;margin:0 0 22px}
+.success-banner .sb-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+
+/* ---------- Modal ---------- */
+.modal-overlay{position:fixed;inset:0;z-index:300;background:rgba(3,5,12,.78);backdrop-filter:blur(7px);display:grid;place-items:center;padding:20px;animation:fade .2s ease}
+.modal{background:linear-gradient(180deg,#0d1530,#0a1024);border:1px solid var(--brd-2);border-radius:22px;padding:34px;max-width:470px;width:100%;text-align:center;box-shadow:var(--shadow)}
+.modal-icon{width:56px;height:56px;border-radius:15px;background:#0a66c2;display:grid;place-items:center;margin:0 auto 16px;box-shadow:0 10px 24px -8px rgba(10,102,194,.9)}
+.modal h3{margin:0 0 8px;font-size:22px}
+.modal p{color:var(--muted);font-size:14.5px;margin:0 0 18px}
+.modal input{margin-bottom:18px;text-align:left;direction:ltr}
+.modal-cta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
+
+/* ---------- Footer ---------- */
+footer{border-top:1px solid var(--brd);margin-top:30px;padding:46px 0 30px;background:rgba(5,7,15,.6)}
+.foot-grid{display:flex;justify-content:space-between;gap:30px;flex-wrap:wrap;align-items:flex-start}
+.foot-brand{max-width:340px}
+.foot-brand .word{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:24px}
+.foot-brand p{color:var(--muted);font-size:14px;margin:10px 0 0}
+.foot-partners{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:center;max-width:560px;justify-content:flex-end}
+.foot-copy{margin-top:32px;padding-top:20px;border-top:1px solid var(--brd);text-align:center;color:var(--muted-2);font-size:13px}
+
+/* ---------- Toast ---------- */
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(140px);z-index:400;background:linear-gradient(90deg,#0a66c2,#3aa0ff);color:#fff;padding:14px 24px;border-radius:14px;font-weight:600;font-size:15px;box-shadow:0 16px 40px -10px rgba(0,0,0,.6);display:flex;align-items:center;gap:10px;transition:transform .4s cubic-bezier(.2,1,.3,1);max-width:90vw}
+#toast.show{transform:translateX(-50%) translateY(0)}
+#toast.ok{background:linear-gradient(90deg,#159e72,#41d6a3)}
+#toast.warn{background:linear-gradient(90deg,#b9772a,#e0a23b)}
+
+@media(max-width:820px){.brand-lead,.brand .sub{display:none}}
+@media(max-width:760px){
+  .nav-links{display:none}
+  .nav-links.open{display:flex;position:absolute;top:68px;right:16px;left:16px;flex-direction:column;background:#0a1024;border:1px solid var(--brd);border-radius:16px;padding:12px}
+  .menu-btn{display:block}
+  .field-grid{grid-template-columns:1fr}
+  .reg-top{flex-direction:column;align-items:flex-start}
+  .li-fill{align-items:flex-start}
+  form#regForm{padding:20px}
+  .foot-grid{flex-direction:column}
+  .foot-partners{justify-content:flex-start}
+}
+</style>
+</head>
+<body>
+<div class="bg-wrap"></div>
+<canvas id="stars"></canvas>
+<div class="grid-overlay"></div>
+
+<!-- ============ TOP BAR ============ -->
+<header class="topbar">
+  <div class="nav">
+    <a class="brand" onclick="showView('home')">
+      <span class="mh-lockup" id="mhLockup">
+        <img src="logos/manhelet-halal.png" alt="מנהלת החלל" class="mh-img" onerror="mhFallback()" />
+      </span>
+      <span class="brand-div"></span>
+      <svg class="ecos-mark" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="24" cy="24" r="13" fill="url(#g1)"/>
+        <ellipse cx="24" cy="24" rx="22" ry="8.5" stroke="url(#g2)" stroke-width="2" transform="rotate(-28 24 24)"/>
+        <path d="M24 7 L29 26 L24 22 L19 26 Z" fill="#eaf0ff"/>
+        <defs>
+          <linearGradient id="g1" x1="11" y1="11" x2="37" y2="37"><stop stop-color="#3aa0ff"/><stop offset="1" stop-color="#8b8bff"/></linearGradient>
+          <linearGradient id="g2" x1="2" y1="24" x2="46" y2="24"><stop stop-color="#5eead4"/><stop offset="1" stop-color="#3aa0ff"/></linearGradient>
+        </defs>
+      </svg>
+      <div>
+        <div class="word">ecos</div>
+        <div class="sub">אקוסיסטם החלל</div>
+      </div>
+    </a>
+    <nav class="nav-links" id="navLinks">
+      <a onclick="showView('register')">הרשמת חברה</a>
+      <a id="navGrowth" onclick="openGrowth()">כלי צמיחה</a>
+      <a onclick="showDirectory()">מאגר חברות</a>
+      <a class="nav-cta" onclick="showView('register')">+ הצטרפות</a>
+    </nav>
+    <button class="menu-btn" onclick="document.getElementById('navLinks').classList.toggle('open')">☰</button>
+  </div>
+</header>
+
+<!-- ============ PARTNER STRIP ============ -->
+<div class="partner-strip">
+  <div class="partner-inner">
+    <span class="plabel">שותפי המערכת</span>
+    <div class="plogos" id="plogos"></div>
+  </div>
+</div>
+
+<main>
+<!-- ============ HOME VIEW ============ -->
+<div id="view-home">
+  <section class="hero">
+    <div class="container">
+      <span class="eyebrow"><span class="dot"></span> מיזם לאומי למיפוי תעשיית החלל</span>
+      <h1>מיפוי <span class="g">חברות החלל</span> של ישראל</h1>
+      <p class="lead">ecos היא הפלטפורמה שמרכזת את האקוסיסטם הישראלי לחלל — הצטרפו, ספרו על החברה שלכם, והתחברו למשקיעים, לשותפים ולכלי הצמיחה של המדינה.</p>
+      <div class="hero-cta">
+        <button class="btn btn-primary" onclick="showView('register')">הרשמת חברה <span>←</span></button>
+        <button class="btn btn-li" onclick="openLiModal()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.34V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/></svg>
+          כניסה מהירה עם LinkedIn
+        </button>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><div class="n" id="statCount">0</div><div class="l">חברות רשומות</div></div>
+        <div class="stat"><div class="n">12</div><div class="l">קטגוריות מידע</div></div>
+        <div class="stat"><div class="n">24</div><div class="l">כלי צמיחה ממשלתיים</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="directory">
+    <div class="container">
+      <div class="sec-head">
+        <div class="kicker">המאגר</div>
+        <h2>מאגר חברות החלל</h2>
+        <p>החברות שנרשמו ל-ecos. המאגר נשמר מקומית בדפדפן זה (הדגמה).</p>
+      </div>
+      <div id="dirContent"></div>
+    </div>
+  </section>
+</div>
+
+<!-- ============ REGISTER VIEW ============ -->
+<section id="view-register" class="hidden">
+  <div class="container">
+    <div class="page-head"><button class="btn btn-ghost btn-sm" onclick="showView('home')">→ חזרה</button></div>
+    <div class="sec-head">
+      <div class="kicker">הצטרפות לאקוסיסטם</div>
+      <h2>רישום חברה ל-ecos</h2>
+      <p>מלאו את הפרטים בשלבים — או חסכו זמן עם כניסה מהירה דרך LinkedIn. שדות עם <span style="color:var(--danger)">*</span> הם חובה.</p>
+    </div>
+    <div class="reg-card">
+      <div class="reg-top">
+        <div>
+          <div class="rt-title">טופס מיפוי חברה</div>
+          <div class="rt-sub" id="stepCounter">שלב 1 מתוך 7</div>
+        </div>
+        <div class="li-fill">
+          <button type="button" class="btn btn-li btn-sm" onclick="linkedInFill()">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="#fff"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.34V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/></svg>
+            מילוי אוטומטי מ-LinkedIn
+          </button>
+          <span class="li-note">הדגמה — ממלא את כל הטופס ללא הזנת פרטים</span>
+        </div>
+      </div>
+      <div class="steps" id="steps"></div>
+      <div class="progress"><div class="bar" id="progressBar"></div></div>
+      <form id="regForm" autocomplete="off" novalidate></form>
+    </div>
+  </div>
+</section>
+
+<!-- ============ GROWTH VIEW ============ -->
+<section id="view-growth" class="hidden">
+  <div class="container">
+    <div class="page-head"><button class="btn btn-ghost btn-sm" onclick="showView('home')">→ חזרה לעמוד הבית</button></div>
+    <div class="growth-hero">
+      <span class="eyebrow"><span class="dot"></span> נפתח עבור חברות רשומות</span>
+      <h2 style="font-size:clamp(28px,4.5vw,44px);font-weight:800;margin:14px 0 12px">כלי צמיחה לחברות החלל</h2>
+      <p style="color:var(--muted);font-size:17px;margin:0">מענקים, מסלולים ותכניות של רשות החדשנות, משרד הכלכלה, רקיע ומפא״ת — כל הקישורים במקום אחד.</p>
+    </div>
+    <div class="gt-grid" id="gtGrid"></div>
+  </div>
+</section>
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="container">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <div class="word">ecos</div>
+        <p>פלטפורמת מיפוי האקוסיסטם של תעשיית החלל בישראל. מופעל ע״י מנהלת החלל בשיתוף שותפי המערכת.</p>
+      </div>
+      <div class="foot-partners" id="footPartners"></div>
+    </div>
+    <div class="foot-copy">© 2026 ecos · מנהלת החלל · כל הזכויות שמורות. אתר הדגמה.</div>
+  </div>
+</footer>
+
+<!-- ============ LINKEDIN MODAL ============ -->
+<div id="liModal" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="#fff"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.34V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/></svg>
+    </div>
+    <h3>כניסה מהירה עם LinkedIn</h3>
+    <p>הדביקו את כתובת ה-LinkedIn של החברה. נמלא את הפרטים אוטומטית וניקח אתכם ישר לכלי הצמיחה.</p>
+    <input id="liInput" type="url" placeholder="https://www.linkedin.com/company/..." />
+    <div class="modal-cta">
+      <button class="btn btn-li" onclick="linkedInGo()">המשך לכלי הצמיחה ←</button>
+      <button class="btn btn-ghost" onclick="closeLiModal()">ביטול</button>
+    </div>
+    <span class="li-note">הדגמה — אין חיבור אמיתי ל-LinkedIn; הפרטים ממולאים לדוגמה.</span>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ============ Partner logos ============ */
+const PARTNERS=[
+  {file:'p_snc.png', m:'SNC', name:'Startup Nation Central'},
+  {file:'ht.png',    m:'HT',  name:'Israeli High-Tech Association'},
+  {file:'iei.png',   m:'IEI', name:'Israel Export Institute'},
+  {file:'rakia.png?v=2', m:'ר',   name:'Rakia', dark:true},
+  {file:'isa.png',   m:'ISA', name:'Israel Space Agency'},
+  {file:'iia.png',   m:'רח',  name:'Israel Innovation Authority', dark:true},
+  {file:'npeg.png',  m:'צמ',  name:'National Program for Economic Growth'},
+];
+function partnerHTML(p){
+  if(p.file) return `<span class="pchip${p.dark?' pdark':''}" title="${p.name}"><img src="logos/${p.file}" alt="${p.name}" onerror="pImgFallback(this,'${p.m}')"></span>`;
+  return `<span class="pchip pmono" title="${p.name}">${p.m}</span>`;
+}
+function pImgFallback(img,m){ const c=img.parentElement; c.classList.add('pmono'); c.textContent=m; }
+function partnersBlock(idp){
+  const chips=PARTNERS.map(partnerHTML).join('');
+  return `<span class="partners-combined" id="${idp}_img"><img src="logos/partners.png" alt="שותפי המערכת" onerror="combinedFallback('${idp}')"></span>`+
+         `<span class="partners-chips" id="${idp}_chips">${chips}</span>`;
+}
+function combinedFallback(idp){
+  const im=document.getElementById(idp+'_img'); if(im) im.style.display='none';
+  const ch=document.getElementById(idp+'_chips'); if(ch) ch.style.display='inline-flex';
+}
+function renderPartners(){
+  document.getElementById('plogos').innerHTML=partnersBlock('pstrip');
+  document.getElementById('footPartners').innerHTML=partnersBlock('pfoot');
+}
+
+/* ============ Org logos (SVG marks) ============ */
+function orgLogo(key){
+  const s = 'fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"';
+  switch(key){
+    case 'iia': return `<svg viewBox="0 0 40 40" ${s}>
+      <path d="M7 14V8a1 1 0 0 1 1-1h6"/><path d="M33 14V8a1 1 0 0 0-1-1h-6"/>
+      <path d="M7 26v6a1 1 0 0 0 1 1h6"/><path d="M33 26v6a1 1 0 0 1-1 1h-6"/>
+      <path d="M16 20l4-4M16 20l4 4"/><path d="M24 20l-4-4M24 20l-4 4"/></svg>`;
+    case 'growth': return `<svg viewBox="0 0 40 40" ${s}>
+      <path d="M7 30l9-9 6 6 11-13"/><path d="M27 13h8v8"/><path d="M7 33h28" opacity=".5"/></svg>`;
+    case 'invest': return `<svg viewBox="0 0 40 40" ${s}>
+      <path d="M6 16L20 8l14 8"/><path d="M9 16v12M16 16v12M24 16v12M31 16v12"/>
+      <path d="M6 30h28M8 16h24"/></svg>`;
+    case 'rakia': return `<svg viewBox="0 0 40 40" ${s}>
+      <path d="M20 5c6 6 6 15 0 21-6-6-6-15 0-21z"/><circle cx="20" cy="15" r="2.3"/>
+      <path d="M14 22l-4 6 6-2M26 22l4 6-6-2"/><path d="M17 28l3 6 3-6"/></svg>`;
+    case 'mafat': return `<svg viewBox="0 0 40 40" ${s}>
+      <path d="M20 5l13 5v9c0 9-6 14-13 16-7-2-13-7-13-16v-9z"/>
+      <path d="M20 14l1.9 3.9 4.3.6-3.1 3 .7 4.3-3.8-2-3.8 2 .7-4.3-3.1-3 4.3-.6z"/></svg>`;
+    default: return '';
+  }
+}
+
+/* ============ Logo fallbacks (used if a real logo file is missing) ============ */
+function mhFallback(){
+  document.getElementById('mhLockup').innerHTML=`
+    <svg class="mh-mark" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="24" cy="23" r="12" fill="#2f6fb0"/>
+      <path d="M14 23a10 10 0 0 1 20 0" stroke="#cfe0f5" stroke-width="1.3" fill="none" opacity=".8"/>
+      <path d="M24 13v20" stroke="#cfe0f5" stroke-width="1" opacity=".5"/>
+      <ellipse cx="24" cy="23" rx="22" ry="7.5" stroke="#9fb6d6" stroke-width="1.7" transform="rotate(-26 24 23)"/>
+      <path d="M24 3 L30 31 L24 26 L18 31 Z" fill="#eaf0ff" stroke="#c3cfe6" stroke-width=".6"/>
+    </svg>
+    <div class="brand-lead"><div class="bl-title">מנהלת החלל</div><div class="bl-sub">Israel Space</div></div>`;
+}
+function gtLogoFallback(key,color,tint,org){
+  const p=document.getElementById('plate_'+key);
+  if(!p) return;
+  p.classList.add('fallback');
+  p.innerHTML=`<span class="gt-badge" style="background:${tint};color:${color}">${orgLogo(key)}</span><span class="gt-name">${org}</span>`;
+}
+
+/* ============ Growth tools data ============ */
+const GROWTH=[
+  { org:'רשות החדשנות', key:'iia', color:'#36d1c4', tint:'rgba(54,209,196,.12)', groups:[
+    { t:'כללי', items:[
+      {n:'גלגולה של בקשה', u:'https://innovationisrael.org.il/%d7%92%d7%9c%d7%92%d7%95%d7%9c%d7%94-%d7%a9%d7%9c-%d7%91%d7%a7%d7%a9%d7%94/'},
+      {n:'מענקים למחקר ופיתוח', u:'https://innovationisrael.org.il/%D7%9E%D7%A2%D7%A0%D7%A7%D7%99%D7%9D-%D7%9C%D7%9E%D7%97%D7%A7%D7%A8-%D7%95%D7%A4%D7%99%D7%AA%D7%95%D7%97/'},
+    ]},
+    { t:'חטיבת הזנק', items:[
+      {n:'קרן החממות הטכנולוגיות', u:'https://innovationisrael.org.il/programs/technological-incubators-funding-program/'},
+      {n:'מסלול פרה-סיד', u:'https://innovationisrael.org.il/programs/preseed/'},
+      {n:'מעבדות לחדשנות טכנולוגית', u:'https://innovationisrael.org.il/programs/%d7%9e%d7%a1%d7%9c%d7%95%d7%9c-%d7%9e%d7%a2%d7%91%d7%93%d7%95%d7%aa-%d7%9c%d7%97%d7%93%d7%a9%d7%a0%d7%95%d7%aa-%d7%98%d7%9b%d7%a0%d7%95%d7%9c%d7%95%d7%92%d7%99%d7%aa/#about_route'},
+      {n:'מסלול תנופה – קרן ההזנק', u:'https://innovationisrael.org.il/programs/%d7%9e%d7%a1%d7%9c%d7%95%d7%9c-%d7%aa%d7%a0%d7%95%d7%a4%d7%94-%d7%a7%d7%a8%d7%9f-%d7%94%d7%94%d7%96%d7%a0%d7%a7/#about_route'},
+    ]},
+    { t:'חטיבת צמיחה', items:[
+      {n:'מסלול ראונד אי', u:'https://innovationisrael.org.il/programs/rounda/'},
+      {n:'מסלול סיד', u:'https://innovationisrael.org.il/programs/seed/'},
+      {n:'היתכנות טכנו-כלכלית – קרן מופ״ת', u:'https://innovationisrael.org.il/programs/manufacturing-rnd-mofet-fund-financial-feasability/#about_route'},
+      {n:'פיילוט משקי – קרן הפיילוטים', u:'https://innovationisrael.org.il/programs/sector-level-pilots/'},
+      {n:'מסלול פיתוח מוצר – קרן מופ״ת', u:'https://innovationisrael.org.il/programs/%d7%9e%d7%a1%d7%9c%d7%95%d7%9c-%d7%a4%d7%99%d7%aa%d7%95%d7%97-%d7%9e%d7%95%d7%a6%d7%a8-%d7%a7%d7%a8%d7%9f-%d7%9e%d7%95%d7%a4%d7%aa/'},
+      {n:'מסלול השקעות בחלל', u:'https://innovationisrael.org.il/programs/%d7%9e%d7%a1%d7%9c%d7%95%d7%9c-%d7%94%d7%a9%d7%a7%d7%a2%d7%94-%d7%91%d7%aa%d7%97%d7%95%d7%9d-%d7%94%d7%97%d7%9c%d7%9c/'},
+    ]},
+    { t:'חטיבות נוספות', items:[
+      {n:'חטיבה בין-לאומית', u:'https://innovationisrael.org.il/term_type/%d7%91%d7%99%d7%9f-%d7%9c%d7%90%d7%95%d7%9e%d7%99%d7%aa/'},
+      {n:'חטיבת תשתיות חדשנות', u:'https://innovationisrael.org.il/term_type/%d7%aa%d7%a9%d7%aa%d7%99%d7%95%d7%aa-%d7%97%d7%93%d7%a9%d7%a0%d7%95%d7%aa/'},
+    ]},
+  ]},
+  { org:'מנהלת הצמיחה · משרד הכלכלה', key:'growth', color:'#3ad17e', tint:'rgba(58,209,126,.12)', groups:[
+    { t:'', items:[
+      {n:'מענק להקמת תשתיות פיזיות', u:'https://israelgrowth.org.il/infrastructure/'},
+      {n:'מענק להקמת תשתיות דאטא', u:'https://israelgrowth.org.il/calling-voice/'},
+      {n:'עידוד פעילות בחו״ל', u:'https://israelgrowth.org.il/growth-to-the-world/'},
+      {n:'פריצת שווקים בחו״ל', u:'https://israelgrowth.org.il/pilot-program/'},
+      {n:'מנועי צמיחה אזוריים', u:'https://israelgrowth.org.il/regional-growth/'},
+    ]},
+  ]},
+  { org:'הרשות להשקעות · משרד הכלכלה', key:'invest', color:'#5b9dff', tint:'rgba(91,157,255,.12)', groups:[
+    { t:'', items:[ {n:'מסלולי סיוע', u:'https://govextra.gov.il/economy/iia-grants/home/'} ]},
+  ]},
+  { org:'רקיע', key:'rakia_card', color:'#a78bfa', tint:'rgba(167,139,250,.14)', groups:[
+    { t:'', items:[
+      {n:'אירועים ותערוכות', u:'https://www.rakiamission.com/events-and-exhibitions-he'},
+      {n:'הגשת ניסוי לחלל', u:'https://www.rakiamission.com/industry-academy-he#industry-join-space'},
+    ]},
+  ]},
+  { org:'מפא״ת', key:'mafat', dark:true, color:'#e0b341', tint:'rgba(224,179,65,.12)', groups:[
+    { t:'', items:[
+      {n:'מפא״ת לסטארטאפים', u:'https://ddrd-mafat.mod.gov.il/he/mafat-for-startups'},
+      {n:'תכנית מימד', u:'https://ddrd-mafat.mod.gov.il/he//mafat-for-startups/meimad'},
+    ]},
+  ]},
+];
+function renderGrowth(){
+  document.getElementById('gtGrid').innerHTML = GROWTH.map(o=>{
+    const total=o.groups.reduce((a,g)=>a+g.items.length,0);
+    const groups=o.groups.map(g=>{
+      const links=g.items.map(it=>`<a class="gt-link" href="${it.u}" target="_blank" rel="noopener">${it.n}<span class="arrow">↗</span></a>`).join('');
+      return `<div class="gt-group">${g.t?`<div class="gt-gt">${g.t}</div>`:''}${links}</div>`;
+    }).join('');
+    const SVG_KEYS=['mafat'];
+    const ext=SVG_KEYS.includes(o.key)?'svg':'png';
+    return `<div class="gt-card">
+      <div class="gt-plate${o.dark?' dark-bg':''}" id="plate_${o.key}">
+        <img src="logos/${o.key}.${ext}" alt="${o.org}" class="gt-logo-img" onerror="gtLogoFallback('${o.key}','${o.color}','${o.tint}','${o.org}')" />
+      </div>
+      <div class="gt-org-name" style="color:${o.color};font-size:13px;font-weight:700;margin-bottom:6px;margin-top:-4px">${o.org}</div>
+      <div class="gt-count">${total} תכניות / מסלולים</div>
+      ${groups}</div>`;
+  }).join('');
+}
+
+/* ============ Form schema (72 fields) ============ */
+const SCHEMA=[
+  { title:'פרטי חברה', icon:'🛰️', desc:'הזהות והפרטים הבסיסיים של החברה.', fields:[
+    {id:'companyName', label:'שם החברה', type:'text', required:true, demo:'ננו-סאט טכנולוגיות בע״מ', ph:'לדוגמה: ננו-סאט טכנולוגיות בע״מ'},
+    {id:'regNumber', label:'ח.פ / מספר רישום', type:'text', demo:'515432198'},
+    {id:'website', label:'אתר', type:'url', demo:'https://www.nanosat.co.il', ph:'https://'},
+    {id:'linkedin', label:'LinkedIn (חברה)', type:'url', demo:'https://www.linkedin.com/company/nanosat-technologies', ph:'https://linkedin.com/company/...'},
+    {id:'logo', label:'לוגו החברה', type:'file', accept:'image/*', full:true},
+    {id:'email', label:'מייל כללי', type:'email', demo:'info@nanosat.co.il'},
+    {id:'phone', label:'טלפון כללי', type:'tel', demo:'03-7654321'},
+    {id:'founded', label:'שנת הקמה', type:'number', demo:'2019', ph:'2019', min:1950, max:2026},
+    {id:'location', label:'מדינה / עיר', type:'text', demo:'ישראל / תל אביב'},
+    {id:'address', label:'כתובת מלאה', type:'text', demo:'רחוב יגאל אלון 98, תל אביב'},
+    {id:'employees', label:'מספר עובדים', type:'select', options:['1-10','11-50','51-200','201-500','500+'], demo:'11-50'},
+    {id:'parent', label:'חברת אם / חברה בת', type:'text', demo:'—'},
+    {id:'summary', label:'תקציר סטטוס פעילות + הבעיה שהחברה פותרת', type:'textarea', full:true,
+      demo:'ננו-סאט מפתחת ננו-לוויינים מודולריים לתצפית כדור הארץ ולתקשורת IoT. הבעיה שאנו פותרים: הורדת עלות וזמן ההגעה לחלל עבור מפעילי לוויינים קטנים.'},
+  ]},
+  { title:'סיווג ותחומי פעילות', icon:'🧭', desc:'איך החברה מסווגת בתוך האקוסיסטם.', fields:[
+    {id:'targetAudience', label:'קהל יעד / לקוח אידיאלי', type:'text', full:true, demo:'מפעילי לוויינים, חברות ביטוח חקלאי, גופי ביטחון'},
+    {id:'sector', label:'Sector ראשי', type:'select', demo:'חישה מרחוק (Earth Observation)',
+      options:['לוויינות','שיגור','תקשורת לוויינית','חישה מרחוק (Earth Observation)','ניווט (GNSS)','קרקע (Ground Segment)','הנעה','חלל עמוק','מודעות מצב חלל (SSA)','רכיבים ותת-מערכות','שירותים ונתונים','אחר']},
+    {id:'defense', label:'פעילות ביטחונית / דו-שימושית', type:'select', options:['אזרחי','דו-שימושי','ביטחוני'], demo:'דו-שימושי'},
+    {id:'segments', label:'Segments', type:'chips', full:true, demo:['NewSpace','SmallSat','IoT']},
+    {id:'spaceDomain', label:'תחום חללי רלוונטי', type:'text', full:true, demo:'תצפית כדור הארץ, תקשורת לוויינית'},
+    {id:'techTags', label:'תיוגים טכנולוגיים', type:'chips', full:true, demo:['AI','Edge Computing','RF','Propulsion']},
+    {id:'sncTags', label:'תיוגי SNC / IVC / אחרים', type:'chips', full:true, demo:['SNC: Space-Tech','IVC: Aerospace']},
+  ]},
+  { title:'מוצר וטכנולוגיה', icon:'⚙️', desc:'מה החברה בונה ובאיזו רמת בשלות.', fields:[
+    {id:'product', label:'מוצר / שירות מרכזי', type:'textarea', full:true, demo:'פלטפורמת ננו-לוויין 6U עם מטען תצפית רב-ספקטרלי ושירות נתונים מבוסס ענן.'},
+    {id:'coreTech', label:'טכנולוגיות ליבה', type:'chips', full:true, demo:['Multispectral Imaging','Onboard AI','Green Propulsion']},
+    {id:'trl', label:'TRL / רמת מוכנות טכנולוגית', type:'select', options:['TRL 1','TRL 2','TRL 3','TRL 4','TRL 5','TRL 6','TRL 7','TRL 8','TRL 9'], demo:'TRL 7'},
+    {id:'bizMaturity', label:'רמת בשלות עסקית', type:'select', options:['רעיון','אבטיפוס','מוצר ראשוני (MVP)','הכנסות ראשונות','צמיחה','בשל'], demo:'הכנסות ראשונות'},
+    {id:'demoAvailable', label:'מוצר זמין להדגמה?', type:'select', options:['כן','לא','בפיתוח'], demo:'כן'},
+    {id:'ip', label:'פטנטים / IP', type:'text', demo:'2 פטנטים רשומים, 1 בתהליך'},
+    {id:'uniqueAdvantage', label:'יתרון ייחודי', type:'textarea', full:true, demo:'עלות שיגור נמוכה ב-40% וזמן אספקת תמונה של פחות משעתיים.'},
+  ]},
+  { title:'עסקי ופיננסי', icon:'💰', desc:'שלב, גיוסים, לקוחות ושותפים.', fields:[
+    {id:'stage', label:'שלב החברה', type:'select', options:['Pre-seed','Seed','Round A','Round B','Round C+','Growth','ציבורית','Bootstrapped'], demo:'Seed'},
+    {id:'funding', label:'סבבי גיוס וסכומים', type:'text', full:true, demo:'Pre-seed: $0.8M (2020), Seed: $4.5M (2023)'},
+    {id:'investors', label:'משקיעים מרכזיים', type:'chips', full:true, demo:['OurCrowd','Israel Space Agency Fund']},
+    {id:'customers', label:'לקוחות מרכזיים', type:'text', demo:'משרד החקלאות, חברת ביטוח גדולה'},
+    {id:'partners', label:'שותפים מרכזיים', type:'text', demo:'IAI, רפאל (פיילוט)'},
+    {id:'targetMarkets', label:'שווקי יעד', type:'chips', full:true, demo:['ישראל','אירופה','ארה״ב']},
+    {id:'revenue', label:'הכנסות / מודל עסקי (אם ניתן לשתף)', type:'textarea', full:true, demo:'מודל SaaS לנתוני תצפית + מכירת חומרה.'},
+  ]},
+  { title:'צורך, הצעה והתאמה', icon:'🤝', desc:'מה אתם מציעים, מה אתם מחפשים, ולמי אתם רלוונטיים.', fields:[
+    {sub:'צורך והצעה'},
+    {id:'offers', label:'מה החברה מציעה', type:'textarea', full:true, demo:'נתוני תצפית מעובדים, שירותי שיגור משותף לננו-לוויינים.'},
+    {id:'seeking', label:'מה החברה מחפשת', type:'textarea', full:true, demo:'גיוס Round A, שותפי הפצה באירופה, לקוחות פיילוט.'},
+    {id:'immediateNeeds', label:'צרכים מיידיים', type:'textarea', full:true, demo:'משקיע מוביל ולקוחות פיילוט בתחום החקלאות.'},
+    {id:'collabType', label:'סוג שיתוף פעולה רצוי', type:'chips', full:true, demo:['משקיעים','פיילוטים','שותפים טכנולוגיים']},
+    {id:'collabOpportunity', label:'הזדמנות קונקרטית לשיתוף פעולה', type:'textarea', full:true, demo:'פיילוט תצפית חקלאית משותף עם גוף ממשלתי.'},
+    {sub:'התאמה לאקוסיסטם'},
+    {id:'relevantTo', label:'למי החברה רלוונטית', type:'text', full:true, demo:'רשות החלל, משרד החקלאות, חברות אגרי-טק'},
+    {id:'fitAreas', label:'תחומי התאמה', type:'chips', full:true, demo:['NewSpace','Earth Observation','Dual-use']},
+    {id:'whyNow', label:'למה כדאי להתחבר עכשיו', type:'textarea', full:true, demo:'לקראת שיגור הדגמה ברבעון הקרוב, מחפשים שותפים ולקוחות.'},
+    {id:'connectPrefs', label:'העדפות חיבור', type:'text', full:true, demo:'פגישות אונליין, אירועי רשת, הקדמות ממנהלת החלל'},
+  ]},
+  { title:'אנשי קשר וקשרים', icon:'📇', desc:'אנשי הקשר בחברה והחיבורים הקיימים שלה.', fields:[
+    {sub:'אנשי קשר'},
+    {id:'mgmtContacts', label:'אנשי קשר בהנהלה', type:'text', full:true, demo:'ד״ר רונן לוי (מנכ״ל), מאיה כהן (פיתוח עסקי)'},
+    {id:'ceo', label:'מנכ״ל/ית', type:'text', demo:'ד״ר רונן לוי'},
+    {id:'cto', label:'CTO / מוביל טכנולוגי', type:'text', demo:'אבי שפירא'},
+    {id:'primaryContact', label:'איש קשר ראשי', type:'text', required:true, demo:'מאיה כהן'},
+    {id:'primaryRole', label:'תפקיד איש קשר ראשי', type:'text', demo:'סמנכ״לית פיתוח עסקי'},
+    {id:'primaryEmail', label:'מייל איש קשר ראשי', type:'email', required:true, demo:'maya@nanosat.co.il'},
+    {id:'primaryPhone', label:'טלפון איש קשר ראשי', type:'tel', demo:'052-1234567'},
+    {id:'primaryLinkedin', label:'LinkedIn של איש קשר ראשי', type:'url', full:true, demo:'https://www.linkedin.com/in/maya-cohen'},
+    {sub:'קשרים באקוסיסטם ופעילות'},
+    {id:'existingConnections', label:'קשרים קיימים באקוסיסטם', type:'textarea', full:true, demo:'רקיע, רשות החדשנות, מנהלת החלל.'},
+    {id:'worthKnowing', label:'לקוחות / שותפים / משקיעים שכדאי להכיר', type:'textarea', full:true, demo:'קרנות חלל אירופיות, מפעילי תחנות קרקע.'},
+    {id:'news', label:'חדשות / עדכונים אחרונים', type:'textarea', full:true, demo:'זכייה במענק רשות החדשנות 2025, חתימה על לקוח ממשלתי.'},
+    {id:'events', label:'אירועים / כנסים רלוונטיים', type:'text', full:true, demo:'Space Tech Expo Europe, כנס החלל הישראלי'},
+    {id:'lastUpdate', label:'תאריך עדכון אחרון', type:'date', demo:'2026-06-01'},
+  ]},
+  { title:'רגולציה, קבצים ומידע נוסף', icon:'📂', desc:'היבטי רגולציה, מסמכים, והסכמות.', fields:[
+    {sub:'רגולציה וביטחון'},
+    {id:'regLimits', label:'מגבלות רגולטוריות ידועות', type:'textarea', full:true, demo:'כפוף לרגולציית ITAR חלקית ולבקרת יצוא ביטחוני.'},
+    {id:'classifiedEnv', label:'אפשרות עבודה בסביבה מסווגת', type:'select', options:['כן','לא','חלקי'], demo:'חלקי'},
+    {id:'infoSensitivity', label:'רמת רגישות המידע', type:'select', options:['ציבורי','פנימי','חסוי','מסווג'], demo:'פנימי'},
+    {id:'shareConsent', label:'אישור לשיתוף מידע', type:'checks', full:true,
+      options:['שיתוף עם שותפים','הופעה פומבית במאגר','שיתוף עם גופים ממשלתיים'], demo:['שיתוף עם שותפים','שיתוף עם גופים ממשלתיים']},
+    {id:'appearInDb', label:'האם החברה מעוניינת להופיע במאגר?', type:'select', required:true, options:['כן','לא'], demo:'כן'},
+    {sub:'קבצים ומקורות'},
+    {id:'deck', label:'מצגת חברה / Pitch Deck', type:'file', accept:'.pdf,.ppt,.pptx'},
+    {id:'onePager', label:'One-pager', type:'file', accept:'.pdf,.doc,.docx'},
+    {id:'files', label:'קבצים רלוונטיים נוספים', type:'file', accept:'*', multiple:true, full:true},
+    {id:'infoSource', label:'מקור המידע', type:'text', demo:'טופס עצמי (החברה)'},
+    {id:'infoReliability', label:'רמת אמינות המידע', type:'select', options:['גבוהה','בינונית','נמוכה'], demo:'גבוהה'},
+    {sub:'מידע נוסף'},
+    {id:'additionalNotes', label:'הערות נוספות', type:'textarea', full:true, demo:'מעוניינים בחיבור למסלול השקעות בחלל של רשות החדשנות.'},
+    {internal:true},
+  ]},
+];
+const INTERNAL_FIELDS=[
+  {id:'crmStatus', label:'סטטוס קשר נוכחי', type:'select', options:['—','ליד חדש','בקשר','בפגישות','מחובר','לא רלוונטי']},
+  {id:'internalOwner', label:'בעלים פנימי בארגון', type:'text'},
+  {id:'nextAction', label:'פעולה הבאה מומלצת', type:'text'},
+  {id:'followUp', label:'תאריך Follow-up', type:'date'},
+  {id:'internalNotes', label:'הערות פנימיות', type:'textarea', full:true},
+];
+
+/* ============ State ============ */
+let current=0;
+const state={};
+const fileData={};
+let REG_CARD_TEMPLATE='';
+
+/* ============ Field rendering ============ */
+function fieldHTML(f){
+  if(f.sub) return `<div class="subsec" style="grid-column:1/-1">${f.sub}</div>`;
+  if(f.internal){
+    const inner=INTERNAL_FIELDS.map(x=>`<div class="field ${x.full?'full':''}">${labelHTML(x)}${controlHTML(x)}</div>`).join('');
+    return `<details class="collapse-internal" style="grid-column:1/-1"><summary>ניהול פנימי (אופציונלי — לשימוש צוות האקוסיסטם)</summary>
+      <div class="field-grid" style="margin-top:14px">${inner}</div></details>`;
+  }
+  return `<div class="field ${f.full?'full':''}" data-field="${f.id}">${labelHTML(f)}${controlHTML(f)}</div>`;
+}
+function labelHTML(f){ return `<label for="f_${f.id}">${f.label}${f.required?'<span class="req">*</span>':''}</label>`; }
+function controlHTML(f){
+  const id='f_'+f.id;
+  switch(f.type){
+    case 'textarea': return `<textarea id="${id}" name="${f.id}" placeholder="${f.ph||''}"></textarea>`;
+    case 'select': return `<select id="${id}" name="${f.id}"><option value="">בחר/י…</option>${f.options.map(o=>`<option>${o}</option>`).join('')}</select>`;
+    case 'chips': return `<div class="chips" id="chips_${f.id}" onclick="document.getElementById('${id}').focus()"><input id="${id}" placeholder="הקלד/י והקש/י Enter…" onkeydown="chipKey(event,'${f.id}')"></div>`;
+    case 'checks': return `<div class="checks" id="checks_${f.id}">${f.options.map(o=>`<div class="check" onclick="toggleCheck('${f.id}','${o.replace(/'/g,"\\'")}',this)"><span class="box">✓</span>${o}</div>`).join('')}</div>`;
+    case 'file': return `<label class="filebox" for="${id}"><div class="fi">📎</div><div class="ft">${f.multiple?'בחר/י קבצים':'בחר/י קובץ'}</div>
+        <input type="file" id="${id}" name="${f.id}" accept="${f.accept||'*'}" ${f.multiple?'multiple':''} onchange="onFile('${f.id}',this,${f.accept&&f.accept.includes('image')})">
+        <div class="fname" id="fname_${f.id}"></div></label>`;
+    default:
+      const extra=f.type==='number'?`min="${f.min||''}" max="${f.max||''}"`:'';
+      return `<input type="${f.type}" id="${id}" name="${f.id}" placeholder="${f.ph||''}" ${extra}>`;
+  }
+}
+function buildForm(){
+  const form=document.getElementById('regForm');
+  const topNav=`<div class="form-nav form-nav-top">
+      <button type="button" class="btn btn-ghost btn-sm" id="prevBtnTop" onclick="prevStep()" style="visibility:hidden">→ הקודם</button>
+      <button type="button" class="btn btn-primary btn-sm" id="nextBtnTop" onclick="nextStep()">הבא ←</button>
+    </div>`;
+  form.innerHTML=topNav+SCHEMA.map((step,i)=>`
+    <div class="step-panel ${i===0?'active':''}" data-step="${i}">
+      <div class="step-title"><span class="ic">${step.icon}</span>${step.title}</div>
+      <p class="step-desc">${step.desc}</p>
+      <div class="field-grid">${step.fields.map(fieldHTML).join('')}</div>
+    </div>`).join('')+`
+    <div class="form-nav">
+      <button type="button" class="btn btn-ghost" id="prevBtn" onclick="prevStep()" style="visibility:hidden">→ הקודם</button>
+      <button type="button" class="btn btn-primary" id="nextBtn" onclick="nextStep()">הבא ←</button>
+    </div>`;
+  document.getElementById('steps').innerHTML=SCHEMA.map((s,i)=>`<div class="step-pill ${i===0?'active':''}" data-pill="${i}" onclick="gotoStep(${i})"><span class="num">${i+1}</span>${s.title}</div>`).join('');
+  updateProgress();
+}
+
+/* ============ Navigation ============ */
+function showStep(n){
+  current=n;
+  document.querySelectorAll('.step-panel').forEach(p=>p.classList.toggle('active',+p.dataset.step===n));
+  document.querySelectorAll('.step-pill').forEach(p=>{const i=+p.dataset.pill;p.classList.toggle('active',i===n);p.classList.toggle('done',i<n);});
+  const last=n===SCHEMA.length-1;
+  document.getElementById('prevBtn').style.visibility=n===0?'hidden':'visible';
+  document.getElementById('prevBtnTop').style.visibility=n===0?'hidden':'visible';
+  document.getElementById('nextBtn').textContent=last?'שליחת הרשמה ✓':'הבא ←';
+  document.getElementById('nextBtnTop').textContent=last?'שליחה ✓':'הבא ←';
+  document.getElementById('stepCounter').textContent=`שלב ${n+1} מתוך ${SCHEMA.length}`;
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function updateProgress(){ document.getElementById('progressBar').style.width=((current)/(SCHEMA.length-1))*100+'%'; }
+function validateStep(n){
+  let ok=true;
+  SCHEMA[n].fields.forEach(f=>{
+    if(!f.id||!f.required) return;
+    const el=document.getElementById('f_'+f.id), wrap=document.querySelector(`[data-field="${f.id}"]`);
+    if(el&&!el.value.trim()){ok=false;wrap&&wrap.classList.add('invalid');} else wrap&&wrap.classList.remove('invalid');
+  });
+  if(!ok) toast('יש למלא את שדות החובה המסומנים','warn');
+  return ok;
+}
+function nextStep(){ if(!validateStep(current)) return; if(current===SCHEMA.length-1){submitForm();return;} showStep(current+1); }
+function prevStep(){ if(current>0) showStep(current-1); }
+function gotoStep(n){ if(n>current&&!validateStep(current)) return; showStep(n); }
+
+/* ============ Chips / Checks / Files ============ */
+function chipKey(e,id){
+  if(e.key==='Enter'||e.key===','){e.preventDefault();const v=e.target.value.trim();if(!v)return;state[id]=state[id]||[];if(!state[id].includes(v))state[id].push(v);e.target.value='';renderChips(id);}
+  else if(e.key==='Backspace'&&!e.target.value&&state[id]&&state[id].length){state[id].pop();renderChips(id);}
+}
+function renderChips(id){
+  const cont=document.getElementById('chips_'+id), input=document.getElementById('f_'+id);
+  cont.querySelectorAll('.chip').forEach(c=>c.remove());
+  (state[id]||[]).forEach((v,i)=>{const c=document.createElement('span');c.className='chip';c.innerHTML=`${v} <b onclick="removeChip('${id}',${i})">×</b>`;cont.insertBefore(c,input);});
+}
+function removeChip(id,i){ state[id].splice(i,1); renderChips(id); }
+function toggleCheck(id,val,el){ state[id]=state[id]||[];const i=state[id].indexOf(val);if(i>-1){state[id].splice(i,1);el.classList.remove('on');}else{state[id].push(val);el.classList.add('on');} }
+function onFile(id,input,isImg){
+  const out=document.getElementById('fname_'+id);
+  if(!input.files.length){out.textContent='';return;}
+  out.textContent='✓ '+[...input.files].map(f=>f.name).join(', ');
+  if(isImg&&input.files[0]){const r=new FileReader();r.onload=e=>{fileData[id]=e.target.result;let img=document.getElementById('prev_'+id);if(!img){img=document.createElement('img');img.id='prev_'+id;img.className='logo-preview';out.after(img);}img.src=e.target.result;};r.readAsDataURL(input.files[0]);}
+}
+
+/* ============ LinkedIn auto-fill ============ */
+function linkedInFill(silent){
+  [...SCHEMA.flatMap(s=>s.fields), ...INTERNAL_FIELDS].forEach(f=>{
+    if(!f.id||f.demo===undefined) return;
+    if(f.type==='chips'){state[f.id]=[...f.demo];renderChips(f.id);}
+    else if(f.type==='checks'){state[f.id]=[...f.demo];const box=document.getElementById('checks_'+f.id);if(box)box.querySelectorAll('.check').forEach(c=>{if(f.demo.includes(c.textContent.trim()))c.classList.add('on');});}
+    else if(f.type==='file'){}
+    else {const el=document.getElementById('f_'+f.id);if(el)el.value=f.demo;}
+  });
+  fileData['logo']=makeInitialLogo('NS');
+  const out=document.getElementById('fname_logo');
+  if(out){out.textContent='✓ לוגו לדוגמה';let img=document.getElementById('prev_logo');if(!img){img=document.createElement('img');img.id='prev_logo';img.className='logo-preview';out.after(img);}img.src=fileData['logo'];}
+  document.querySelectorAll('.field.invalid').forEach(e=>e.classList.remove('invalid'));
+  if(!silent) toast('✓ הטופס מולא אוטומטית מ-LinkedIn (הדגמה)');
+}
+function makeInitialLogo(txt){
+  const c=document.createElement('canvas');c.width=c.height=120;const x=c.getContext('2d');
+  const g=x.createLinearGradient(0,0,120,120);g.addColorStop(0,'#3aa0ff');g.addColorStop(1,'#8b8bff');
+  x.fillStyle=g;x.fillRect(0,0,120,120);x.fillStyle='#fff';x.font='700 54px Heebo, sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(txt,60,64);
+  return c.toDataURL();
+}
+
+/* ============ LinkedIn modal → quick register → growth ============ */
+function openLiModal(){ document.getElementById('liModal').classList.remove('hidden'); setTimeout(()=>document.getElementById('liInput').focus(),60); }
+function closeLiModal(){ document.getElementById('liModal').classList.add('hidden'); }
+function linkedInGo(){
+  const url=(document.getElementById('liInput').value||'').trim();
+  linkedInFill(true);
+  if(url){const lf=document.getElementById('f_linkedin');if(lf)lf.value=url;}
+  const d=collectData();
+  if(url) d.linkedin=url;
+  doRegister(d);
+  closeLiModal();
+  document.getElementById('liInput').value='';
+  toast('✓ נרשמתם דרך LinkedIn — אלו כלי הצמיחה שלכם');
+  showView('growth');
+}
+
+/* ============ Submit ============ */
+function collectData(){
+  const data={id:'c_'+(Date.now()), createdAt:new Date().toISOString()};
+  [...SCHEMA.flatMap(s=>s.fields), ...INTERNAL_FIELDS].forEach(f=>{
+    if(!f.id) return;
+    if(f.type==='chips'||f.type==='checks') data[f.id]=state[f.id]||[];
+    else if(f.type==='file') data[f.id]= f.id==='logo' ? (fileData['logo']||'') : (document.getElementById('fname_'+f.id)?.textContent||'');
+    else data[f.id]=document.getElementById('f_'+f.id)?.value||'';
+  });
+  return data;
+}
+function doRegister(data){ const db=getDB(); db.push(data); saveDB(db); unlockGrowth(); renderDirectory(); updateStat(); }
+function submitForm(){ if(!validateStep(current)) return; const d=collectData(); doRegister(d); renderSuccess(d); }
+
+/* ============ Storage ============ */
+function getDB(){ try{return JSON.parse(localStorage.getItem('ecos_companies')||'[]')}catch(e){return []} }
+function saveDB(d){ localStorage.setItem('ecos_companies',JSON.stringify(d)); }
+
+/* ============ Success ============ */
+function renderSuccess(data){
+  document.querySelector('.reg-card').innerHTML=`
+    <div class="success-banner">
+      <div class="check-ring">✓</div>
+      <h2>${data.companyName||'החברה'} נרשמה בהצלחה!</h2>
+      <p>תודה שהצטרפתם ל-ecos. כעת נפתחו עבורכם <b style="color:var(--accent-2)">כלי הצמיחה</b> — מענקים ומסלולים ממשלתיים שיכולים להאיץ אתכם.</p>
+      <div class="sb-cta">
+        <button class="btn btn-primary" onclick="openGrowth()">צפייה בכלי הצמיחה ←</button>
+        <button class="btn btn-ghost" onclick="showDirectory()">למאגר החברות</button>
+        <button class="btn btn-ghost" onclick="resetForm()">רישום חברה נוספת</button>
+      </div>
+    </div>`;
+}
+function resetForm(){
+  Object.keys(state).forEach(k=>delete state[k]);
+  Object.keys(fileData).forEach(k=>delete fileData[k]);
+  current=0;
+  document.querySelector('.reg-card').innerHTML=REG_CARD_TEMPLATE;
+  buildForm(); showStep(0);
+}
+
+/* ============ Views ============ */
+function showView(name){
+  document.getElementById('navLinks').classList.remove('open');
+  ['home','register','growth'].forEach(v=>document.getElementById('view-'+v).classList.toggle('hidden',v!==name));
+  window.scrollTo({top:0,behavior:'instant' in window?'instant':'auto'});
+}
+function showDirectory(){ showView('home'); setTimeout(()=>document.getElementById('directory').scrollIntoView({behavior:'smooth'}),60); }
+function unlockGrowth(){ localStorage.setItem('ecos_registered','1'); document.getElementById('navGrowth').classList.remove('locked'); }
+function openGrowth(){
+  showView('growth');
+}
+
+/* ============ Directory ============ */
+function renderDirectory(){
+  const db=getDB(), el=document.getElementById('dirContent');
+  if(!db.length){ el.innerHTML=`<div class="empty">עדיין אין חברות במאגר. היו הראשונים — <a style="color:var(--accent);cursor:pointer" onclick="showView('register')">הירשמו עכשיו</a>.</div>`; return; }
+  el.innerHTML='<div class="dir-grid">'+db.slice().reverse().map(c=>{
+    const initials=(c.companyName||'?').trim().slice(0,2);
+    const logo=c.logo?`<img src="${c.logo}" alt="">`:initials;
+    const tags=[c.sector,c.stage,...(c.fitAreas||[])].filter(Boolean).slice(0,4).map(t=>`<span class="dir-tag">${t}</span>`).join('');
+    const links=[c.website&&`<a href="${c.website}" target="_blank" rel="noopener">אתר ↗</a>`,c.linkedin&&`<a href="${c.linkedin}" target="_blank" rel="noopener">LinkedIn ↗</a>`].filter(Boolean).join('');
+    return `<div class="dir-card"><div class="dir-head"><div class="dir-logo">${logo}</div>
+      <div><div class="dir-name">${c.companyName||'—'}</div><div class="dir-meta">${[c.location,c.founded].filter(Boolean).join(' · ')}</div></div></div>
+      <div class="dir-tags">${tags}</div><div class="dir-summary">${c.summary||c.product||''}</div><div class="dir-links">${links}</div></div>`;
+  }).join('')+'</div>';
+}
+function updateStat(){ document.getElementById('statCount').textContent=getDB().length; }
+
+/* ============ Helpers ============ */
+let toastT;
+function toast(msg,type){ const t=document.getElementById('toast');t.textContent=msg;t.className='show'+(type?' '+type:'');clearTimeout(toastT);toastT=setTimeout(()=>t.className='',3400); }
+
+/* ============ Starfield ============ */
+function initStars(){
+  const c=document.getElementById('stars'),x=c.getContext('2d');let w,h,stars;
+  function resize(){w=c.width=innerWidth;h=c.height=innerHeight;stars=Array.from({length:Math.min(140,Math.floor(w*h/12000))},()=>({x:Math.random()*w,y:Math.random()*h,r:Math.random()*1.4+.2,a:Math.random(),s:Math.random()*.02+.003}));}
+  function draw(){x.clearRect(0,0,w,h);stars.forEach(st=>{st.a+=st.s;const al=.3+Math.abs(Math.sin(st.a))*.7;x.beginPath();x.arc(st.x,st.y,st.r,0,7);x.fillStyle=`rgba(180,210,255,${al})`;x.fill();});requestAnimationFrame(draw);}
+  resize();draw();addEventListener('resize',resize);
+}
+
+/* ============ Init ============ */
+renderPartners();
+renderGrowth();
+REG_CARD_TEMPLATE=document.querySelector('.reg-card').innerHTML;
+buildForm();
+renderDirectory();
+updateStat();
+initStars();
+showView('home');
+if(localStorage.getItem('ecos_registered')==='1') document.getElementById('navGrowth').classList.remove('locked');
+document.getElementById('liModal').addEventListener('click',e=>{ if(e.target.id==='liModal') closeLiModal(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!document.getElementById('liModal').classList.contains('hidden')) linkedInGo(); if(e.key==='Escape') closeLiModal(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 60" fill="none">
+  <!-- Globe icon -->
+  <circle cx="28" cy="30" r="18" stroke="#1a2e5a" stroke-width="1.8" fill="none"/>
+  <ellipse cx="28" cy="30" rx="9" ry="18" stroke="#1a2e5a" stroke-width="1.4" fill="none"/>
+  <line x1="10" y1="30" x2="46" y2="30" stroke="#1a2e5a" stroke-width="1.4"/>
+  <path d="M13 20 Q28 24 43 20" stroke="#1a2e5a" stroke-width="1.2" fill="none"/>
+  <path d="M13 40 Q28 36 43 40" stroke="#1a2e5a" stroke-width="1.2" fill="none"/>
+  <!-- Text -->
+  <text x="54" y="24" font-family="Arial,Helvetica,sans-serif" font-size="10.5" font-weight="700" fill="#1a2e5a" letter-spacing="0.3">ISRAEL</text>
+  <text x="54" y="37" font-family="Arial,Helvetica,sans-serif" font-size="10.5" font-weight="700" fill="#1a2e5a" letter-spacing="0.3">EXPORT</text>
+  <text x="54" y="50" font-family="Arial,Helvetica,sans-serif" font-size="10.5" font-weight="700" fill="#1a2e5a" letter-spacing="0.3">INSTITUTE</text>
+</svg>
