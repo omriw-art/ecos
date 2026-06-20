@@ -345,9 +345,9 @@ footer{border-top:1px solid var(--brd);margin-top:30px;padding:46px 0 30px;backg
         </button>
       </div>
       <div class="hero-stats">
-        <div class="stat"><div class="n" id="statCount">0</div><div class="l">חברות רשומות</div></div>
+        <div class="stat"><div class="n" id="statCount">0</div><div class="l">חברות ממופות</div></div>
         <div class="stat"><div class="n">12</div><div class="l">קטגוריות מידע</div></div>
-        <div class="stat"><div class="n">24</div><div class="l">כלי צמיחה ממשלתיים</div></div>
+        <div class="stat"><div class="n" id="statGrowth">0</div><div class="l">כלי הצמיחה המוצעים</div></div>
       </div>
     </div>
   </section>
@@ -909,7 +909,11 @@ function renderDirectory(){
       <div class="dir-tags">${tags}</div><div class="dir-summary">${c.blurb||''}</div></div>`;
   }).join('')+'</div>';
 }
-function updateStat(){ document.getElementById('statCount').textContent=(window.COMPANIES||[]).length; }
+function updateStat(){
+  document.getElementById('statCount').textContent=(window.COMPANIES||[]).length;
+  const gtTotal=(typeof GROWTH!=='undefined')?GROWTH.reduce((a,o)=>a+o.groups.reduce((b,g)=>b+g.items.length,0),0):0;
+  document.getElementById('statGrowth').textContent=gtTotal;
+}
 
 /* ============ Helpers ============ */
 let toastT;
