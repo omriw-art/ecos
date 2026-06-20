@@ -447,7 +447,7 @@ footer{border-top:1px solid var(--brd);margin-top:30px;padding:46px 0 30px;backg
 
 <div id="toast"></div>
 
-<script src="data.js?v=3"></script>
+<script src="data.js?v=4"></script>
 <script>
 /* ============ Partner logos ============ */
 const PARTNERS=[
@@ -924,6 +924,7 @@ function initStars(){
 }
 
 /* ============ Init ============ */
+localStorage.removeItem('ecos_companies');
 renderPartners();
 renderGrowth();
 REG_CARD_TEMPLATE=document.querySelector('.reg-card').innerHTML;
