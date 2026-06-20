@@ -140,6 +140,21 @@ form#regForm{padding:24px 30px 30px}
 .step-panel{display:none;animation:fade .35s ease}
 .step-panel.active{display:block}
 @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes hero-in{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes shimmer-text{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.hero h1{animation:hero-in .7s cubic-bezier(.16,1,.3,1) both}
+.hero p.lead{animation:hero-in .7s .1s cubic-bezier(.16,1,.3,1) both}
+.hero-cta{animation:hero-in .7s .18s cubic-bezier(.16,1,.3,1) both}
+.hero-stats{animation:hero-in .7s .28s cubic-bezier(.16,1,.3,1) both}
+.eyebrow{animation:hero-in .6s cubic-bezier(.16,1,.3,1) both}
+.hero h1 .g{background-size:200% auto;animation:shimmer-text 4s linear infinite}
+.btn-primary:active{transform:scale(.97)}
+.btn-ghost:active{transform:scale(.97)}
+.btn-li:active{transform:scale(.97)}
+.stat .n{background:linear-gradient(90deg,#fff,#7fc4ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.reg-card{transition:box-shadow .2s ease}
+input:focus,select:focus,textarea:focus{transition:.18s}
 .step-title{font-size:18px;font-weight:700;margin:0 0 4px;display:flex;align-items:center;gap:10px}
 .step-title .ic{font-size:22px}
 .step-desc{color:var(--muted);font-size:14px;margin:0 0 22px}
@@ -833,6 +848,7 @@ function renderSuccess(data){
       <p>תודה שהצטרפתם ל-ecos. כעת נפתחו עבורכם <b style="color:var(--accent-2)">כלי הצמיחה</b> — מענקים ומסלולים ממשלתיים שיכולים להאיץ אתכם.</p>
       <div class="sb-cta">
         <button class="btn btn-primary" onclick="openGrowth()">צפייה בכלי הצמיחה ←</button>
+        <a class="btn btn-primary" href="ecos.html" style="background:linear-gradient(90deg,var(--accent-2),var(--violet));box-shadow:0 14px 30px -10px rgba(94,234,212,.5)">כניסה ל-Dashboard ↗</a>
         <button class="btn btn-ghost" onclick="showDirectory()">למאגר החברות</button>
         <button class="btn btn-ghost" onclick="resetForm()">רישום חברה נוספת</button>
       </div>

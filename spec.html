@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ecos — מסמך אפיון</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-0: oklch(0.10 0.012 270);
+    --bg-1: oklch(0.13 0.015 270);
+    --bg-2: oklch(0.16 0.018 270);
+    --bg-3: oklch(0.19 0.020 270);
+    --line-1: oklch(0.22 0.018 270);
+    --line-2: oklch(0.28 0.022 270);
+    --text-1: oklch(0.97 0.006 270);
+    --text-2: oklch(0.78 0.015 270);
+    --text-3: oklch(0.60 0.018 270);
+    --text-4: oklch(0.46 0.020 270);
+    --blue:   oklch(0.74 0.17 245);
+    --violet: oklch(0.72 0.19 295);
+    --green:  oklch(0.78 0.16 150);
+    --amber:  oklch(0.82 0.16 80);
+    --rose:   oklch(0.70 0.20 20);
+    --cyan:   oklch(0.82 0.13 200);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; background:
+      radial-gradient(1200px 600px at 80% -10%, oklch(0.30 0.10 290 / 0.18), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, oklch(0.32 0.10 240 / 0.16), transparent 60%),
+      var(--bg-0);
+    background-attachment: fixed;
+    color: var(--text-1);
+    font-family: "Heebo", "Inter Tight", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.005em;
+    line-height: 1.6;
+  }
+  .mono { font-family: "JetBrains Mono", ui-monospace, monospace; letter-spacing: 0; }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 80px 56px 120px; }
+  header { margin-bottom: 56px; padding-bottom: 32px; border-bottom: 1px solid var(--line-1); }
+  .eyebrow {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--text-3);
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 18px;
+  }
+  .eyebrow .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--blue); box-shadow: 0 0 10px var(--blue);
+  }
+  h1 {
+    font-size: 48px; font-weight: 600; letter-spacing: -0.025em;
+    margin: 0 0 14px; line-height: 1.05;
+  }
+  h1 .accent {
+    background: linear-gradient(120deg, var(--violet), var(--blue));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 24px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px; color: var(--text-4);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    margin-top: 20px;
+  }
+  .meta span b { color: var(--text-2); font-weight: 500; }
+
+  .lead {
+    font-size: 18px; color: var(--text-2); line-height: 1.65;
+    max-width: 62ch; text-wrap: pretty;
+    margin: 0;
+  }
+
+  section { margin-top: 64px; }
+  h2 {
+    font-size: 13px; font-weight: 500;
+    font-family: "JetBrains Mono", monospace;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--text-4);
+    margin: 0 0 8px;
+    display: flex; align-items: baseline; gap: 14px;
+  }
+  h2 .num {
+    color: var(--blue);
+    font-size: 11px;
+  }
+  h2 .line {
+    flex: 1; height: 1px; background: var(--line-1);
+  }
+  h3 {
+    font-size: 26px; font-weight: 600; letter-spacing: -0.02em;
+    margin: 0 0 24px; color: var(--text-1);
+    text-wrap: balance;
+  }
+  h3 .em {
+    color: var(--text-3); font-weight: 400;
+  }
+
+  ul.bullets {
+    list-style: none; padding: 0; margin: 0;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  ul.bullets > li {
+    display: flex; gap: 14px; align-items: flex-start;
+    font-size: 15.5px; color: var(--text-2);
+    line-height: 1.6;
+  }
+  ul.bullets > li::before {
+    content: ""; flex: none;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--blue);
+    margin-top: 10px;
+    box-shadow: 0 0 6px var(--blue);
+  }
+  ul.bullets > li b {
+    color: var(--text-1); font-weight: 600;
+  }
+  ul.bullets ul {
+    list-style: none; padding: 8px 0 0; margin: 0;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  ul.bullets ul li {
+    font-size: 14px; color: var(--text-3);
+    padding-inline-start: 14px;
+    position: relative;
+  }
+  ul.bullets ul li::before {
+    content: "—"; position: absolute;
+    inset-inline-start: 0; color: var(--text-4);
+  }
+
+  .grid-cards {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    margin-top: 20px;
+  }
+  .card {
+    padding: 22px 22px 20px;
+    background: var(--bg-1);
+    border: 1px solid var(--line-1);
+    border-radius: 14px;
+  }
+  .card .tag {
+    display: inline-block;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--blue);
+    padding: 3px 8px;
+    background: oklch(0.22 0.10 250 / 0.4);
+    border: 1px solid oklch(0.35 0.12 250);
+    border-radius: 999px;
+    margin-bottom: 12px;
+  }
+  .card.violet .tag { color: var(--violet); background: oklch(0.22 0.10 295 / 0.4); border-color: oklch(0.35 0.12 295); }
+  .card.green .tag  { color: var(--green);  background: oklch(0.22 0.10 150 / 0.4); border-color: oklch(0.35 0.12 150); }
+  .card.amber .tag  { color: var(--amber);  background: oklch(0.22 0.10 80 / 0.4);  border-color: oklch(0.35 0.12 80); }
+  .card h4 {
+    font-size: 17px; font-weight: 600; margin: 0 0 8px;
+    color: var(--text-1); letter-spacing: -0.01em;
+  }
+  .card p {
+    font-size: 13.5px; color: var(--text-3); line-height: 1.6;
+    margin: 0;
+  }
+
+  .stack {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px;
+  }
+  .chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 7px 13px;
+    background: var(--bg-2);
+    border: 1px solid var(--line-2);
+    border-radius: 999px;
+    font-size: 12.5px;
+    color: var(--text-2);
+  }
+  .chip .swatch {
+    width: 7px; height: 7px; border-radius: 50%;
+  }
+
+  footer {
+    margin-top: 80px; padding-top: 32px;
+    border-top: 1px solid var(--line-1);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--text-4);
+    display: flex; justify-content: space-between;
+  }
+
+  @media print {
+    html, body { background: white; color: black; }
+    h1, h2, h3, h4, .card h4, ul.bullets > li b { color: black; }
+    .lead, ul.bullets > li, .card p, .chip { color: #333; }
+    .card { background: #f8f8f8; border-color: #ddd; }
+    ul.bullets > li::before { background: #555; box-shadow: none; }
+    h2 .line { background: #ccc; }
+    .wrap { padding: 30px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow"><span class="dot"></span> מסמך אפיון מוצר · גרסה 1.0</div>
+    <h1>ecos — <span class="accent">מערכת הפעלה לאקוסיסטם החלל</span></h1>
+    <p class="lead">
+      פלטפורמת SaaS לניהול, מיפוי וחיבור של אקוסיסטם חברות החלל הישראלי.
+      מאחדת CRM, רשת מקצועית ומנוע התאמות מבוסס AI לכלי אחד שמנהל קשרים בין חברות, סוכנויות, משקיעים וטאלנט.
+    </p>
+    <div class="meta">
+      <span><b>קהל יעד:</b> Innovation / BD / Strategy בארגונים גדולים</span>
+      <span><b>פלטפורמה:</b> Web · Desktop-first · RTL</span>
+      <span><b>סטטוס:</b> אפיון</span>
+    </div>
+  </header>
+
+  <!-- ───────────────────── 1. סקירה ───────────────────── -->
+  <section>
+    <h2><span class="num">01</span> <span>סקירה כללית</span><span class="line"></span></h2>
+    <h3>למה ecos קיים<span class="em"> — הבעיה והפתרון</span></h3>
+    <ul class="bullets">
+      <li><b>הבעיה:</b> אקוסיסטם החלל הישראלי מבוזר בין IAI, רפאל, סטארטאפים, סוכנויות, משקיעים ואקדמיה — אין מקום אחד שמראה מי קיים, מה הוא עושה ולמי הוא מתאים.</li>
+      <li><b>הפתרון:</b> מאגר חי של חברות + מנוע התאמות AI + רשת חיבורים מאומתים, שמחבר בין אנשים בארגון לבין החברה/הטכנולוגיה/השותף הנכון.</li>
+      <li><b>ההבטחה:</b> חברה נרשמת פעם אחת — והמערכת מציעה לה לקוחות, שותפים ומשקיעים אוטומטית. ארגון רוכש access — והעובדים שלו מקבלים feed של הזדמנויות רלוונטיות.</li>
+      <li><b>מודל עסקי:</b> שתי כניסות — Enterprise (ארגון משלם שגיש לכל הצוות) וחינמי לחברות מצטרפות (long-tail של סטארטאפים).</li>
+    </ul>
+  </section>
+
+  <!-- ───────────────────── 2. שני המוצרים ───────────────────── -->
+  <section>
+    <h2><span class="num">02</span> <span>שני המוצרים</span><span class="line"></span></h2>
+    <h3>Mission Control למנהל אקוסיסטם <span class="em">+</span> Join Flow לחברות מצטרפות</h3>
+    <div class="grid-cards">
+      <div class="card">
+        <span class="tag">ecos.html · Enterprise</span>
+        <h4>Mission Control</h4>
+        <p>סביבת עבודה צפופה ועשירה לרון אבני (VP Innovation). דשבורד, חברות, מפת רשת, התאמות לעובדים, ארגון, AI Copilot. אסתטיקת mission control כהה — צפיפות מידע גבוהה, מספרים, גרפים, סטטוסים live.</p>
+      </div>
+      <div class="card violet">
+        <span class="tag">join.html · Public</span>
+        <h4>חלונית הצטרפות</h4>
+        <p>זרימה נקייה ומינימליסטית לחברות שנרשמות לראשונה — צעד-אחד-בכל-מסך, ייבוא חכם מ-LinkedIn, רקע חללי כהה. ההיפך הגמור מ-Mission Control: פשוטה, אוורירית, ממוקדת.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────────────── 3. Mission Control ───────────────────── -->
+  <section>
+    <h2><span class="num">03</span> <span>Mission Control · המסכים</span><span class="line"></span></h2>
+    <h3>מבנה הניווט<span class="em"> — סייד-בר ימני, 3 קבוצות</span></h3>
+    <ul class="bullets">
+      <li>
+        <b>מבט-על</b>
+        <ul>
+          <li>דשבורד · KPI, פילוח, Heatmap, Funnel, תובנות AI</li>
+          <li>חברות · גריד/טבלה, סינון לפי תחום ושלב, פרופיל עומק</li>
+          <li>מפת אקוסיסטם · רשת כוחות, קלאסטרים לפי תחום</li>
+        </ul>
+      </li>
+      <li>
+        <b>Intelligence</b>
+        <ul>
+          <li>התאמות לעובדים · מנוע ME-Score, השוואה, intro</li>
+          <li>AI Copilot · Drawer צד, ⌘K לפתיחה</li>
+          <li>ארגון · פרופילי עובדים, תחומי עניין, matches</li>
+        </ul>
+      </li>
+      <li>
+        <b>פעולות</b>
+        <ul>
+          <li>Onboarding לחברה · 6 שלבים, ייבוא מ-LinkedIn, AI side panel</li>
+          <li>הגדרות · אינטגרציות, משקלי scoring</li>
+        </ul>
+      </li>
+    </ul>
+
+    <div class="grid-cards" style="margin-top: 36px;">
+      <div class="card">
+        <span class="tag">דשבורד</span>
+        <h4>Mission Control</h4>
+        <p>4 KPIs עליונים (חברות, חיבורים, אסטרטגיים, התאמות), פילוח לפי תחום (Donut), מסע אקוסיסטם (Funnel), פעילות אחרונה, Heatmap תחום×מדינה, Top-matched, וקופסת תובנות AI שבועיות.</p>
+      </div>
+      <div class="card violet">
+        <span class="tag">חברות</span>
+        <h4>רשימה + פרופיל</h4>
+        <p>מעבר Grid/Table, שבבי סינון (תחום, שלב), חיפוש חופשי. פרופיל חברה: hero, פאנל compatibility, טאבים — סקירה, טכנולוגיות, התאמה לארגון, חיבורים, אנשי קשר.</p>
+      </div>
+      <div class="card green">
+        <span class="tag">מפה</span>
+        <h4>Network Graph</h4>
+        <p>SVG אינטראקטיבי. צמתים מצובעים לפי תחום ראשי, אסטרטגיים פולסים. hover מדגיש שכנים, click פותח פרופיל. סינון לפי תחום, toggle לתוויות.</p>
+      </div>
+      <div class="card amber">
+        <span class="tag">התאמות</span>
+        <h4>ME-Score Engine</h4>
+        <p>שתי עמודות: בחירת עובד מצד אחד, רשימת חברות ממוינות לפי ME-Score מצד שני. שורת השוואה ל-3 העליונות, כפתור intro לכל שורה.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Copilot</span>
+        <h4>AI Drawer</h4>
+        <p>Drawer מימין, פתיחה ב-⌘K. שיחה עם ה-Copilot על המאגר: "מי מתאים ל-X", "סכם את אקוסיסטם SAR". הצעות מובנות, היסטוריה.</p>
+      </div>
+      <div class="card violet">
+        <span class="tag">Onboarding פנימי</span>
+        <h4>6 שלבים</h4>
+        <p>ייבוא → פרטים → טכנולוגיות → הצעה+צרכים → Readiness → סקירה. AI side panel מסביר כל שלב + Live Preview של כרטיס החברה.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────────────── 4. Join Flow ───────────────────── -->
+  <section>
+    <h2><span class="num">04</span> <span>Join Flow · ההצטרפות החיצונית</span><span class="line"></span></h2>
+    <h3>זרימה לחברות שנרשמות<span class="em"> — מסך אחד, שאלה אחת</span></h3>
+    <ul class="bullets">
+      <li><b>פילוסופיה:</b> פשוט, נקי, חללי. שאלה אחת בכל מסך. ללא ז'רגון. שמירה אוטומטית בין מסכים.</li>
+      <li><b>נקודת כניסה (Welcome):</b> כותרת + שתי אופציות גדולות — "הירשמו עם LinkedIn" (מהיר, 1 דקה) או "מלאו ידנית" (3–4 דקות). שורת אמון עם לוגואים של חברים קיימים.</li>
+      <li>
+        <b>שלבי הטופס (7 שאלות):</b>
+        <ul>
+          <li>שם החברה — input גדול, focus אוטומטי</li>
+          <li>תחום פעילות — choice grid עם איקונים, 1–3 בחירות</li>
+          <li>במשפט אחד — מה אתם עושים — textarea</li>
+          <li>מה אתם מציעים — TagInput עם הצעות</li>
+          <li>מה אתם מחפשים — TagInput עם הצעות</li>
+          <li>שלב החברה + מדינה + מטה</li>
+          <li>איש קשר — שם, תפקיד, אימייל</li>
+        </ul>
+      </li>
+      <li><b>מסך ייבוא AI:</b> Spinner + log חי של 7 צעדים (מתחבר ל-LinkedIn, סורק אתר, מסווג תחום…). ממלא 80% מהשדות אוטומטית.</li>
+      <li><b>סקירה אחרונה:</b> כל הפרטים מקובצים לסקציות, כל אחת עם "ערוך" שמחזיר לשלב המתאים.</li>
+      <li><b>מסך הצלחה:</b> וי ירוק, "ברוכים הבאים לאקוסיסטם", 3 צעדים הבאים (ביקורת AI · אישור צוות · התאמות חיות), CTA לדשבורד.</li>
+    </ul>
+  </section>
+
+  <!-- ───────────────────── 5. AI ───────────────────── -->
+  <section>
+    <h2><span class="num">05</span> <span>שכבת ה-AI</span><span class="line"></span></h2>
+    <h3>איפה ה-AI נוכח<span class="em"> — באמצע, לא בצד</span></h3>
+    <ul class="bullets">
+      <li><b>Copilot גלובלי:</b> Drawer שנפתח מכל מקום (⌘K). עונה על שאלות פתוחות על המאגר, מציע פעולות, מנסח intros.</li>
+      <li><b>תובנות AI שבועיות בדשבורד:</b> 3 קלפים שזיהו תבניות — over-supply, הזדמנויות חיבור, חברות under-represented.</li>
+      <li><b>ME-Score:</b> ניקוד אוטומטי per-עובד לכל חברה — מבוסס חפיפת תחום, פוקוס, hand-picked overrides.</li>
+      <li><b>סיכום אוטומטי בכל פרופיל חברה:</b> נוצר מעדכוני LinkedIn + אתר + דוחות, מתעדכן כל 6 שעות.</li>
+      <li><b>Tags אוטומטיים:</b> תיוג חברות מבוסס פטנטים ב-Espacenet + 30 פוסטי LinkedIn אחרונים.</li>
+      <li><b>ייבוא חכם:</b> ב-onboarding וב-join — שואב מ-LinkedIn/אתר וממלא ~80% מהשדות.</li>
+      <li><b>הצעות פעולה בפרופיל:</b> "שלח intro ל-X", "פתח workspace עם Y" — מבוססות הקשר.</li>
+    </ul>
+  </section>
+
+  <!-- ───────────────────── 6. שפה ויזואלית ───────────────────── -->
+  <section>
+    <h2><span class="num">06</span> <span>שפה ויזואלית</span><span class="line"></span></h2>
+    <h3>Mission Control aesthetic<span class="em"> — חלל עמוק, סגול-כחול</span></h3>
+    <ul class="bullets">
+      <li><b>Theme:</b> dark mode בלבד. רקע oklch כהה עם נטייה לסגול. RTL native.</li>
+      <li><b>טיפוגרפיה:</b> Heebo (עברית) · Inter Tight (English display) · JetBrains Mono (מספרים, IDs, eyebrows) · Instrument Serif (לעיתים נדירות).</li>
+      <li>
+        <b>פלטה:</b>
+        <div class="stack">
+          <span class="chip"><span class="swatch" style="background: var(--blue)"></span> Blue 245</span>
+          <span class="chip"><span class="swatch" style="background: var(--violet)"></span> Violet 295</span>
+          <span class="chip"><span class="swatch" style="background: var(--cyan)"></span> Cyan 200</span>
+          <span class="chip"><span class="swatch" style="background: var(--green)"></span> Green 150</span>
+          <span class="chip"><span class="swatch" style="background: var(--amber)"></span> Amber 80</span>
+          <span class="chip"><span class="swatch" style="background: var(--rose)"></span> Rose 20</span>
+        </div>
+      </li>
+      <li><b>קומפוננטות חוזרות:</b> ScoreRing · Sparkline · CoLogo · SectorPill · Donut · FitBar · Funnel · MiniBar.</li>
+      <li><b>אפקטים:</b> Scan-line בכרטיסי hero · pulse על אסטרטגיים · backdrop-blur בכרטיסים · drop-shadow צבעוני סביב צבעי מפתח.</li>
+      <li><b>צפיפות:</b> Mission Control צפוף (12–13px בסיס). Join Flow אוורירי (16–40px). Tweaks מאפשרים compact/regular/spacious.</li>
+    </ul>
+  </section>
+
+  <!-- ───────────────────── 7. נתונים ───────────────────── -->
+  <section>
+    <h2><span class="num">07</span> <span>מודל הנתונים</span><span class="line"></span></h2>
+    <h3>הישויות העיקריות</h3>
+    <ul class="bullets">
+      <li><b>Company:</b> id, name, country, hq, sectors[], stage, size, founded, fundingM, blurb, tech[], offers[], needs[], customers[], partners[], readiness, strategic, score, overlap[].</li>
+      <li><b>Person (עובד בארגון):</b> id, name, role, dept, avatar, color, interests[], focus[], matches[].</li>
+      <li><b>Connection:</b> from, to, type (intro/partner/customer/investor).</li>
+      <li><b>Sector:</b> launch · eo · sar · comms · ai · robotics · isam · debris · lunar · defense · ground · propulsion.</li>
+      <li><b>Stage:</b> Seed · Series A · Series B · Growth · Public · Enterprise.</li>
+      <li><b>Readiness:</b> Research · Pilot Ready · Commercial · Defense Cleared.</li>
+    </ul>
+  </section>
+
+  <!-- ───────────────────── 8. אינטגרציות ───────────────────── -->
+  <section>
+    <h2><span class="num">08</span> <span>אינטגרציות</span><span class="line"></span></h2>
+    <h3>מקורות מידע ויעדים</h3>
+    <ul class="bullets">
+      <li><b>LinkedIn Talent</b> — סנכרון פרופילי חברות + עובדים, OAuth.</li>
+      <li><b>Crunchbase Pro</b> — נתוני גיוס וצוות.</li>
+      <li><b>Salesforce CRM</b> — דו-כיווני: intros יוצאים כ-leads, חזרה מ-pipeline.</li>
+      <li><b>Snowflake</b> — דה-וו-האוס למאגר.</li>
+      <li><b>Microsoft Teams</b> — שליחת intros, התראות.</li>
+      <li><b>Espacenet</b> — סריקת פטנטים לתיוג טכנולוגי.</li>
+      <li><b>Workday</b> — ייבוא ארגוני של פרופילי עובדים.</li>
+    </ul>
+  </section>
+
+  <!-- ───────────────────── 9. פיצ'רים עתידיים ───────────────────── -->
+  <section>
+    <h2><span class="num">09</span> <span>Backlog · Phase 2</span><span class="line"></span></h2>
+    <h3>מה לא נכנס ל-MVP</h3>
+    <ul class="bullets">
+      <li>Workspace שיתופי בין שתי חברות (deal room) — כרגע רק כפתור.</li>
+      <li>Mobile native — כרגע Desktop-first בלבד.</li>
+      <li>Multi-tenant — תמיכה בכמה ארגונים-לקוח עם הרשאות נפרדות.</li>
+      <li>Public marketplace — דף פומבי לכל חברה (כרגע רק פנים-ארגוני).</li>
+      <li>Events module — כנסים, פגישות, חיבור לקלנדר.</li>
+      <li>Investor view — פרסונה נוספת (VC scout).</li>
+      <li>Notifications & digests — מייל שבועי אישי לכל עובד.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <span>ecos — מסמך אפיון</span>
+    <span>גרסה 1.0 · מאי 2026</span>
+  </footer>
+
+</div>
+</body>
+</html>
