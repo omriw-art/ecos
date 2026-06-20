@@ -394,7 +394,10 @@ footer{border-top:1px solid var(--brd);margin-top:30px;padding:46px 0 30px;backg
 <!-- ============ GROWTH VIEW ============ -->
 <section id="view-growth" class="hidden">
   <div class="container">
-    <div class="page-head"><button class="btn btn-ghost btn-sm" onclick="showView('home')">→ חזרה לעמוד הבית</button></div>
+    <div class="page-head" style="justify-content:space-between">
+      <button class="btn btn-ghost btn-sm" onclick="showView('register')">→ חזרה להרשמה</button>
+      <a class="btn btn-primary btn-sm" href="ecos.html">כניסה לדשבורד ↗</a>
+    </div>
     <div class="growth-hero">
       <span class="eyebrow"><span class="dot"></span> נפתח עבור חברות רשומות</span>
       <h2 style="font-size:clamp(28px,4.5vw,44px);font-weight:800;margin:14px 0 12px">כלי צמיחה לחברות החלל</h2>
@@ -817,8 +820,8 @@ function linkedInGo(){
   doRegister(d);
   closeLiModal();
   document.getElementById('liInput').value='';
-  toast('✓ נרשמתם דרך LinkedIn! מעביר לדשבורד…','ok');
-  setTimeout(()=>{ window.location.href='ecos.html'; },1800);
+  toast('✓ נרשמתם דרך LinkedIn!','ok');
+  setTimeout(()=>{ showView('growth'); },600);
 }
 
 /* ============ Submit ============ */
@@ -833,7 +836,7 @@ function collectData(){
   return data;
 }
 function doRegister(data){ const db=getDB(); db.push(data); saveDB(db); unlockGrowth(); renderDirectory(); updateStat(); }
-function submitForm(){ if(!validateStep(current)) return; const d=collectData(); doRegister(d); toast('✓ '+(d.companyName||'החברה')+' נרשמה בהצלחה! מעביר לדשבורד…','ok'); setTimeout(()=>{ window.location.href='ecos.html'; },1800); }
+function submitForm(){ if(!validateStep(current)) return; const d=collectData(); doRegister(d); toast('✓ '+(d.companyName||'החברה')+' נרשמה בהצלחה!','ok'); setTimeout(()=>{ showView('growth'); },600); }
 
 /* ============ Storage ============ */
 function getDB(){ try{return JSON.parse(localStorage.getItem('ecos_companies')||'[]')}catch(e){return []} }
