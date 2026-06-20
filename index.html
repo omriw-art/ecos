@@ -198,6 +198,9 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
 
 /* ---------- Growth page ---------- */
 #view-growth{padding:0 0 90px}
+#gtDashBtn.locked{opacity:.35;pointer-events:none;filter:grayscale(.4)}
+.gt-dash-hint{font-size:11.5px;color:var(--muted);margin-top:4px;text-align:end;transition:opacity .3s}
+.gt-dash-hint.done{opacity:0;pointer-events:none}
 .growth-hero{text-align:center;max-width:760px;margin:14px auto 40px}
 .gt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:20px;max-width:1120px;margin:0 auto}
 .gt-card{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));border:1px solid var(--brd);border-radius:20px;padding:24px;transition:.2s}
@@ -394,9 +397,12 @@ footer{border-top:1px solid var(--brd);margin-top:30px;padding:46px 0 30px;backg
 <!-- ============ GROWTH VIEW ============ -->
 <section id="view-growth" class="hidden">
   <div class="container">
-    <div class="page-head" style="justify-content:space-between">
+    <div class="page-head" style="justify-content:space-between;align-items:flex-start">
       <button class="btn btn-ghost btn-sm" onclick="showView('register')">→ חזרה להרשמה</button>
-      <a class="btn btn-primary btn-sm" href="ecos.html">כניסה לדשבורד ↗</a>
+      <div style="display:flex;flex-direction:column;align-items:flex-end">
+        <a id="gtDashBtn" class="btn btn-primary btn-sm locked" href="ecos.html">כניסה לדשבורד ↗</a>
+        <span id="gtDashHint" class="gt-dash-hint">↓ גלול למטה לצפייה בכלים</span>
+      </div>
     </div>
     <div class="growth-hero">
       <span class="eyebrow"><span class="dot"></span> נפתח עבור חברות רשומות</span>
@@ -870,6 +876,21 @@ function showView(name){
   document.getElementById('navLinks').classList.remove('open');
   ['home','register','growth'].forEach(v=>document.getElementById('view-'+v).classList.toggle('hidden',v!==name));
   window.scrollTo({top:0,behavior:'instant' in window?'instant':'auto'});
+  if(name==='growth') initGrowthScroll();
+}
+function initGrowthScroll(){
+  const btn=document.getElementById('gtDashBtn'), hint=document.getElementById('gtDashHint');
+  btn.classList.add('locked'); hint.classList.remove('done');
+  function check(){
+    const grid=document.getElementById('gtGrid');
+    if(!grid) return;
+    if(grid.getBoundingClientRect().bottom <= window.innerHeight+120){
+      btn.classList.remove('locked'); hint.classList.add('done');
+      window.removeEventListener('scroll',check);
+    }
+  }
+  window.addEventListener('scroll',check,{passive:true});
+  check();
 }
 function showDirectory(){ showView('home'); setTimeout(()=>document.getElementById('directory').scrollIntoView({behavior:'smooth'}),60); }
 function unlockGrowth(){ localStorage.setItem('ecos_registered','1'); document.getElementById('navGrowth').classList.remove('locked'); }
