@@ -357,7 +357,7 @@ footer{border-top:1px solid var(--brd);margin-top:30px;padding:46px 0 30px;backg
       <div class="sec-head">
         <div class="kicker">המאגר</div>
         <h2>מאגר חברות החלל</h2>
-        <p>החברות שנרשמו ל-ecos. המאגר נשמר מקומית בדפדפן זה (הדגמה).</p>
+        <p>חברות החלל הישראליות הממופות ב-ecos.</p>
       </div>
       <div id="dirContent"></div>
     </div>
@@ -447,6 +447,7 @@ footer{border-top:1px solid var(--brd);margin-top:30px;padding:46px 0 30px;backg
 
 <div id="toast"></div>
 
+<script src="data.js?v=3"></script>
 <script>
 /* ============ Partner logos ============ */
 const PARTNERS=[
@@ -615,7 +616,6 @@ const SCHEMA=[
     {id:'segments', label:'Segments', type:'chips', full:true, demo:['NewSpace','Defense','Commercial Space']},
     {id:'spaceDomain', label:'תחום חללי רלוונטי', type:'text', full:true, demo:'מחשוב חללי, עיבוד נתונים בלוויינים, AI בחלל'},
     {id:'techTags', label:'תיוגים טכנולוגיים', type:'chips', full:true, demo:['AI','Space Computing','Radiation Hardening','FPGA']},
-    {id:'sncTags', label:'תיוגי SNC / IVC / אחרים', type:'chips', full:true, demo:['SNC: Space-Tech','IVC: Aerospace']},
   ]},
   { title:'מוצר וטכנולוגיה', icon:'⚙️', desc:'מה החברה בונה ובאיזו רמת בשלות.', fields:[
     {id:'product', label:'מוצר / שירות מרכזי', type:'textarea', full:true, demo:'מחשב חלל עתיר ביצועים (SpaceDC™) המספק כוח עיבוד AI בזמן אמת בסביבת החלל, עמיד לקרינה ולטמפרטורות קיצוניות.'},
@@ -898,19 +898,18 @@ function openGrowth(){
 
 /* ============ Directory ============ */
 function renderDirectory(){
-  const db=getDB(), el=document.getElementById('dirContent');
-  if(!db.length){ el.innerHTML=`<div class="empty">עדיין אין חברות במאגר. היו הראשונים — <a style="color:var(--accent);cursor:pointer" onclick="showView('register')">הירשמו עכשיו</a>.</div>`; return; }
-  el.innerHTML='<div class="dir-grid">'+db.slice().reverse().map(c=>{
-    const initials=(c.companyName||'?').trim().slice(0,2);
-    const logo=c.logo?`<img src="${c.logo}" alt="">`:initials;
-    const tags=[c.sector,c.stage,...(c.fitAreas||[])].filter(Boolean).slice(0,4).map(t=>`<span class="dir-tag">${t}</span>`).join('');
-    const links=[c.website&&`<a href="${c.website}" target="_blank" rel="noopener">אתר ↗</a>`,c.linkedin&&`<a href="${c.linkedin}" target="_blank" rel="noopener">LinkedIn ↗</a>`].filter(Boolean).join('');
-    return `<div class="dir-card"><div class="dir-head"><div class="dir-logo">${logo}</div>
-      <div><div class="dir-name">${c.companyName||'—'}</div><div class="dir-meta">${[c.location,c.founded].filter(Boolean).join(' · ')}</div></div></div>
-      <div class="dir-tags">${tags}</div><div class="dir-summary">${c.summary||c.product||''}</div><div class="dir-links">${links}</div></div>`;
+  const cos=window.COMPANIES||[], el=document.getElementById('dirContent');
+  if(!cos.length){ el.innerHTML=`<div class="empty">אין חברות במאגר.</div>`; return; }
+  const sectorLabel=(id)=>(window.SECTORS||[]).find(s=>s.id===id)?.label||id;
+  el.innerHTML='<div class="dir-grid">'+cos.slice().map(c=>{
+    const initials=(c.name||'?').trim().slice(0,2);
+    const tags=[c.stage,...(c.sectors||[]).slice(0,2).map(sectorLabel)].filter(Boolean).slice(0,3).map(t=>`<span class="dir-tag">${t}</span>`).join('');
+    return `<div class="dir-card"><div class="dir-head"><div class="dir-logo">${initials}</div>
+      <div><div class="dir-name">${c.name||'—'}</div><div class="dir-meta">${[c.hq,c.country].filter(Boolean).join(' · ')}</div></div></div>
+      <div class="dir-tags">${tags}</div><div class="dir-summary">${c.blurb||''}</div></div>`;
   }).join('')+'</div>';
 }
-function updateStat(){ document.getElementById('statCount').textContent=getDB().length; }
+function updateStat(){ document.getElementById('statCount').textContent=(window.COMPANIES||[]).length; }
 
 /* ============ Helpers ============ */
 let toastT;
