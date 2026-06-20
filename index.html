@@ -817,8 +817,8 @@ function linkedInGo(){
   doRegister(d);
   closeLiModal();
   document.getElementById('liInput').value='';
-  toast('✓ נרשמתם דרך LinkedIn — אלו כלי הצמיחה שלכם');
-  showView('growth');
+  toast('✓ נרשמתם דרך LinkedIn! מעביר לדשבורד…','ok');
+  setTimeout(()=>{ window.location.href='ecos.html'; },1800);
 }
 
 /* ============ Submit ============ */
@@ -833,7 +833,7 @@ function collectData(){
   return data;
 }
 function doRegister(data){ const db=getDB(); db.push(data); saveDB(db); unlockGrowth(); renderDirectory(); updateStat(); }
-function submitForm(){ if(!validateStep(current)) return; const d=collectData(); doRegister(d); renderSuccess(d); }
+function submitForm(){ if(!validateStep(current)) return; const d=collectData(); doRegister(d); toast('✓ '+(d.companyName||'החברה')+' נרשמה בהצלחה! מעביר לדשבורד…','ok'); setTimeout(()=>{ window.location.href='ecos.html'; },1800); }
 
 /* ============ Storage ============ */
 function getDB(){ try{return JSON.parse(localStorage.getItem('ecos_companies')||'[]')}catch(e){return []} }
@@ -914,6 +914,7 @@ showView('home');
 if(localStorage.getItem('ecos_registered')==='1') document.getElementById('navGrowth').classList.remove('locked');
 document.getElementById('liModal').addEventListener('click',e=>{ if(e.target.id==='liModal') closeLiModal(); });
 document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!document.getElementById('liModal').classList.contains('hidden')) linkedInGo(); if(e.key==='Escape') closeLiModal(); });
+showView('register');
 </script>
 </body>
 </html>
