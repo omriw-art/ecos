@@ -881,16 +881,14 @@ function showView(name){
 function initGrowthScroll(){
   const btn=document.getElementById('gtDashBtn'), hint=document.getElementById('gtDashHint');
   btn.classList.add('locked'); hint.classList.remove('done');
-  function check(){
-    const grid=document.getElementById('gtGrid');
-    if(!grid) return;
-    if(grid.getBoundingClientRect().bottom <= window.innerHeight+120){
-      btn.classList.remove('locked'); hint.classList.add('done');
-      window.removeEventListener('scroll',check);
-    }
+  let secs=10;
+  function tick(){
+    secs--;
+    if(secs>0){ hint.textContent='↓ גלול לצפייה בכלים · ממשיך בעוד '+secs+'...'; }
+    else{ clearInterval(iv); btn.classList.remove('locked'); hint.textContent=''; hint.classList.add('done'); }
   }
-  window.addEventListener('scroll',check,{passive:true});
-  check();
+  hint.textContent='↓ גלול לצפייה בכלים · ממשיך בעוד '+secs+'...';
+  const iv=setInterval(tick,1000);
 }
 function showDirectory(){ showView('home'); setTimeout(()=>document.getElementById('directory').scrollIntoView({behavior:'smooth'}),60); }
 function unlockGrowth(){ localStorage.setItem('ecos_registered','1'); document.getElementById('navGrowth').classList.remove('locked'); }
