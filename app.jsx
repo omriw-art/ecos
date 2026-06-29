@@ -62,7 +62,7 @@ function App() {
     <div className="shell" data-screen-label={view}>
       <Sidebar active={view === "company" ? "companies" : view} onChange={goNav} />
       <main className="main">
-        <Topbar title={head.title} crumb={head.crumb} onOpenCopilot={() => setCopilotOpen(true)} />
+        <Topbar title={head.title} crumb={head.crumb} onOpenCopilot={() => setCopilotOpen(true)} onOpenCompany={goCompany} />
         {view === "dashboard"    && <Dashboard onOpenCompany={goCompany} onNav={goNav} />}
         {view === "companies"    && <CompaniesView onOpenCompany={goCompany} />}
         {view === "company"      && <CompanyProfile id={companyId} onBack={() => setView("companies")} onNav={goNav} onOpenCompany={goCompany} />}
