@@ -441,3 +441,41 @@ git checkout HEAD~1 -- app.jsx shell.jsx view-dashboard.jsx view-companies.jsx v
 - [ ] `join.html` opens without errors
 - [ ] `index.html` opens without errors
 - [ ] Browser console: no 404 errors
+
+---
+
+## Batch H — Migrate Join App to src
+
+### Date
+2026-07-05
+
+### Files Moved
+- `join-app.jsx` → `src/modules/onboarding/join-app.jsx`
+
+### HTML Updated
+- `join.html` now loads `src/modules/onboarding/join-app.jsx`
+
+### Runtime Impact
+`join.html` now loads the onboarding React app from `src/modules/onboarding`. Script load order is unchanged. Contents are identical to the original root file.
+
+### Active Root Runtime Files Preserved
+- `data.js` ✓
+- `ecos.html` ✓
+- `index.html` ✓
+- `join.html` ✓
+
+### Rollback
+```
+git checkout HEAD~1 -- join-app.jsx
+```
+Then revert `join.html` script src back to `join-app.jsx`.
+
+### Manual Test Checklist
+- [ ] `join.html` opens without errors
+- [ ] Onboarding wizard renders
+- [ ] Icons render (window.I)
+- [ ] LinkedIn mock import still works if present
+- [ ] Review/done screen works
+- [ ] Browser console: no 404 errors for `join-app.jsx`
+- [ ] `ecos.html` still opens without errors
+- [ ] `index.html` still opens without errors
