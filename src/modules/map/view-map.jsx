@@ -26,7 +26,7 @@ function MapView({ onOpenCompany }) {
 
     const pos = {};
     COMPANIES.forEach((c, i) => {
-      const sector = c.sectors[0];
+      const sector = (c.sectors || [])[0];
       const cnt = centers[sector] || { x: W/2, y: H/2 };
       const ang = (i * 137.5) * Math.PI / 180;
       const rad = 30 + (i % 4) * 18 + (c.strategic ? -10 : 0);
@@ -60,9 +60,9 @@ function MapView({ onOpenCompany }) {
       p.y = Math.max(50, Math.min(H - 30, p.y));
     });
     return pos;
-  }, []);
+  }, [COMPANIES]);
 
-  const isVisible = (c) => !filterSector || c.sectors.includes(filterSector);
+  const isVisible = (c) => !filterSector || (c.sectors || []).includes(filterSector);
   const focused = hover || pinned;
   const focusedCo = focused ? COMPANIES.find((x) => x.id === focused) : null;
 
@@ -137,7 +137,7 @@ function MapView({ onOpenCompany }) {
               const visible = isVisible(c);
               const isFocus = focused === c.id;
               const isLinked = !focused || linkedIds.has(c.id);
-              const sector = SECTORS.find((s) => s.id === c.sectors[0]);
+              const sector = SECTORS.find((s) => s.id === (c.sectors || [])[0]) || { color: "oklch(0.62 0.12 260)" };
               const sz = (c.strategic ? 9 : 6) + (c.score / 25);
               const op = visible ? (isLinked ? 1 : 0.18) : 0.08;
               return (
@@ -214,7 +214,7 @@ function MapView({ onOpenCompany }) {
                 <ScoreRing value={focusedCo.score} size={36} stroke={3} />
               </div>
               <div className="flex wrap gap-4" style={{ marginTop: 10 }}>
-                {focusedCo.sectors.slice(0,3).map((s) => <SectorPill key={s} id={s} />)}
+                {(focusedCo.sectors || []).slice(0,3).map((s) => <SectorPill key={s} id={s} />)}
               </div>
             </div>
           )}

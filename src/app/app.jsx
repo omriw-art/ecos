@@ -22,9 +22,14 @@ const VIEW_TITLES = {
 
 function App() {
   const [t, setTweak] = window.useTweaks(TWEAK_DEFAULTS);
+  const [companies, setCompanies] = React.useState(() => window.CompanyStore ? window.CompanyStore.getCompanies() : (window.COMPANIES || []));
   const [view, setView] = React.useState("dashboard");
   const [companyId, setCompanyId] = React.useState(null);
   const [copilotOpen, setCopilotOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    window.COMPANIES = companies;
+  }, [companies]);
 
   // Apply typography + density class to body
   React.useEffect(() => {
@@ -55,6 +60,16 @@ function App() {
     if (id === "copilot") { setCopilotOpen(true); return; }
     setView(id);
   };
+  const createCompany = (input) => {
+    const company = window.CompanyStore.createCompany(input);
+    setCompanies(window.CompanyStore.getCompanies());
+    return company;
+  };
+  const updateCompany = (id, patch) => {
+    const company = window.CompanyStore.updateCompany(id, patch);
+    setCompanies(window.CompanyStore.getCompanies());
+    return company;
+  };
 
   const head = VIEW_TITLES[view] || { title: "ecos", crumb: "" };
 
@@ -64,8 +79,8 @@ function App() {
       <main className="main">
         <Topbar title={head.title} crumb={head.crumb} onOpenCopilot={() => setCopilotOpen(true)} onOpenCompany={goCompany} />
         {view === "dashboard"    && <Dashboard onOpenCompany={goCompany} onNav={goNav} />}
-        {view === "companies"    && <CompaniesView onOpenCompany={goCompany} />}
-        {view === "company"      && <CompanyProfile id={companyId} onBack={() => setView("companies")} onNav={goNav} onOpenCompany={goCompany} />}
+        {view === "companies"    && <CompaniesView onOpenCompany={goCompany} onCreateCompany={createCompany} />}
+        {view === "company"      && <CompanyProfile id={companyId} onBack={() => setView("companies")} onNav={goNav} onOpenCompany={goCompany} onUpdateCompany={updateCompany} />}
         {view === "capabilities" && <CapabilitiesView onOpenCompany={goCompany} onNav={goNav} />}
         {view === "map"          && <MapView onOpenCompany={goCompany} />}
         {view === "matches"   && <MatchesView onOpenCompany={goCompany} />}

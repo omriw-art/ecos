@@ -3,7 +3,7 @@
 
 const NAV = [
   { id: "dashboard",    label: "דשבורד",          icon: "Grid",     section: "מבט-על" },
-  { id: "companies",    label: "חברות",           icon: "Building", section: "מבט-על", count: () => window.COMPANIES.length },
+  { id: "companies",    label: "חברות",           icon: "Building", section: "מבט-על", count: () => (window.COMPANIES || []).length },
   { id: "capabilities", label: "יכולות חלל",      icon: "Layers",   section: "מבט-על" },
   { id: "map",          label: "מפת אקוסיסטם",    icon: "Network",  section: "מבט-על" },
 
@@ -94,7 +94,7 @@ function SearchBox({ onOpenCompany }) {
       row.style.cssText = "display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.06)";
       const logo = c.logo
         ? `<img src="${c.logo}" style="width:26px;height:26px;border-radius:6px;object-fit:contain;background:#fff;padding:2px;flex-shrink:0">`
-        : `<div style="width:26px;height:26px;border-radius:6px;background:rgba(255,255,255,.12);display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0">${c.name[0]}</div>`;
+        : `<div style="width:26px;height:26px;border-radius:6px;background:rgba(255,255,255,.12);display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0">${(c.name || "?")[0]}</div>`;
       row.innerHTML = `${logo}<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px;color:#eaf0ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name}</div><div style="font-size:11px;color:#6c7898;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.blurb || ""}</div></div><div style="font-size:10px;color:#6c7898;white-space:nowrap;flex-shrink:0">${c.stage || ""}</div>`;
       row.onmouseenter = () => row.style.background = "rgba(255,255,255,.07)";
       row.onmouseleave = () => row.style.background = "transparent";
@@ -117,7 +117,7 @@ function SearchBox({ onOpenCompany }) {
           ref={inputRef}
           placeholder="חיפוש חברה, טכנולוגיה, אדם או פרויקט…"
           value={q}
-          onChange={(e) => { setQ(e.target.value); console.log("q=", e.target.value, "companies=", (window.COMPANIES||[]).length, "drop=", dropRef.current); }}
+          onChange={(e) => setQ(e.target.value)}
           onKeyDown={onKey}
           autoComplete="off"
         />

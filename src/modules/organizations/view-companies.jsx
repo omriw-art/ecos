@@ -2,19 +2,124 @@
 // List: searchable, filterable, grid view + table view toggle.
 // Profile: full deep-dive (tabs, score breakdown, connections, contacts, etc.)
 
-function CompaniesView({ onOpenCompany }) {
+function companyEditorInitial(company) {
+  return {
+    name: company?.name || "",
+    sector: company?.sectors?.[0] || window.SECTORS[0]?.id || "earth-obs",
+    blurb: company?.blurb || "",
+    hq: company?.hq || "",
+    website: company?.website || "",
+    stage: company?.stage || "Seed",
+    techText: (company?.tech || []).join(", "),
+  };
+}
+
+function parseList(value) {
+  return String(value || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function CompanyEditor({ company, title, submitLabel, onSave, onCancel }) {
+  const [form, setForm] = React.useState(() => companyEditorInitial(company));
+  const [error, setError] = React.useState("");
+
+  React.useEffect(() => {
+    setForm(companyEditorInitial(company));
+    setError("");
+  }, [company?.id]);
+
+  const setField = (field, value) => setForm((prev) => Object.assign({}, prev, { [field]: value }));
+  const submit = (e) => {
+    e.preventDefault();
+    if (!form.name.trim()) {
+      setError("שם חברה הוא שדה חובה");
+      return;
+    }
+    setError("");
+    onSave({
+      name: form.name,
+      sectors: [form.sector],
+      blurb: form.blurb,
+      hq: form.hq,
+      website: form.website,
+      stage: form.stage,
+      tech: parseList(form.techText),
+    });
+  };
+
+  return (
+    <form className="card" onSubmit={submit}>
+      <div className="card-hd">
+        <div className="card-title"><span className="dot green" /> {title}</div>
+        {onCancel && <button type="button" className="btn btn-ghost" onClick={onCancel}>ביטול</button>}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div className="field">
+          <label>שם חברה <span className="req">*</span></label>
+          <input className="input" value={form.name} onChange={(e) => setField("name", e.target.value)} />
+        </div>
+        <div className="field">
+          <label>תחום ראשי</label>
+          <select className="select" value={form.sector} onChange={(e) => setField("sector", e.target.value)}>
+            {window.SECTORS.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+          </select>
+        </div>
+        <div className="field">
+          <label>מיקום</label>
+          <input className="input" value={form.hq} onChange={(e) => setField("hq", e.target.value)} placeholder="תל אביב" />
+        </div>
+        <div className="field">
+          <label>שלב</label>
+          <select className="select" value={form.stage} onChange={(e) => setField("stage", e.target.value)}>
+            {window.STAGES.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+        <div className="field">
+          <label>אתר</label>
+          <input className="input" value={form.website} onChange={(e) => setField("website", e.target.value)} placeholder="https://..." dir="ltr" />
+        </div>
+        <div className="field">
+          <label>יכולות / Tags</label>
+          <input className="input" value={form.techText} onChange={(e) => setField("techText", e.target.value)} placeholder="Satellite, AI, Payload" />
+        </div>
+        <div className="field" style={{ gridColumn: "1 / -1" }}>
+          <label>תיאור קצר</label>
+          <textarea className="textarea" value={form.blurb} onChange={(e) => setField("blurb", e.target.value)} />
+        </div>
+      </div>
+      {error && <div className="help" style={{ color: "var(--rose)", marginTop: 10 }}>{error}</div>}
+      <div className="flex center gap-8" style={{ marginTop: 14 }}>
+        <button type="submit" className="btn btn-primary"><window.I.Check size={13} /> {submitLabel}</button>
+        {onCancel && <button type="button" className="btn" onClick={onCancel}>סגור</button>}
+      </div>
+    </form>
+  );
+}
+
+function CompaniesView({ onOpenCompany, onCreateCompany }) {
   const { COMPANIES, SECTORS } = window;
   const [activeSectors, setActiveSectors] = React.useState([]);
   const [stage,         setStage]         = React.useState("all");
   const [view,          setView]          = React.useState("grid");
   const [q,             setQ]             = React.useState("");
+  const [showCreate,    setShowCreate]    = React.useState(false);
 
   const toggle = (id) => setActiveSectors((p) => p.includes(id) ? p.filter((x) => x !== id) : [...p, id]);
+  const create = (input) => {
+    const company = onCreateCompany(input);
+    setShowCreate(false);
+    window.toast(`${company.name} נשמרה במאגר המקומי`, "ok");
+    onOpenCompany(company.id);
+  };
 
   const filtered = COMPANIES.filter((c) => {
-    if (activeSectors.length && !activeSectors.some((s) => c.sectors.includes(s))) return false;
+    const sectors = c.sectors || [];
+    const tech = c.tech || [];
+    if (activeSectors.length && !activeSectors.some((s) => sectors.includes(s))) return false;
     if (stage !== "all" && c.stage !== stage) return false;
-    if (q && !`${c.name} ${c.country} ${c.hq} ${c.blurb} ${c.tech.join(" ")} ${c.sectors.join(" ")}`.toLowerCase().includes(q.toLowerCase())) return false;
+    if (q && !`${c.name} ${c.country} ${c.hq} ${c.blurb} ${tech.join(" ")} ${sectors.join(" ")}`.toLowerCase().includes(q.toLowerCase())) return false;
     return true;
   });
 
@@ -35,9 +140,18 @@ function CompaniesView({ onOpenCompany }) {
             </button>
           </div>
           <button className="btn" onClick={() => window.toast("סינון מתקדם — בקרוב")}><window.I.Filter size={13} /> סינון מתקדם</button>
-          <button className="btn btn-primary" onClick={() => window.toast("הוספת חברה — בקרוב")}><window.I.Plus size={13} /> חברה חדשה</button>
+          <button className="btn btn-primary" onClick={() => setShowCreate((v) => !v)}><window.I.Plus size={13} /> חברה חדשה</button>
         </div>
       </div>
+
+      {showCreate && (
+        <CompanyEditor
+          title="חברה חדשה"
+          submitLabel="שמור חברה"
+          onSave={create}
+          onCancel={() => setShowCreate(false)}
+        />
+      )}
 
       {/* Filter chips */}
       <div className="card" style={{ padding: 14 }}>
@@ -93,9 +207,9 @@ function CompaniesView({ onOpenCompany }) {
                   <td><CoLogo company={c} size={28} /></td>
                   <td>
                     <div style={{ fontWeight: 500 }}>{c.name} {c.strategic && <window.I.Star size={11} style={{ color: "var(--amber)", verticalAlign: 1 }} fill={true} />}</div>
-                    <div className="mono tiny" style={{ color: "var(--text-4)" }}>{c.hq.toUpperCase()}</div>
+                    <div className="mono tiny" style={{ color: "var(--text-4)" }}>{String(c.hq || "").toUpperCase()}</div>
                   </td>
-                  <td><div className="flex gap-4 wrap">{c.sectors.slice(0,2).map((s) => <SectorPill key={s} id={s} />)}</div></td>
+                  <td><div className="flex gap-4 wrap">{(c.sectors || []).slice(0,2).map((s) => <SectorPill key={s} id={s} />)}</div></td>
                   <td>{c.flag} {c.country}</td>
                   <td><span className="pill">{c.stage}</span></td>
                   <td className="mono tabnum" style={{ color: "var(--text-2)" }}>{c.size}</td>
@@ -117,6 +231,7 @@ function CompaniesView({ onOpenCompany }) {
 }
 
 function CoCard({ c, onClick }) {
+  const sectors = c.sectors || [];
   return (
     <div className="co-card" onClick={onClick}>
       <div className="score-ring"><ScoreRing value={c.score} size={42} stroke={3} /></div>
@@ -127,14 +242,14 @@ function CoCard({ c, onClick }) {
             {c.name}
             {c.strategic && <window.I.Star size={11} style={{ color: "var(--amber)", verticalAlign: 1, marginInlineStart: 6 }} fill={true} />}
           </div>
-          <div className="co-meta">{c.flag} {c.hq.toUpperCase()} · {c.stage}</div>
+          <div className="co-meta">{c.flag} {String(c.hq || "").toUpperCase()} · {c.stage}</div>
         </div>
       </div>
       <div className="co-blurb" style={{
         display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden",
       }}>{c.blurb}</div>
       <div className="co-tags">
-        {c.sectors.slice(0,3).map((s) => <SectorPill key={s} id={s} />)}
+        {sectors.slice(0,3).map((s) => <SectorPill key={s} id={s} />)}
       </div>
       <div className="flex between center" style={{ marginTop: 4, paddingTop: 10, borderTop: "1px solid var(--line-1)" }}>
         <div className="flex gap-12 mono tiny" style={{ color: "var(--text-4)" }}>
@@ -153,13 +268,19 @@ function CoCard({ c, onClick }) {
 
 /* ────────────────────────── Profile ────────────────────────── */
 
-function CompanyProfile({ id, onBack, onNav, onOpenCompany }) {
+function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany }) {
   const c = window.COMPANIES.find((x) => x.id === id);
   if (!c) return <div className="view"><div className="card">חברה לא נמצאה</div></div>;
   const [tab, setTab] = React.useState("overview");
+  const [editing, setEditing] = React.useState(false);
 
   const matchedPeople = window.PEOPLE.filter((p) => p.matches.includes(c.id));
   const overlapCo = (c.overlap || []).map((id) => window.COMPANIES.find((x) => x.id === id)).filter(Boolean);
+  const saveEdit = (patch) => {
+    const updated = onUpdateCompany(c.id, patch);
+    setEditing(false);
+    window.toast(`${updated.name} עודכנה ונשמרה מקומית`, "ok");
+  };
 
   return (
     <div className="view">
@@ -213,10 +334,22 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany }) {
           <button className="btn" onClick={() => window.toast(`${c.name} סומנה כאסטרטגית`, "ok")}><window.I.Pin size={13} /> סמן כאסטרטגי</button>
           <button className="btn" onClick={() => window.toast("קישור הועתק ללוח")}><window.I.Link size={13} /> צור קישור לפרויקט</button>
           <button className="btn btn-ghost" onClick={() => window.toast("פותח LinkedIn…")}><window.I.Linkedin size={13} /> LinkedIn</button>
+          <button className="btn" onClick={() => setEditing((v) => !v)}><window.I.Settings size={13} /> ערוך פרטים</button>
           <div className="grow" />
           <div className="mono tiny" style={{ color: "var(--text-4)" }}>ID · {c.id.toUpperCase()}</div>
         </div>
       </div>
+
+      {editing && (
+        <CompanyEditor
+          key={c.id}
+          company={c}
+          title={`עריכת ${c.name}`}
+          submitLabel="שמור שינויים"
+          onSave={saveEdit}
+          onCancel={() => setEditing(false)}
+        />
+      )}
 
       {/* Tabs */}
       <div className="card flush" style={{ padding: "0 20px" }}>
