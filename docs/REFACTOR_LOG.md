@@ -321,3 +321,63 @@ Prepare the future dashboard runtime migration without changing current app beha
 - [ ] Map view opens
 - [ ] Matches view opens
 - [ ] Browser console: no new errors
+
+---
+
+## Batch F — Dashboard Script Migration to src
+
+### Date
+2026-07-05
+
+### Files Modified
+- `ecos.html` — 9 script src paths updated
+- `docs/REFACTOR_LOG.md` — Batch F entry appended
+- `docs/BATCH_F_SELF_REVIEW.md` — created
+
+### Script Paths Updated
+| File | Old src | New src |
+|---|---|---|
+| `ecos.html` | `shell.jsx` | `src/app/shell.jsx` |
+| `ecos.html` | `view-dashboard.jsx` | `src/modules/dashboard/view-dashboard.jsx` |
+| `ecos.html` | `view-capabilities.jsx` | `src/modules/capabilities/view-capabilities.jsx` |
+| `ecos.html` | `view-companies.jsx` | `src/modules/organizations/view-companies.jsx` |
+| `ecos.html` | `view-map.jsx` | `src/modules/map/view-map.jsx` |
+| `ecos.html` | `view-matches.jsx` | `src/modules/matches/view-matches.jsx` |
+| `ecos.html` | `view-onboard.jsx` | `src/modules/onboarding/view-onboard.jsx` |
+| `ecos.html` | `view-misc.jsx` | `src/modules/misc/view-misc.jsx` |
+| `ecos.html` | `app.jsx` | `src/app/app.jsx` |
+
+### Runtime Impact
+`ecos.html` now loads all dashboard files from `src/`. File contents are unchanged from the copied root originals (verified byte-identical in Batch E). Script load order is unchanged.
+
+### Originals Preserved
+All root dashboard files remain in place as rollback backup:
+- `app.jsx` ✓
+- `shell.jsx` ✓
+- `view-dashboard.jsx` ✓
+- `view-companies.jsx` ✓
+- `view-capabilities.jsx` ✓
+- `view-map.jsx` ✓
+- `view-matches.jsx` ✓
+- `view-misc.jsx` ✓
+- `view-onboard.jsx` ✓
+
+### Rollback
+Revert `ecos.html` script src values back to the root filenames:
+- `shell.jsx`, `view-dashboard.jsx`, `view-capabilities.jsx`, `view-companies.jsx`
+- `view-map.jsx`, `view-matches.jsx`, `view-onboard.jsx`, `view-misc.jsx`, `app.jsx`
+
+### Manual Test Checklist
+- [ ] `ecos.html` opens without errors
+- [ ] Dashboard renders correctly
+- [ ] Sidebar renders correctly
+- [ ] Sidebar icons render (window.I)
+- [ ] Topbar search renders (atoms globals)
+- [ ] Companies view opens
+- [ ] Ramon.Space profile opens — Tech / Match / Connections tabs work
+- [ ] Capabilities view opens
+- [ ] Map view opens
+- [ ] Matches view opens
+- [ ] Onboarding Readiness step renders chips
+- [ ] Browser console: no 404 errors
+- [ ] Browser console: no `window.*` undefined errors
