@@ -479,3 +479,73 @@ Then revert `join.html` script src back to `join-app.jsx`.
 - [ ] Browser console: no 404 errors for `join-app.jsx`
 - [ ] `ecos.html` still opens without errors
 - [ ] `index.html` still opens without errors
+
+---
+
+## Batch J — Phase 1: Copy data.js to src/data
+
+### Date
+2026-07-05
+
+### Action
+Copied `data.js` → `src/data/data.js`. Contents verified byte-identical. No HTML files changed. No runtime behavior changed.
+
+### Runtime Impact
+None. All three HTML entry points still load `data.js` from root.
+
+### Root data.js
+Preserved at root — not modified, not deleted.
+
+---
+
+## Batch J — Phase 2: Migrate ecos.html data script
+
+### Date
+2026-07-05
+
+### Script Path Updated
+| File | Old src | New src |
+|---|---|---|
+| `ecos.html` | `data.js?v=3` | `src/data/data.js?v=3` |
+
+### Runtime Impact
+`ecos.html` now loads data from `src/data/data.js`. Cache-buster `?v=3` preserved. Script load order unchanged.
+
+### Root data.js
+Preserved at root — not deleted.
+
+---
+
+## Batch J — Phase 3: Migrate join.html data script
+
+### Date
+2026-07-05
+
+### Script Path Updated
+| File | Old src | New src |
+|---|---|---|
+| `join.html` | `data.js` | `src/data/data.js` |
+
+### Runtime Impact
+`join.html` now loads data from `src/data/data.js`. Script load order unchanged.
+
+### Root data.js
+Preserved at root — not deleted.
+
+---
+
+## Batch J — Phase 4: Migrate index.html data script
+
+### Date
+2026-07-05
+
+### Script Path Updated
+| File | Old src | New src |
+|---|---|---|
+| `index.html` | `data.js?v=4` | `src/data/data.js?v=4` |
+
+### Runtime Impact
+`index.html` now loads data from `src/data/data.js`. Script tag remains at line 450. Cache-buster `?v=4` preserved. No inline JS changed.
+
+### Root data.js
+Preserved at root — not deleted. Root `data.js` is the rollback target if any entry point fails.
