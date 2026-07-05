@@ -590,3 +590,34 @@ Then revert HTML script src values back to `data.js` (or with cache-busters).
 - [ ] Browser console: no 404 for `data.js` (the root file is gone — any cached old reference would 404)
 - [ ] Browser console: no `window.*` undefined errors
 - [ ] Network tab: `src/data/data.js` loads with status 200 on all three pages
+
+---
+
+## Batch L — Organize Refactor Documentation
+
+### Date
+2026-07-05
+
+### Files Moved
+Batch-specific docs were moved into docs/refactor-history/:
+- BATCH_A_SELF_REVIEW.md
+- BATCH_B_SELF_REVIEW.md
+- BATCH_C_SELF_REVIEW.md
+- BATCH_D_SELF_REVIEW.md
+- BATCH_E_SELF_REVIEW.md
+- BATCH_F_SELF_REVIEW.md
+- BATCH_G_SELF_REVIEW.md
+- BATCH_H_SELF_REVIEW.md
+- BATCH_J_DATA_MIGRATION_REPORT.md
+- BATCH_J_SELF_REVIEW.md
+- BATCH_K_SELF_REVIEW.md
+
+### Files Created
+- docs/README.md — documentation index
+- docs/refactor-history/ — archive directory for batch self-reviews
+
+### Runtime Impact
+None. Documentation-only change.
+
+### Reason
+Keep docs/ root focused on current core documentation while preserving detailed batch history.
