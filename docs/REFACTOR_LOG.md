@@ -639,3 +639,22 @@ None. Documentation-only batch.
 
 ### Reason
 Define the next product and UX direction after structural refactor completion, based on the long-term Ecosystem OS vision and the user's decision that the current dashboard design is not final. Establishes the Admin Mission Control concept, the MVP screen architecture, and the phased implementation sequence for Batches N–S.
+
+---
+
+## Batch N — Mission Control Data Foundation
+
+### Date
+2026-07-05
+
+### Files Modified
+- src/data/data.js — enriched 12 company profiles; added OPPORTUNITIES constant (12 items); added REVIEW_QUEUE constant (12 items); updated Object.assign export
+
+### Files Created
+- docs/BATCH_N_SELF_REVIEW.md
+
+### Runtime Impact
+Non-breaking data additions only. OPPORTUNITIES and REVIEW_QUEUE are new window globals; no existing view references them yet, so no view can break. Existing COMPANIES enrichments are additive (populated empty arrays, set readiness/strategic fields from defaults) — no existing field values were changed to conflicting values.
+
+### Reason
+Fulfill the pre-Batch N data prerequisites defined in docs/DASHBOARD_REDESIGN_IMPLEMENTATION_PLAN.md: 8+ strategic companies, 17 companies with readiness and needs[], 12 OPPORTUNITIES items, 12 REVIEW_QUEUE items. This unblocks the Admin Mission Control dashboard redesign (Batch N in the implementation plan — now renumbered as Batch O to avoid conflict with this data sprint).
