@@ -52,6 +52,7 @@
     const offers = asArray(source.offers);
     const needs = asArray(source.needs);
     const tags = asArray(source.tags);
+    const capabilities = asArray(source.capabilities || source.solutions || source.tags).filter(Boolean);
     const fallbackTech = tags.length ? tags : tech;
 
     return Object.assign({}, source, {
@@ -69,6 +70,9 @@
       readiness: text(source.readiness) || "Mapped",
       sectors,
       tech: fallbackTech,
+      capabilities,
+      tags,
+      solutions: asArray(source.solutions),
       offers,
       needs,
       customers: asArray(source.customers),

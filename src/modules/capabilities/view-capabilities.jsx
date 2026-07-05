@@ -2,76 +2,6 @@
 // Organizes the ecosystem by space building blocks.
 // Shows coverage level, gaps, and per-capability company drill-down.
 
-const CAPABILITY_DEFS = [
-  {
-    id: "earth-obs",
-    desc: "הדמיה, ניטור כדור הארץ וחישה מרחוק ממסלול לוויין",
-    examples: ["Multi-spectral Imaging", "Video from Space", "Change Detection"],
-  },
-  {
-    id: "comms",
-    desc: "תקשורת לוויינית, אנטנות, מודמים ופרוטוקולי RF",
-    examples: ["Phased Array Antenna", "Ka/Ku Band", "LEO Broadband"],
-  },
-  {
-    id: "ai-data",
-    desc: "AI, עיבוד נתוני לוויין, למידת מכונה וניתוח תמונה",
-    examples: ["Object Detection", "Signal Processing", "Onboard AI"],
-  },
-  {
-    id: "propulsion",
-    desc: "הנעה חללית — מנועים, חמצנים ומיקרו-תרסיסים",
-    examples: ["Electric Thruster", "Green Propellant", "Cold Gas System"],
-  },
-  {
-    id: "manufacturing",
-    desc: "ייצור, מבנים, רכיבים חלליים ואינטגרציית מערכות",
-    examples: ["Structural Components", "Space-Grade PCB", "System Integration"],
-  },
-  {
-    id: "launchers",
-    desc: "שיגור לחלל, כלי נשיאה, rideshare ופריסת לוויינים",
-    examples: ["Small Launch Vehicle", "Rideshare", "Deployment Service"],
-  },
-  {
-    id: "sar",
-    desc: 'SAR ופסיקות מכ"מ לתצפית ביטחונית ואזרחית',
-    examples: ["SAR Sensor", "ISAR", "GMTI Radar"],
-  },
-  {
-    id: "life-sci",
-    desc: "ביולוגיה, רפואה ומניעת קרינה בסביבת חלל",
-    examples: ["Radiation Protection", "Bio-Sensors", "Space Medicine"],
-  },
-  {
-    id: "energy",
-    desc: "אנרגיה בחלל — פאנלים סולאריים, סוללות ומערכות כוח",
-    examples: ["Solar Array", "Space Battery", "Power Management"],
-  },
-  // "Virtual" capabilities — not yet mapped to a sector, displayed as gaps
-  {
-    id: "ground-seg",
-    label: "מקטע קרקע",
-    desc: "תחנות קרקע, מרכזי שליטה ותוכנה מבצעית",
-    examples: ["Ground Station", "Mission Control Software", "TT&C"],
-    virtual: true,
-  },
-  {
-    id: "navigation",
-    label: "ניווט ו-GNC",
-    desc: "שליטה על מיקום ואוריינטציה, GNSS וניווט עצמאי",
-    examples: ["Star Tracker", "GNSS Receiver", "Attitude Control"],
-    virtual: true,
-  },
-  {
-    id: "isam",
-    label: "שירותים בחלל",
-    desc: "תיקון לוויינים, תדלוק בחלל וניקוי פסולת חלל",
-    examples: ["On-Orbit Refueling", "Debris Removal", "Servicing Arm"],
-    virtual: true,
-  },
-];
-
 const LEVEL_META = {
   strong:   { label: "חזק",    color: "var(--green)",  bg: "oklch(0.20 0.08 145 / 0.55)" },
   moderate: { label: "בינוני", color: "var(--amber)",  bg: "oklch(0.20 0.08 80  / 0.55)" },
@@ -83,19 +13,9 @@ function CapabilitiesView({ onOpenCompany, onNav }) {
   const [selected, setSelected] = React.useState(null);
   const [sortBy,   setSortBy]   = React.useState("count");
 
-  // Build coverage data once
-  const coverage = React.useMemo(() => CAPABILITY_DEFS.map((def) => {
-    if (def.virtual) {
-      return { ...def, sector: null, companies: [], count: 0, level: "none" };
-    }
-    const sector    = window.SECTORS.find((s) => s.id === def.id);
-    const companies = window.COMPANIES
-      .filter((c) => c.sectors.includes(def.id))
-      .sort((a, b) => b.score - a.score);
-    const count = companies.length;
-    const level = count >= 12 ? "strong" : count >= 5 ? "moderate" : count >= 1 ? "weak" : "none";
-    return { ...def, sector, companies, count, level };
-  }), []);
+  const coverage = React.useMemo(() => (
+    window.CapabilityRegistry.getCapabilityCoverage(window.COMPANIES || [])
+  ), [window.COMPANIES]);
 
   const sorted = React.useMemo(() =>
     [...coverage].sort((a, b) => sortBy === "count" ? b.count - a.count : a.count - b.count),
@@ -106,8 +26,8 @@ function CapabilitiesView({ onOpenCompany, onNav }) {
   const strongCount  = coverage.filter((c) => c.level === "strong").length;
   const gapCount     = coverage.filter((c) => c.level === "none" || c.level === "weak").length;
   const maxCount     = Math.max(...coverage.map((c) => c.count), 1);
-  const nonVirtual   = coverage.filter((c) => !c.virtual);
-  const avgPerCap    = Math.round(window.COMPANIES.length / nonVirtual.length);
+  const nonVirtual   = coverage.filter((c) => !c.virtual && !c.custom);
+  const avgPerCap    = Math.round((window.COMPANIES || []).length / Math.max(nonVirtual.length, 1));
 
   const selectedData = selected ? coverage.find((c) => c.id === selected) : null;
 

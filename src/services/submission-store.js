@@ -153,6 +153,8 @@
       stage: s.stage,
       sectors: s.sectors,
       tech: s.capabilities,
+      capabilities: s.capabilities,
+      tags: s.tags,
       offers: s.offers,
       needs: s.needs,
       blurb: s.blurb,

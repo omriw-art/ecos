@@ -10,7 +10,7 @@ function companyEditorInitial(company) {
     hq: company?.hq || "",
     website: company?.website || "",
     stage: company?.stage || "Seed",
-    techText: (company?.tech || []).join(", "),
+    techText: (company?.capabilities?.length ? company.capabilities : (company?.tech || [])).join(", "),
   };
 }
 
@@ -46,6 +46,7 @@ function CompanyEditor({ company, title, submitLabel, onSave, onCancel }) {
       website: form.website,
       stage: form.stage,
       tech: parseList(form.techText),
+      capabilities: parseList(form.techText),
     });
   };
 
