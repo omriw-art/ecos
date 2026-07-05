@@ -165,3 +165,57 @@ Revert the 3 `href` values in `ecos.html` and `join.html` back to:
 - [ ] Network tab shows `src/shared/styles/styles.css` loaded (not root `styles.css`)
 - [ ] Network tab shows `src/shared/styles/join-styles.css` loaded for `join.html`
 - [ ] `index.html` unaffected — loads and looks identical
+
+---
+
+## Batch C — Shared JSX Script Migration
+
+### Date
+2026-07-05
+
+### Files Modified
+- `ecos.html` — 3 script src paths updated
+- `join.html` — 1 script src path updated
+- `docs/REFACTOR_LOG.md` — Batch C entry appended
+- `docs/BATCH_C_SELF_REVIEW.md` — created
+
+### Script Paths Updated
+| File | Old src | New src |
+|---|---|---|
+| `ecos.html` | `tweaks-panel.jsx` | `src/shared/components/tweaks-panel.jsx` |
+| `ecos.html` | `icons.jsx` | `src/shared/icons/icons.jsx` |
+| `ecos.html` | `atoms.jsx` | `src/shared/components/atoms.jsx` |
+| `join.html` | `icons.jsx` | `src/shared/icons/icons.jsx` |
+
+### Runtime Impact
+`ecos.html` and `join.html` now load shared JSX files from `src/shared/`. The copied JSX contents are identical to the original root files. Script load order is unchanged. `index.html` was not affected (does not reference these JSX files).
+
+### Originals Preserved
+All root copies remain in place — not deleted, not moved:
+- `icons.jsx` ✓
+- `atoms.jsx` ✓
+- `tweaks-panel.jsx` ✓
+
+### Rollback
+Revert script src values in `ecos.html` and `join.html` back to:
+- `icons.jsx`
+- `atoms.jsx`
+- `tweaks-panel.jsx`
+
+Root JSX files were not deleted — reverting the src values is sufficient.
+
+### Manual Test Checklist
+- [ ] `ecos.html` opens without errors
+- [ ] Dashboard renders correctly
+- [ ] Sidebar icons render (window.I globals)
+- [ ] Topbar search renders
+- [ ] Companies view opens
+- [ ] Ramon.Space profile opens — Tech / Match / Connections tabs work
+- [ ] Onboarding Readiness step renders chips
+- [ ] Map view opens
+- [ ] `join.html` opens without errors
+- [ ] Join wizard icons render
+- [ ] Browser console: no JSX 404 errors
+- [ ] Browser console: no `window.I undefined` errors
+- [ ] Browser console: no `ScoreRing / CoLogo / TweaksPanel undefined` errors
+- [ ] `index.html` unaffected — loads and looks identical
