@@ -687,3 +687,21 @@ Dashboard view was refactored into a Mission Control layout. Other views unchang
 
 ### Reason
 Use Batch N data foundations to turn the dashboard into an operational admin intelligence view.
+
+---
+
+## Batch O-Fix — Dashboard Recovery
+
+### Date
+2026-07-05
+
+### Reason
+`ecos.html` did not open after Batch O.
+
+### Fix
+Targeted dashboard compatibility fix was applied in `src/modules/dashboard/view-dashboard.jsx`: removed `flatMap`, nullish coalescing, optional chaining, and added a guarded `SafeCoLogo` fallback while preserving the 9-zone Mission Control layout and `window.Dashboard = Dashboard`.
+
+Local validation also found an early syntax blocker in `src/data/data.js` caused by smart quotes in the `Gorilla Link` record. The data file was not changed because this recovery task explicitly forbids data-file edits.
+
+### Runtime Impact
+Dashboard file was hardened. Other views unchanged. Full app opening still requires a separate allowed fix for the `src/data/data.js` syntax error.

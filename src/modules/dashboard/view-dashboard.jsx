@@ -131,7 +131,7 @@ function EcosystemHealth({ companies, companiesWithReadiness, companiesWithNeeds
 }
 
 function ActionQueue({ items }) {
-  const sorted = [...items].sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority)).slice(0, 5);
+  const sorted = items.slice().sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority)).slice(0, 5);
   return (
     <div className="card">
       <div className="card-hd">
@@ -149,7 +149,7 @@ function ActionQueue({ items }) {
 }
 
 function OpportunitiesRadar({ opportunities, counts }) {
-  const top = [...opportunities].sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority)).slice(0, 5);
+  const top = opportunities.slice().sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority)).slice(0, 5);
   return (
     <div className="card">
       <div className="card-hd">
@@ -205,7 +205,7 @@ function StrategicCompanies({ companies, onOpenCompany }) {
       <div className="col gap-8">
         {companies.slice(0, 8).map((c) => (
           <button key={c.id || c.name} className="btn btn-ghost" style={{ justifyContent: "stretch", textAlign: "start", padding: 8 }} onClick={() => onOpenCompany(c.id)}>
-            <window.CoLogo company={c} size={30} />
+            <SafeCoLogo company={c} size={30} />
             <div className="col grow" style={{ minWidth: 0 }}>
               <div className="flex between center gap-8">
                 <span style={truncateStyle()}>{c.name}</span>
@@ -341,6 +341,17 @@ function Metric({ label, value, tone }) {
   );
 }
 
+function SafeCoLogo({ company, size }) {
+  if (window.CoLogo) {
+    return <window.CoLogo company={company} size={size} />;
+  }
+  return (
+    <div className="co-logo" style={{ width: size, height: size, fontSize: size * 0.32 }}>
+      {(company.name || "?").slice(0, 2).toUpperCase()}
+    </div>
+  );
+}
+
 function BarRow({ label, value, max, color }) {
   const pct = Math.max(0, Math.min(100, (value / Math.max(max, 1)) * 100));
   return (
@@ -435,7 +446,11 @@ function hasItems(value) {
 }
 
 function unique(items) {
-  return [...new Set(items.filter(Boolean))];
+  const out = [];
+  items.forEach((item) => {
+    if (item && out.indexOf(item) === -1) out.push(item);
+  });
+  return out;
 }
 
 function grid(columns, gap) {
@@ -478,7 +493,9 @@ function toneColor(tone) {
 }
 
 function priorityRank(priority) {
-  return { high: 0, medium: 1, low: 2 }[norm(priority)] ?? 3;
+  const ranks = { high: 0, medium: 1, low: 2 };
+  const key = norm(priority);
+  return Object.prototype.hasOwnProperty.call(ranks, key) ? ranks[key] : 3;
 }
 
 function priorityTone(priority) {
@@ -486,13 +503,19 @@ function priorityTone(priority) {
 }
 
 function collectCompanyItems(companies, field) {
-  return companies.flatMap((company) => asArray(company[field]).map((item, idx) => ({
-    id: `${company.id || company.name}-${field}-${idx}`,
-    companyId: company.id,
-    companyName: company.name,
-    text: typeof item === "string" ? item : (item.description || item.title || item.type || ""),
-    raw: item,
-  })));
+  const items = [];
+  companies.forEach((company) => {
+    asArray(company[field]).forEach((item, idx) => {
+      items.push({
+        id: `${company.id || company.name}-${field}-${idx}`,
+        companyId: company.id,
+        companyName: company.name,
+        text: typeof item === "string" ? item : (item.description || item.title || item.type || ""),
+        raw: item,
+      });
+    });
+  });
+  return items;
 }
 
 function getOpportunityCounts(opportunities) {
@@ -514,7 +537,12 @@ function getReadinessDistribution(companies, readiness) {
     color: `oklch(0.62 0.16 ${145 + i * 24})`,
   }));
   const max = Math.max(...rows.map((r) => r.count), 1);
-  return rows.map((row) => ({ ...row, max })).filter((row) => row.count > 0 || readiness.length);
+  return rows.map((row) => ({
+    label: row.label,
+    count: row.count,
+    color: row.color,
+    max,
+  })).filter((row) => row.count > 0 || readiness.length);
 }
 
 function getNeedThemes(needs) {
@@ -532,11 +560,16 @@ function getNeedThemes(needs) {
     color: def.color,
   }));
   const max = Math.max(...rows.map((r) => r.count), 1);
-  return rows.map((row) => ({ ...row, max }));
+  return rows.map((row) => ({
+    label: row.label,
+    count: row.count,
+    color: row.color,
+    max,
+  }));
 }
 
 function getCapabilityThemes(companies) {
-  const corpus = companies.map((c) => [...asArray(c.tech), ...asArray(c.offers), ...asArray(c.needs)].join(" ")).map(norm);
+  const corpus = companies.map((c) => asArray(c.tech).concat(asArray(c.offers), asArray(c.needs)).join(" ")).map(norm);
   const defs = [
     { label: "Communication", keys: ["communication", "connectivity", "satellite iot", "vsat", "network"], color: "var(--blue)" },
     { label: "Remote Sensing", keys: ["remote sensing", "imaging", "observation", "hyperspectral", "geospatial", "sar"], color: "oklch(0.68 0.18 250)" },
@@ -553,7 +586,12 @@ function getCapabilityThemes(companies) {
     color: def.color,
   }));
   const max = Math.max(...rows.map((r) => r.count), 1);
-  return rows.map((row) => ({ ...row, max }));
+  return rows.map((row) => ({
+    label: row.label,
+    count: row.count,
+    color: row.color,
+    max,
+  }));
 }
 
 function getCopilotSuggestions({ REVIEW_QUEUE, OPPORTUNITIES, COMPANIES, allNeeds }) {
@@ -603,7 +641,7 @@ function getCopilotSuggestions({ REVIEW_QUEUE, OPPORTUNITIES, COMPANIES, allNeed
 function categoryLabel(company) {
   const sectorId = asArray(company.sectors)[0];
   const sector = asArray(window.SECTORS).find((s) => s.id === sectorId);
-  return sector?.label || sectorId || company.stage || "Uncategorized";
+  return (sector && sector.label) || sectorId || company.stage || "Uncategorized";
 }
 
 window.Dashboard = Dashboard;
