@@ -4,34 +4,51 @@
 
 This folder is the future modular source structure for the Ecosystem OS MVP.
 
-## Current Status
+## Current Status (after Batch E)
 
-The app does not currently run from `src/`.
-Runtime files are still loaded from the root through HTML script tags in `ecos.html`, `join.html`, and `index.html`.
+The active runtime files for the shared layer are now loaded from `src/shared/`:
+- `src/shared/styles/styles.css` — active (loaded by `ecos.html`, `join.html`)
+- `src/shared/styles/join-styles.css` — active (loaded by `join.html`)
+- `src/shared/icons/icons.jsx` — active (loaded by `ecos.html`, `join.html`)
+- `src/shared/components/atoms.jsx` — active (loaded by `ecos.html`)
+- `src/shared/components/tweaks-panel.jsx` — active (loaded by `ecos.html`)
 
-## Copied Files (Batch A)
+The core dashboard and app files are **reference copies only** — not yet active:
+- `ecos.html` still loads `app.jsx`, `shell.jsx`, and all `view-*.jsx` from the root.
 
-Reference copies only — not active runtime files:
+## Copied Files (Batch A — now active via Batches B + C)
 
-- `src/shared/icons/icons.jsx` ← copy of root `icons.jsx`
-- `src/shared/components/atoms.jsx` ← copy of root `atoms.jsx`
-- `src/shared/components/tweaks-panel.jsx` ← copy of root `tweaks-panel.jsx`
-- `src/shared/styles/styles.css` ← copy of root `styles.css`
-- `src/shared/styles/join-styles.css` ← copy of root `join-styles.css`
+- `src/shared/icons/icons.jsx` ← was root `icons.jsx` (root copy deleted in Batch D)
+- `src/shared/components/atoms.jsx` ← was root `atoms.jsx` (root copy deleted in Batch D)
+- `src/shared/components/tweaks-panel.jsx` ← was root `tweaks-panel.jsx` (root copy deleted in Batch D)
+- `src/shared/styles/styles.css` ← was root `styles.css` (root copy deleted in Batch D)
+- `src/shared/styles/join-styles.css` ← was root `join-styles.css` (root copy deleted in Batch D)
+
+## Copied Files (Batch E — reference copies, not yet active)
+
+- `src/app/app.jsx` ← copy of root `app.jsx`
+- `src/app/shell.jsx` ← copy of root `shell.jsx`
+- `src/modules/dashboard/view-dashboard.jsx` ← copy of root `view-dashboard.jsx`
+- `src/modules/organizations/view-companies.jsx` ← copy of root `view-companies.jsx`
+- `src/modules/capabilities/view-capabilities.jsx` ← copy of root `view-capabilities.jsx`
+- `src/modules/map/view-map.jsx` ← copy of root `view-map.jsx`
+- `src/modules/matches/view-matches.jsx` ← copy of root `view-matches.jsx`
+- `src/modules/misc/view-misc.jsx` ← copy of root `view-misc.jsx`
+- `src/modules/onboarding/view-onboard.jsx` ← copy of root `view-onboard.jsx`
 
 ## Important Rule
 
-Files in `src/` are currently reference copies only.
-Do not assume they are active runtime files until HTML `<script>` and `<link>` tags are explicitly updated in a later step.
-Do not edit files in `src/` expecting those changes to appear in the running app — edit the root files instead.
+Files in `src/` that are not yet active are reference copies only.
+Do not edit them expecting those changes to appear in the running app.
+Until `ecos.html` script tags are updated to point to `src/`, the root files remain the source of truth.
 
-## Future Migration Direction
+## Migration Status
 
-Later phases will migrate runtime usage gradually, one group of files at a time, with manual browser tests after each change:
-
-1. **Batch B** (planned): Update `<link>` tags to point CSS to `src/shared/styles/`
-2. **Batch C** (planned): Update `<script>` tags to point shared JSX to `src/shared/`
-3. **Batch D** (planned): Move view files to `src/modules/`
-4. **Batch E** (planned): Move core files (`app.jsx`, `shell.jsx`, `data.js`)
-
-Each batch requires explicit approval before implementation.
+| Batch | Action | Status |
+|---|---|---|
+| A | Copy shared files to `src/shared/` | Done |
+| B | Switch CSS `<link>` tags to `src/shared/styles/` | Done — active |
+| C | Switch shared JSX `<script>` tags to `src/shared/` | Done — active |
+| D | Delete root shared duplicates | Done |
+| E | Copy dashboard files to `src/modules/` | Done — not yet active |
+| F (next) | Switch `<script>` tags in `ecos.html` to `src/` dashboard files | Pending approval |

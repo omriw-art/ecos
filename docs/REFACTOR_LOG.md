@@ -265,3 +265,59 @@ git checkout HEAD~1 -- styles.css join-styles.css icons.jsx atoms.jsx tweaks-pan
 - [ ] Browser console: no `window.I undefined` errors
 - [ ] Browser console: no `ScoreRing / CoLogo / TweaksPanel undefined` errors
 - [ ] `index.html` opens and looks identical
+
+---
+
+## Batch E — Copy Core Dashboard Files Into src
+
+### Date
+2026-07-05
+
+### Files Copied
+
+| Source (root) | Destination (src) |
+|---|---|
+| `app.jsx` | `src/app/app.jsx` |
+| `shell.jsx` | `src/app/shell.jsx` |
+| `view-dashboard.jsx` | `src/modules/dashboard/view-dashboard.jsx` |
+| `view-companies.jsx` | `src/modules/organizations/view-companies.jsx` |
+| `view-capabilities.jsx` | `src/modules/capabilities/view-capabilities.jsx` |
+| `view-map.jsx` | `src/modules/map/view-map.jsx` |
+| `view-matches.jsx` | `src/modules/matches/view-matches.jsx` |
+| `view-misc.jsx` | `src/modules/misc/view-misc.jsx` |
+| `view-onboard.jsx` | `src/modules/onboarding/view-onboard.jsx` |
+
+### New Folders Created
+- `src/modules/dashboard/`
+- `src/modules/capabilities/`
+- `src/modules/map/`
+- `src/modules/matches/`
+- `src/modules/misc/`
+
+### Runtime Impact
+None. `ecos.html` still loads all root dashboard files. No script tags changed. App behavior is unchanged.
+
+### Originals Preserved
+All root files remain in place, unchanged, and active:
+- `app.jsx` ✓
+- `shell.jsx` ✓
+- `view-dashboard.jsx` ✓
+- `view-companies.jsx` ✓
+- `view-capabilities.jsx` ✓
+- `view-map.jsx` ✓
+- `view-matches.jsx` ✓
+- `view-misc.jsx` ✓
+- `view-onboard.jsx` ✓
+
+### Reason
+Prepare the future dashboard runtime migration without changing current app behavior. Copies serve as reference candidates for Batch F, which will switch `ecos.html` script tags to load from `src/`.
+
+### Manual Test Checklist
+- [ ] `ecos.html` opens without errors
+- [ ] Dashboard renders correctly
+- [ ] Companies view opens
+- [ ] Ramon.Space profile opens — Tech / Match / Connections tabs work
+- [ ] Onboarding Readiness step renders chips
+- [ ] Map view opens
+- [ ] Matches view opens
+- [ ] Browser console: no new errors
