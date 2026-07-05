@@ -621,3 +621,21 @@ None. Documentation-only change.
 
 ### Reason
 Keep docs/ root focused on current core documentation while preserving detailed batch history.
+
+---
+
+## Batch M — UX / Product Blueprint for Admin Mission Control
+
+### Date
+2026-07-05
+
+### Files Created
+- docs/UX_MISSION_CONTROL_BLUEPRINT.md
+- docs/MVP_SCREEN_ARCHITECTURE.md
+- docs/DASHBOARD_REDESIGN_IMPLEMENTATION_PLAN.md
+
+### Runtime Impact
+None. Documentation-only batch.
+
+### Reason
+Define the next product and UX direction after structural refactor completion, based on the long-term Ecosystem OS vision and the user's decision that the current dashboard design is not final. Establishes the Admin Mission Control concept, the MVP screen architecture, and the phased implementation sequence for Batches N–S.
