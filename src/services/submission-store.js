@@ -93,6 +93,19 @@
     return getSubmissions().filter((s) => s.status === "pending");
   }
 
+  function getSubmissionsByStatus(status) {
+    return getSubmissions().filter((s) => s.status === status);
+  }
+
+  function getSubmissionCounts() {
+    const submissions = getSubmissions();
+    return {
+      pending: submissions.filter((s) => s.status === "pending").length,
+      approved: submissions.filter((s) => s.status === "approved").length,
+      rejected: submissions.filter((s) => s.status === "rejected").length,
+    };
+  }
+
   function createSubmission(input) {
     const submissions = getSubmissions();
     const submission = normalizeSubmission(Object.assign({}, input, {
@@ -155,6 +168,8 @@
     key: STORAGE_KEY,
     getSubmissions,
     getPendingSubmissions,
+    getSubmissionsByStatus,
+    getSubmissionCounts,
     saveSubmissions,
     createSubmission,
     updateSubmission,

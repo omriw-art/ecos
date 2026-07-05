@@ -12,7 +12,8 @@ const STEPS = [
 
 function OnboardView({ onCompaniesChanged, onOpenCompany }) {
   const [step, setStep] = React.useState(0);
-  const [pending, setPending] = React.useState(() => window.SubmissionStore ? window.SubmissionStore.getPendingSubmissions() : []);
+  const [submissions, setSubmissions] = React.useState(() => window.SubmissionStore ? window.SubmissionStore.getSubmissions() : []);
+  const [submissionNotice, setSubmissionNotice] = React.useState("");
   const [data, setData] = React.useState({
     name: "", website: "", linkedin: "",
     sectors: [], stage: "Seed", founded: 2020, size: "",
@@ -31,18 +32,27 @@ function OnboardView({ onCompaniesChanged, onOpenCompany }) {
   const [imported, setImported] = React.useState(false);
 
   const setField = (k, v) => setData((d) => ({ ...d, [k]: v }));
-  const refreshPending = () => setPending(window.SubmissionStore ? window.SubmissionStore.getPendingSubmissions() : []);
+  const refreshSubmissions = () => setSubmissions(window.SubmissionStore ? window.SubmissionStore.getSubmissions() : []);
   const approveSubmission = (submission) => {
+    const duplicate = window.CompanyStore.findCompanyByName(submission.companyName);
+    if (duplicate) {
+      const message = `${submission.companyName} כבר קיימת במאגר כחברה: ${duplicate.name}. ההגשה נשארה Pending.`;
+      setSubmissionNotice(message);
+      window.toast(message, "err");
+      return;
+    }
     const company = window.CompanyStore.createCompany(window.SubmissionStore.toCompanyInput(submission));
     window.SubmissionStore.approveSubmission(submission.id, company.id);
-    refreshPending();
+    refreshSubmissions();
+    setSubmissionNotice("");
     onCompaniesChanged && onCompaniesChanged();
     window.toast(`${company.name} אושרה ונוספה לחברות`, "ok");
     onOpenCompany && onOpenCompany(company.id);
   };
   const rejectSubmission = (submission) => {
     window.SubmissionStore.rejectSubmission(submission.id);
-    refreshPending();
+    refreshSubmissions();
+    setSubmissionNotice("");
     window.toast(`${submission.companyName} נדחתה`, "ok");
   };
 
@@ -89,7 +99,8 @@ function OnboardView({ onCompaniesChanged, onOpenCompany }) {
       </div>
 
       <PendingSubmissionsPanel
-        submissions={pending}
+        submissions={submissions}
+        notice={submissionNotice}
         onApprove={approveSubmission}
         onReject={rejectSubmission}
       />
@@ -177,18 +188,31 @@ function OnboardView({ onCompaniesChanged, onOpenCompany }) {
   );
 }
 
-function PendingSubmissionsPanel({ submissions, onApprove, onReject }) {
+function PendingSubmissionsPanel({ submissions, notice, onApprove, onReject }) {
+  const pending = submissions.filter((submission) => submission.status === "pending");
+  const approved = submissions.filter((submission) => submission.status === "approved");
+  const rejected = submissions.filter((submission) => submission.status === "rejected");
   return (
     <div className="card">
       <div className="card-hd">
         <div className="card-title"><span className="dot amber" /> Pending Join Submissions</div>
-        <span className={"pill " + (submissions.length ? "amber" : "green")}>{submissions.length} pending</span>
+        <div className="flex center gap-6 wrap">
+          <span className={"pill " + (pending.length ? "amber" : "green")}>{pending.length} pending</span>
+          <span className="pill green">{approved.length} approved</span>
+          <span className="pill rose">{rejected.length} rejected</span>
+        </div>
       </div>
-      {!submissions.length ? (
+      {notice && (
+        <div className="hint-ai" style={{ marginBottom: 12, background: "oklch(0.18 0.07 25 / 0.4)", borderColor: "oklch(0.35 0.12 25)", color: "var(--rose)" }}>
+          <window.I.Flag size={12} />
+          <span>{notice}</span>
+        </div>
+      )}
+      {!pending.length ? (
         <div className="muted tiny">אין הגשות ציבוריות שממתינות לאישור כרגע.</div>
       ) : (
         <div className="col gap-10">
-          {submissions.map((submission) => (
+          {pending.map((submission) => (
             <PendingSubmissionRow
               key={submission.id}
               submission={submission}
@@ -196,6 +220,22 @@ function PendingSubmissionsPanel({ submissions, onApprove, onReject }) {
               onReject={() => onReject(submission)}
             />
           ))}
+        </div>
+      )}
+      {!!rejected.length && (
+        <>
+          <div className="divider" />
+          <div className="card-title" style={{ marginBottom: 10 }}><span className="dot" /> Rejected History</div>
+          <div className="col gap-8">
+            {rejected.map((submission) => (
+              <ReviewedSubmissionRow key={submission.id} submission={submission} tone="rose" />
+            ))}
+          </div>
+        </>
+      )}
+      {!!approved.length && (
+        <div className="muted tiny" style={{ marginTop: 12 }}>
+          Approved submissions are preserved in local history: {approved.length}.
         </div>
       )}
     </div>
@@ -234,6 +274,21 @@ function PendingSubmissionRow({ submission, onApprove, onReject }) {
       <div className="flex center gap-8">
         <button className="btn btn-primary" onClick={onApprove}><window.I.Check size={13} /> אשר</button>
         <button className="btn btn-ghost" onClick={onReject}>דחה</button>
+      </div>
+    </div>
+  );
+}
+
+function ReviewedSubmissionRow({ submission, tone }) {
+  const reviewed = submission.reviewedAt ? new Date(submission.reviewedAt).toLocaleString("he-IL") : "—";
+  return (
+    <div className="flex center gap-10" style={{ padding: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8 }}>
+      <span className={"pill " + tone}>{submission.status}</span>
+      <div className="col grow" style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 13, fontWeight: 600 }}>{submission.companyName}</div>
+        <div className="mono tiny" style={{ color: "var(--text-4)" }}>
+          reviewed · {reviewed}{submission.email ? ` · ${submission.email}` : ""}
+        </div>
       </div>
     </div>
   );

@@ -23,6 +23,16 @@
     return base || "company";
   }
 
+  function normalizeName(value) {
+    return text(value).toLowerCase().replace(/\s+/g, " ");
+  }
+
+  function findCompanyByName(name) {
+    const normalizedName = normalizeName(name);
+    if (!normalizedName) return null;
+    return getCompanies().find((company) => normalizeName(company.name) === normalizedName) || null;
+  }
+
   function uniqueId(name, companies) {
     const ids = new Set(asArray(companies).map((c) => c.id));
     const base = slugify(name);
@@ -145,6 +155,8 @@
     updateCompany,
     resetCompaniesToSeed,
     normalizeCompany,
+    normalizeName,
+    findCompanyByName,
   };
 
   window.COMPANIES = getCompanies();
