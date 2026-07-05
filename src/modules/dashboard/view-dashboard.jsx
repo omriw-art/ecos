@@ -37,7 +37,7 @@ function Dashboard({ onOpenCompany, onNav }) {
             <span className="swatch" style={{ background: "var(--green)" }} />
             <span className="mono">SYNC · LIVE</span>
           </span>
-          <button className="btn" onClick={() => window.toast("מייצא דו״ח… (demo)", "ok")}>
+          <button className="btn" disabled title="ייצוא — בקרוב">
             <window.I.Upload size={13} /> ייצוא דו"ח
           </button>
           <button className="btn btn-primary" onClick={() => onNav("onboard")}>
@@ -254,7 +254,7 @@ function RecentActivity({ activity }) {
     <div className="card">
       <div className="card-hd">
         <div className="card-title"><span className="dot green" /> Recent Activity</div>
-        <button className="btn-ghost btn" onClick={() => window.toast("היסטוריית פעילות מלאה — בקרוב")}>לכל ההיסטוריה</button>
+        <button className="btn-ghost btn" disabled title="היסטוריה מלאה — בקרוב">לכל ההיסטוריה</button>
       </div>
       <div className="col gap-10">
         {activity.slice(0, 8).map((a, i) => <ActivityRow key={a.id || i} item={a} />)}

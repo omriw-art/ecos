@@ -129,7 +129,7 @@ function CompaniesView({ onOpenCompany, onCreateCompany }) {
       <div className="view-head">
         <div>
           <h2>חברות באקוסיסטם</h2>
-          <div className="sub">{filtered.length} מתוך {COMPANIES.length} חברות · עודכן לפני 4 דקות</div>
+          <div className="sub">{filtered.length} מתוך {COMPANIES.length} חברות</div>
         </div>
         <div className="ops">
           <div className="seg">
@@ -140,7 +140,7 @@ function CompaniesView({ onOpenCompany, onCreateCompany }) {
               <window.I.Layers size={13} style={{ verticalAlign: -2 }} />&nbsp;Table
             </button>
           </div>
-          <button className="btn" onClick={() => window.toast("סינון מתקדם — בקרוב")}><window.I.Filter size={13} /> סינון מתקדם</button>
+          <button className="btn" disabled title="סינון מתקדם — בקרוב"><window.I.Filter size={13} /> סינון מתקדם</button>
           <button className="btn btn-primary" onClick={() => setShowCreate((v) => !v)}><window.I.Plus size={13} /> חברה חדשה</button>
         </div>
       </div>
@@ -282,6 +282,15 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany }) {
     setEditing(false);
     window.toast(`${updated.name} עודכנה ונשמרה מקומית`, "ok");
   };
+  const toggleStrategic = () => {
+    const updated = onUpdateCompany(c.id, { strategic: !c.strategic });
+    window.toast(updated.strategic ? `${updated.name} סומנה כאסטרטגית` : `${updated.name} הוסרה מהרשימה האסטרטגית`, "ok");
+  };
+  const linkedInUrl = c.linkedin || c.website;
+  const openExternalLink = () => {
+    if (!linkedInUrl) return;
+    window.open(linkedInUrl.startsWith("http") ? linkedInUrl : `https://${linkedInUrl}`, "_blank", "noopener");
+  };
 
   return (
     <div className="view">
@@ -331,10 +340,9 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany }) {
         </div>
 
         <div className="flex gap-10 center" style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid var(--line-1)" }}>
-          <button className="btn btn-primary" onClick={() => window.toast(`שולח בקשת intro ל-${c.name}…`, "ok")}><window.I.Mail size={13} /> בקש introduction</button>
-          <button className="btn" onClick={() => window.toast(`${c.name} סומנה כאסטרטגית`, "ok")}><window.I.Pin size={13} /> סמן כאסטרטגי</button>
-          <button className="btn" onClick={() => window.toast("קישור הועתק ללוח")}><window.I.Link size={13} /> צור קישור לפרויקט</button>
-          <button className="btn btn-ghost" onClick={() => window.toast("פותח LinkedIn…")}><window.I.Linkedin size={13} /> LinkedIn</button>
+          <button className="btn btn-primary" disabled title="תהליך intro אינו מוגדר עדיין"><window.I.Mail size={13} /> בקש introduction</button>
+          <button className="btn" onClick={toggleStrategic}><window.I.Pin size={13} /> {c.strategic ? "הסר סימון אסטרטגי" : "סמן כאסטרטגי"}</button>
+          <button className="btn btn-ghost" onClick={linkedInUrl ? openExternalLink : undefined} disabled={!linkedInUrl} title={linkedInUrl ? undefined : "אין קישור מוגדר לחברה זו"}><window.I.Linkedin size={13} /> {c.linkedin ? "LinkedIn" : "אתר"}</button>
           <button className="btn" onClick={() => setEditing((v) => !v)}><window.I.Settings size={13} /> ערוך פרטים</button>
           <div className="grow" />
           <div className="mono tiny" style={{ color: "var(--text-4)" }}>ID · {c.id.toUpperCase()}</div>
@@ -427,24 +435,9 @@ function OverviewTab({ c }) {
 
       <div className="col gap-14">
         <div className="card">
-          <div className="card-hd"><div className="card-title"><span className="dot amber" /> סיכום AI</div><span className="pill violet"><window.I.Sparkles size={10} />Auto</span></div>
+          <div className="card-hd"><div className="card-title"><span className="dot amber" /> סקירה</div></div>
           <div style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.65 }}>
-            {c.blurb} {' '}
-            <span style={{ color: "var(--text-3)" }}>
-              נוצר אוטומטית מעדכוני LinkedIn, אתר החברה ודוחות פיננסיים. נבדק לאחרונה לפני 6 שעות.
-            </span>
-          </div>
-          <div className="divider" />
-          <div className="col gap-8">
-            <div className="mono tiny" style={{ color: "var(--text-3)", letterSpacing: "0.12em", textTransform: "uppercase" }}>Suggested next moves</div>
-            <div className="hint-ai">
-              <window.I.Sparkles size={12} />
-              <span>שלח intro אל מאיה לוי (R&D AI) — מעניינת ב-{c.sectors[0]}.</span>
-            </div>
-            <div className="hint-ai" style={{ background: "oklch(0.18 0.07 250 / 0.4)", borderColor: "oklch(0.35 0.10 250)", color: "var(--blue)" }}>
-              <window.I.Sparkles size={12} />
-              <span>פתח workspace שיתופי עם {c.partners[0]}.</span>
-            </div>
+            {c.blurb}
           </div>
         </div>
 
@@ -484,8 +477,6 @@ function TechTab({ c }) {
               <div className="flex center gap-8">
                 <window.I.Cpu size={14} style={{ color: "var(--blue)" }} />
                 <div style={{ fontSize: 13, fontWeight: 500 }}>{t}</div>
-                <div className="grow" />
-                <span className="mono tiny" style={{ color: "var(--text-4)" }}>TRL · {6 + (i % 4)}</span>
               </div>
             </div>
           ))}
@@ -506,11 +497,6 @@ function TechTab({ c }) {
               </span>
             ))}
         </div>
-        <div className="divider" />
-        <div className="hint-ai">
-          <window.I.Sparkles size={12} />
-          <span>תגיות מבוססות על האתר, פטנטים ב-Espacenet ו-30 פוסטי LinkedIn אחרונים.</span>
-        </div>
       </div>
     </div>
   );
@@ -520,7 +506,7 @@ function MatchTab({ c, matchedPeople, onNav }) {
   if (!matchedPeople.length) {
     return (
       <div className="card">
-        <div className="muted">אין כרגע עובדים שמסומנים כהתאמה ישירה — אך AI מצא קרבה לתחומי עניין של {window.PEOPLE.slice(0,2).map((p) => p.name).join(" ו")}.</div>
+        <div className="muted">אין כרגע עובדים שמסומנים כהתאמה ישירה לחברה זו.</div>
       </div>
     );
   }
@@ -553,7 +539,7 @@ function MatchPersonRow({ p, c }) {
         </div>
         <MiniBar value={fit} color="var(--blue)" />
       </div>
-      <button className="btn"><window.I.Send size={12} /> intro</button>
+      <button className="btn" disabled title="תהליך intro אינו מוגדר עדיין"><window.I.Send size={12} /> intro</button>
     </div>
   );
 }
@@ -596,7 +582,6 @@ function ConnectionsTab({ c, overlapCo, onOpenCompany }) {
                 <div style={{ fontSize: 13 }}>{o.name}</div>
                 <div className="mono tiny" style={{ color: "var(--text-4)" }}>{o.sectors.slice(0,2).map((s) => window.SECTORS.find((x) => x.id === s)?.label).join(" · ").toUpperCase()}</div>
               </div>
-              <span className="pill violet mono">{Math.floor(60 + Math.random() * 30)}%</span>
             </div>
           ))}
         </div>
@@ -614,7 +599,7 @@ function ContactsTab({ c }) {
   ];
   return (
     <div className="card">
-      <div className="card-hd"><div className="card-title"><span className="dot" /> אנשי קשר ב-{c.name}</div><button className="btn"><window.I.Plus size={12} /> הוסף איש קשר</button></div>
+      <div className="card-hd"><div className="card-title"><span className="dot" /> אנשי קשר ב-{c.name}</div><button className="btn" disabled title="הוספת איש קשר — בקרוב"><window.I.Plus size={12} /> הוסף איש קשר</button></div>
       <div className="col gap-10">
         {contacts.map((p, i) => (
           <div key={i} className="flex center gap-10" style={{ padding: 12, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8 }}>
@@ -623,14 +608,10 @@ function ContactsTab({ c }) {
               <div style={{ fontSize: 13, fontWeight: 500 }}>{p.name}</div>
               <div className="mono tiny" style={{ color: "var(--text-4)" }}>{p.role.toUpperCase()} · {c.name}</div>
             </div>
-            <button className="btn btn-ghost"><window.I.Linkedin size={13} /></button>
-            <button className="btn btn-ghost"><window.I.Mail size={13} /></button>
+            <button className="btn btn-ghost" disabled title="אין פרטי קשר מוגדרים"><window.I.Linkedin size={13} /></button>
+            <button className="btn btn-ghost" disabled title="אין פרטי קשר מוגדרים"><window.I.Mail size={13} /></button>
           </div>
         ))}
-        <div className="hint-ai">
-          <window.I.Sparkles size={12} />
-          <span>AI יכול לאתר אוטומטית אנשי קשר חדשים ב-{c.name} מ-LinkedIn ולסנכרן.</span>
-        </div>
       </div>
     </div>
   );

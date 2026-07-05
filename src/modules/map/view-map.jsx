@@ -87,7 +87,7 @@ function MapView({ onOpenCompany }) {
             <button className={showLabels ? "active" : ""} onClick={() => setShowLabels(true)}>שמות</button>
             <button className={!showLabels ? "active" : ""} onClick={() => setShowLabels(false)}>אנונימי</button>
           </div>
-          <button className="btn" onClick={() => window.toast("ייצוא PNG — בקרוב")}><window.I.Upload size={13} /> ייצוא PNG</button>
+          <button className="btn" disabled title="ייצוא PNG — בקרוב"><window.I.Upload size={13} /> ייצוא PNG</button>
         </div>
       </div>
 

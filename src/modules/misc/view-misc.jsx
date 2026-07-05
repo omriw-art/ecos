@@ -107,11 +107,11 @@ function PeopleView({ onNav }) {
       <div className="view-head">
         <div>
           <h2>הארגון שלי</h2>
-          <div className="sub">{PEOPLE.length} עובדים פעילים · התאמות מתעדכנות כל לילה ב-02:00</div>
+          <div className="sub">{PEOPLE.length} עובדים פעילים</div>
         </div>
         <div className="ops">
-          <button className="btn" onClick={() => window.toast("ייבוא מ-Workday יהיה זמין בקרוב")}><window.I.Upload size={13} /> ייבוא מ-Workday</button>
-          <button className="btn btn-primary" onClick={() => window.toast("הוספת עובד — בקרוב")}><window.I.Plus size={13} /> הוסף עובד</button>
+          <button className="btn" disabled title="ייבוא מ-Workday — בקרוב"><window.I.Upload size={13} /> ייבוא מ-Workday</button>
+          <button className="btn btn-primary" disabled title="הוספת עובד — בקרוב"><window.I.Plus size={13} /> הוסף עובד</button>
         </div>
       </div>
 
@@ -144,7 +144,7 @@ function PeopleView({ onNav }) {
             </div>
 
             <div className="flex between center" style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--line-1)" }}>
-              <button className="btn btn-ghost" onClick={() => window.toast("פרופיל מלא — בקרוב")}><window.I.Eye size={12} /> פרופיל מלא</button>
+              <button className="btn btn-ghost" disabled title="פרופיל מלא — בקרוב"><window.I.Eye size={12} /> פרופיל מלא</button>
               <button className="btn" onClick={() => onNav("matches")}><window.I.Sparkles size={12} /> פתח matches</button>
             </div>
           </div>
@@ -172,11 +172,11 @@ function SettingsView() {
           <div className="card-hd"><div className="card-title"><span className="dot" /> אינטגרציות</div></div>
           <div className="col gap-10">
             {[
-              { name: "LinkedIn Talent", state: "ok", note: "מסונכרן · 4 דק׳" },
-              { name: "Crunchbase Pro",  state: "ok", note: "מסונכרן · 12 דק׳" },
-              { name: "Salesforce CRM",  state: "warn", note: "טוקן יפוג בעוד 3 ימים" },
-              { name: "Snowflake",       state: "ok", note: "מסונכרן" },
-              { name: "Microsoft Teams", state: "off", note: "לא מחובר" },
+              { name: "LinkedIn Talent", state: "off", note: "לא מחובר · בקרוב" },
+              { name: "Crunchbase Pro",  state: "off", note: "לא מחובר · בקרוב" },
+              { name: "Salesforce CRM",  state: "off", note: "לא מחובר · בקרוב" },
+              { name: "Snowflake",       state: "off", note: "לא מחובר · בקרוב" },
+              { name: "Microsoft Teams", state: "off", note: "לא מחובר · בקרוב" },
             ].map((x) => (
               <div key={x.name} className="flex center between" style={{
                 padding: 12, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8,
@@ -207,7 +207,7 @@ function SettingsView() {
             ))}
           </div>
           <div className="divider" />
-          <button className="btn btn-primary" style={{ alignSelf: "flex-start" }} onClick={() => window.toast("מריץ scoring מחדש… (demo)", "ok")}><window.I.Bolt size={12} /> הריצו מחדש על כל המאגר</button>
+          <button className="btn btn-primary" style={{ alignSelf: "flex-start" }} disabled title="Scoring מחושב אוטומטית מהנתונים הקיימים"><window.I.Bolt size={12} /> הריצו מחדש על כל המאגר</button>
         </div>
       </div>
     </div>
