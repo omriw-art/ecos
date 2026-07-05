@@ -20,7 +20,7 @@ function Dashboard({ onOpenCompany, onNav }) {
   const pendingReviews = REVIEW_QUEUE.filter((q) => !["approved", "done", "resolved", "dismissed", "archived"].includes(norm(q.status)));
   const opportunityCounts = getOpportunityCounts(OPPORTUNITIES);
   const needThemes = getNeedThemes(allNeeds);
-  const capabilityThemes = getCapabilityThemes(COMPANIES);
+  const capabilityThemes = getCapabilityCoverage(COMPANIES);
   const copilotSuggestions = getCopilotSuggestions({ REVIEW_QUEUE, OPPORTUNITIES, COMPANIES, allNeeds });
 
   return (
@@ -224,8 +224,8 @@ function StrategicCompanies({ companies, onOpenCompany }) {
 }
 
 function CapabilityGaps({ themes, sectorDist }) {
-  const strong = themes.filter((t) => t.count >= 3);
-  const weak = themes.filter((t) => t.count < 3);
+  const strong = themes.filter((t) => ["strong", "moderate"].includes(t.level));
+  const weak = themes.filter((t) => ["weak", "none"].includes(t.level));
   return (
     <div className="card">
       <div className="card-hd">
@@ -568,39 +568,56 @@ function getNeedThemes(needs) {
   }));
 }
 
-function getCapabilityThemes(companies) {
-  const corpus = companies.map((c) => asArray(c.tech).concat(asArray(c.offers), asArray(c.needs)).join(" ")).map(norm);
-  const defs = [
-    { label: "Communication", keys: ["communication", "connectivity", "satellite iot", "vsat", "network"], color: "var(--blue)" },
-    { label: "Remote Sensing", keys: ["remote sensing", "imaging", "observation", "hyperspectral", "geospatial", "sar"], color: "oklch(0.68 0.18 250)" },
-    { label: "AI / Data", keys: ["ai", "data", "analytics", "computer vision", "autonomous"], color: "var(--violet)" },
-    { label: "Space Hardware", keys: ["hardware", "payload", "satellite systems", "manufacturing", "processor", "subsystems"], color: "var(--green)" },
-    { label: "Mission Operations", keys: ["mission", "operations", "navigation", "gnc", "lunar"], color: "oklch(0.65 0.18 200)" },
-    { label: "Testing / Qualification", keys: ["testing", "qualification", "space-grade", "radiation", "certification"], color: "var(--amber)" },
-    { label: "Propulsion", keys: ["propulsion", "booster", "thruster", "launch"], color: "oklch(0.72 0.22 80)" },
-    { label: "Cyber / Security", keys: ["security", "cyber", "defense", "encrypted", "intelligence"], color: "var(--rose)" },
-  ];
-  const rows = defs.map((def) => ({
-    label: def.label,
-    count: corpus.filter((body) => def.keys.some((key) => body.includes(key))).length,
-    color: def.color,
-  }));
-  const max = Math.max(...rows.map((r) => r.count), 1);
-  return rows.map((row) => ({
-    label: row.label,
-    count: row.count,
-    color: row.color,
-    max,
-  }));
+function getCapabilityCoverage(companies) {
+  const LEVEL_COLORS = { strong: "var(--green)", moderate: "var(--blue)", weak: "var(--amber)", none: "var(--rose)" };
+  try {
+    if (!window.CapabilityRegistry || typeof window.CapabilityRegistry.getCapabilityCoverage !== "function") return [];
+    const coverage = window.CapabilityRegistry.getCapabilityCoverage(companies);
+    const max = Math.max(...coverage.map((c) => c.count), 1);
+    return coverage.map((c) => ({
+      label: c.label || c.name || "Unknown",
+      count: c.count || 0,
+      color: LEVEL_COLORS[c.level] || "var(--text-4)",
+      max,
+      level: c.level || "none",
+    }));
+  } catch (e) {
+    return [];
+  }
 }
 
 function getCopilotSuggestions({ REVIEW_QUEUE, OPPORTUNITIES, COMPANIES, allNeeds }) {
+  let topMatch = null;
+  try {
+    if (window.MatchEngine && typeof window.MatchEngine.generateCompanyMatches === "function") {
+      const matches = window.MatchEngine.generateCompanyMatches(COMPANIES, { limit: 1, minScore: 40 });
+      topMatch = matches[0] || null;
+    }
+  } catch (e) {}
+
+  let biggestGap = null;
+  try {
+    if (window.CapabilityRegistry && typeof window.CapabilityRegistry.getCapabilityCoverage === "function") {
+      biggestGap = window.CapabilityRegistry.getCapabilityCoverage(COMPANIES).find((c) => c.level === "none") || null;
+    }
+  } catch (e) {}
+
   const strategicReview = REVIEW_QUEUE.find((q) => norm(q.type).includes("ai suggestion") || norm(q.title).includes("strategic"));
   const publishable = REVIEW_QUEUE.find((q) => norm(q.status).includes("ready to publish"));
   const staleStrategic = REVIEW_QUEUE.find((q) => norm(q.title).includes("strategic") && norm(q.title).includes("profile"));
   const closing = OPPORTUNITIES.find((o) => norm(o.status).includes("closing"));
   const companiesWithNeeds = unique(allNeeds.map((n) => n.companyName));
   const suggestions = [
+    topMatch && {
+      title: "High-confidence ecosystem match",
+      text: `${topMatch.source.name} and ${topMatch.target.name} scored ${topMatch.score}% compatibility. ${topMatch.sharedCapabilities && topMatch.sharedCapabilities.length ? "Shared: " + topMatch.sharedCapabilities.slice(0, 2).join(", ") + "." : (topMatch.reasons && topMatch.reasons[0]) || "Complementary signals."} Consider facilitating an introduction.`,
+      tags: ["match", topMatch.confidence || "signal"],
+    },
+    biggestGap && {
+      title: "Ecosystem capability gap",
+      text: `No companies are currently mapped to "${biggestGap.label || biggestGap.name}". This is a coverage blind spot in the ecosystem knowledge graph.`,
+      tags: ["capability", "gap"],
+    },
     strategicReview && {
       title: "Strategic profile needs review",
       text: `${strategicReview.objectName || strategicReview.title} is waiting for human review before it becomes official ecosystem knowledge.`,
