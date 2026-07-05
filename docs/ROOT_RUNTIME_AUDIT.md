@@ -1,7 +1,7 @@
 # ROOT_RUNTIME_AUDIT
 
-Date: 2026-07-05 (updated after Batch J)
-Status: Post Batch J — all HTML entry points now load data from src/data/data.js. Root data.js preserved for rollback.
+Date: 2026-07-05 (updated after Batch K)
+Status: Post Batch K — root data.js deleted. All HTML entry points load data from src/data/data.js. Migration complete.
 
 ---
 
@@ -27,9 +27,9 @@ All three entry points remain at root. They are loaded directly by the browser a
 
 | File | Used By | Notes |
 |---|---|---|
-| `data.js` | ~~`ecos.html`, `join.html`, `index.html`~~ | **No longer referenced by HTML** (Batch J). All three HTML files now load `src/data/data.js`. Root `data.js` preserved for rollback — delete after testing. |
+| ~~`data.js`~~ | n/a | **Deleted in Batch K.** All three HTML files load `src/data/data.js`. |
 
-`data.js` is the only remaining root JS file that is not an entry point. It is now a stale duplicate — no longer loaded at runtime.
+There are no remaining root JS runtime files (other than the three HTML entry points).
 
 ---
 
@@ -102,9 +102,10 @@ Cache-buster query strings preserved exactly. Root `data.js` no longer reference
 | Batch D | `styles.css`, `join-styles.css`, `icons.jsx`, `atoms.jsx`, `tweaks-panel.jsx` |
 | Batch G | `app.jsx`, `shell.jsx`, `view-dashboard.jsx`, `view-companies.jsx`, `view-capabilities.jsx`, `view-map.jsx`, `view-matches.jsx`, `view-misc.jsx`, `view-onboard.jsx` |
 | Batch H | `join-app.jsx` |
-| Batch J | n/a — `data.js` HTML references migrated to `src/data/`; root `data.js` pending deletion after testing |
+| Batch J | n/a — `data.js` HTML references migrated to `src/data/`; root `data.js` preserved for rollback |
+| Batch K | `data.js` — deleted after confirming all 3 HTML entry points loaded from `src/data/` |
 
-Total root JSX/CSS files removed: **14** (data.js cleanup pending)
+Total root runtime files removed: **15** (14 JSX/CSS + `data.js`)
 
 ---
 
@@ -112,7 +113,7 @@ Total root JSX/CSS files removed: **14** (data.js cleanup pending)
 
 | Item | Description |
 |---|---|
-| `data.js` still root/global | All data is loaded into `window.*` globals from a single root file. No data access layer exists. |
+| `data.js` globals | All data is loaded into `window.*` globals from a single file (`src/data/data.js`). No data access layer exists. |
 | Runtime Babel transpilation | JSX is transpiled in the browser at runtime using `@babel/standalone` via CDN. Not a production setup. |
 | CDN React | React and ReactDOM are loaded from `unpkg.com` CDN, not bundled. |
 | `window.*` globals | All components communicate via `window.*` globals, not ES module imports/exports. |
@@ -122,13 +123,10 @@ Total root JSX/CSS files removed: **14** (data.js cleanup pending)
 
 ---
 
-## 9. Recommended Next Step
+## 9. Migration Complete
 
-Create a `data.js` migration plan (see `docs/DATA_LAYER_MIGRATION_PLAN.md`), then execute as a copy-only batch first:
+All runtime JS and CSS is under `src/`. No more root runtime files to migrate. The root directory contains only HTML entry points and static assets.
 
-1. Copy `data.js` to `src/data/data.js` without changing any HTML references.
-2. In a subsequent batch, update `ecos.html` to use `src/data/data.js` and test.
-3. Then update `join.html`, then `index.html`.
-4. Only delete root `data.js` after all three HTML files point to `src/data/`.
-
-Do not move `data.js` directly without first copying and testing each entry point independently.
+Next structural work (per `docs/DATA_LAYER_MIGRATION_PLAN.md`):
+- Phase F: Split `src/data/data.js` into entity repositories under `src/data/repositories/`
+- Phase G: Supabase / PostgreSQL backend (major architectural shift — requires separate planning)

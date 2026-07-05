@@ -157,11 +157,6 @@ The current `window.*` globals approach is a prototype pattern that should not s
 | B — Update `ecos.html` | ✅ Done — commit `9e609e6` |
 | C — Update `join.html` | ✅ Done — commit `3c7ed78` |
 | D — Update `index.html` | ✅ Done — commit `3266507` |
-| E — Delete root `data.js` | ⏳ Pending — requires manual test of all 3 entry points |
+| E — Delete root `data.js` | ✅ Done — Batch K (2026-07-05) |
 
-**Root `data.js` still exists as rollback target.** Delete only after confirming:
-- `ecos.html` dashboard renders, all globals defined
-- `join.html` wizard renders, all globals defined
-- `index.html` landing loads, company directory visible
-
-Rollback path: revert script src values in all 3 HTML files back to `data.js` (or `data.js?v=3` / `data.js?v=4`).
+**Phases A–E complete.** Root `data.js` deleted. Active data source is `src/data/data.js`, loaded by all three HTML entry points.

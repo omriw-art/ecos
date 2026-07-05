@@ -4,9 +4,9 @@
 
 This folder is the modular source structure for the Ecosystem OS MVP.
 
-## Migration Status (as of Batch H — 2026-07-05)
+## Migration Status (as of Batch K — 2026-07-05)
 
-All JSX and CSS runtime files have been migrated from root into `src/`. The root directory now only contains HTML entry points, `data.js`, and static assets.
+All runtime files (JSX, CSS, and data) have been migrated from root into `src/`. The root directory now only contains HTML entry points and static assets.
 
 ## Active src Runtime Files
 
@@ -40,10 +40,8 @@ All JSX and CSS runtime files have been migrated from root into `src/`. The root
 | `ecos.html` | Dashboard entry point |
 | `join.html` | Onboarding entry point |
 | `index.html` | Public landing page |
-| ~~`data.js`~~ | Root copy preserved for rollback — **no longer loaded by HTML** |
-| `src/data/data.js` | **Active data source** — loaded by all three HTML entry points |
 
-Root `data.js` should be deleted after manual testing confirms all entry points work with `src/data/data.js`.
+`src/data/data.js` is the active data source — loaded by all three HTML entry points.
 
 ## Batch Migration History
 
@@ -58,10 +56,11 @@ Root `data.js` should be deleted after manual testing confirms all entry points 
 | G | Deleted root dashboard duplicates |
 | H | Moved `join-app.jsx` to `src/modules/onboarding/`, updated `join.html` |
 | J | Copied `data.js` → `src/data/data.js`; updated all 3 HTML entry points to load from `src/data/` |
+| K | Deleted root `data.js` — migration complete |
 
 ## Important Rules
 
 - Files in `src/` are all active runtime files (no longer reference-copies).
-- Do not edit root files (`ecos.html`, `join.html`, `index.html`, `data.js`) expecting it to affect `src/` copies.
-- The only remaining root runtime JS file is `data.js`.
+- Do not edit root files (`ecos.html`, `join.html`, `index.html`) expecting it to affect `src/` copies.
+- There are no remaining root runtime JS files.
 - See `docs/STRUCTURE_STATUS.md` for the full current state.

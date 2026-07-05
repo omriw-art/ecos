@@ -1,13 +1,13 @@
 # STRUCTURE_STATUS
 
-Date: 2026-07-05 (updated after Batch J)
-Migration status: Batches A–J complete. All HTML entry points load data from src/data/data.js. Root data.js preserved for rollback.
+Date: 2026-07-05 (updated after Batch K)
+Migration status: Batches A–K complete. All runtime files under src/. Root data.js deleted. Migration complete.
 
 ---
 
 ## 1. Current Structure Summary
 
-The dashboard and join app runtime have fully migrated from the root directory into `src/`. The three HTML entry points (`ecos.html`, `join.html`, `index.html`) remain at root along with `data.js`, which is the last active root runtime dependency. The root directory is now clean of JSX and CSS runtime files.
+The dashboard and join app runtime have fully migrated from the root directory into `src/`. The three HTML entry points (`ecos.html`, `join.html`, `index.html`) remain at root along with static assets. The root directory is now clean of all runtime JS and CSS files.
 
 ---
 
@@ -43,8 +43,7 @@ The dashboard and join app runtime have fully migrated from the root directory i
 
 | File | Loaded by | Notes |
 |---|---|---|
-| `data.js` | ~~loaded by HTML~~ | **No longer referenced by HTML** (Batch J). Root copy preserved for rollback. Delete after manual testing. |
-| `src/data/data.js` | `ecos.html?v=3`, `join.html`, `index.html?v=4` | **Now active.** Loaded by all three HTML entry points. |
+| `src/data/data.js` | `ecos.html?v=3`, `join.html`, `index.html?v=4` | **Active data source.** Loaded by all three HTML entry points. |
 | `ecos.html` | Browser directly | Entry point — stays at root |
 | `join.html` | Browser directly | Entry point — stays at root |
 | `index.html` | Browser directly | Entry point — stays at root |
@@ -72,8 +71,9 @@ The dashboard and join app runtime have fully migrated from the root directory i
 | Batch D | `styles.css`, `join-styles.css`, `icons.jsx`, `atoms.jsx`, `tweaks-panel.jsx` |
 | Batch G | `app.jsx`, `shell.jsx`, `view-dashboard.jsx`, `view-companies.jsx`, `view-capabilities.jsx`, `view-map.jsx`, `view-matches.jsx`, `view-misc.jsx`, `view-onboard.jsx` |
 | Batch H | `join-app.jsx` |
+| Batch K | `data.js` |
 
-**14 root JSX/CSS files removed.** All remain recoverable via git history.
+**15 root runtime files removed** (14 JSX/CSS + `data.js`). All recoverable via git history.
 
 ---
 
@@ -96,8 +96,8 @@ Ordered by risk and dependency:
 
 1. ~~**Copy `data.js` to `src/data/data.js`**~~ — **Done (Batch J Phase 1).**
 2. ~~**Migrate `data.js` references per-HTML-file**~~ — **Done (Batch J Phases 2–4).** All three HTML entry points now load `src/data/data.js`.
-3. **Delete root `data.js`** — cleanup batch after manual testing confirms all entry points work. `git rm data.js`.
-4. **Manual testing baseline** — test all three entry points before and after root `data.js` deletion.
+3. ~~**Delete root `data.js`**~~ — **Done (Batch K).** Root `data.js` removed.
+4. **Manual testing baseline** — test all three entry points to confirm no regressions after Batch K.
 5. **UX redesign sprint** — once the structure is stable, address UI improvements with full confidence in the codebase.
 6. **MVP product modules** — governance, export, and search modules when product direction is clearer.
 7. **Supabase / backend** — real data persistence, auth, and API when MVP scope is decided. This is a major architectural shift.

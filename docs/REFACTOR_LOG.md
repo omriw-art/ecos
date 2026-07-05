@@ -549,3 +549,44 @@ Preserved at root — not deleted.
 
 ### Root data.js
 Preserved at root — not deleted. Root `data.js` is the rollback target if any entry point fails.
+
+---
+
+## Batch K — Cleanup Root data.js Duplicate
+
+### Date
+2026-07-05
+
+### File Deleted
+- `data.js`
+
+### Reason
+`data.js` was copied to `src/data/data.js` in Batch J Phase 1, and all three HTML entry points were updated in Batch J Phases 2–4 to load from `src/data/`. The root copy is now an inactive duplicate.
+
+### Runtime Impact
+None. Runtime data source is `src/data/data.js`. All three HTML entry points confirmed pointing to `src/` before deletion.
+
+### Audit Result
+Pre-deletion grep of `ecos.html`, `join.html`, `index.html`:
+- `ecos.html:21` → `src/data/data.js?v=3` ✓
+- `join.html:22` → `src/data/data.js` ✓
+- `index.html:450` → `src/data/data.js?v=4` ✓
+
+No bare root references to `data.js` found. Deletion confirmed safe.
+
+### Active Data File
+- `src/data/data.js`
+
+### Rollback
+```
+git checkout HEAD~1 -- data.js
+```
+Then revert HTML script src values back to `data.js` (or with cache-busters).
+
+### Manual Test Checklist
+- [ ] `ecos.html` opens — dashboard renders, all globals available
+- [ ] `join.html` opens — wizard renders, icons render
+- [ ] `index.html` opens — landing page and company directory render
+- [ ] Browser console: no 404 for `data.js` (the root file is gone — any cached old reference would 404)
+- [ ] Browser console: no `window.*` undefined errors
+- [ ] Network tab: `src/data/data.js` loads with status 200 on all three pages
