@@ -381,3 +381,63 @@ Revert `ecos.html` script src values back to the root filenames:
 - [ ] Onboarding Readiness step renders chips
 - [ ] Browser console: no 404 errors
 - [ ] Browser console: no `window.*` undefined errors
+
+---
+
+## Batch G — Cleanup Root Dashboard Duplicate Files
+
+### Date
+2026-07-05
+
+### Files Deleted
+- `app.jsx`
+- `shell.jsx`
+- `view-dashboard.jsx`
+- `view-companies.jsx`
+- `view-capabilities.jsx`
+- `view-map.jsx`
+- `view-matches.jsx`
+- `view-misc.jsx`
+- `view-onboard.jsx`
+
+### Reason
+These files were migrated to `src/app/` and `src/modules/` in Batch E, and `ecos.html` was updated in Batch F to load from those `src/` paths. The root copies are no longer referenced by any runtime file.
+
+### Runtime Impact
+None. `ecos.html` loads all dashboard runtime from `src/`. `join.html` and `index.html` were unaffected throughout.
+
+### Audit Result
+Searched `ecos.html`, `join.html`, `index.html`, `data.js`, `join-app.jsx`, and all of `src/` for references to the 9 root filenames.
+
+- `ecos.html`: all matches point to `src/app/` or `src/modules/` paths — no bare root references
+- `join.html`: only match is `join-app.jsx` (active file, not being deleted)
+- `index.html`, `data.js`, `join-app.jsx`, `src/`: zero matches
+
+Deletion confirmed safe.
+
+### Active Root Runtime Files Preserved
+- `data.js` ✓
+- `join-app.jsx` ✓
+- `ecos.html` ✓
+- `index.html` ✓
+- `join.html` ✓
+
+### Rollback
+Restore deleted files from git history:
+```
+git checkout HEAD~1 -- app.jsx shell.jsx view-dashboard.jsx view-companies.jsx view-capabilities.jsx view-map.jsx view-matches.jsx view-misc.jsx view-onboard.jsx
+```
+
+### Manual Test Checklist
+- [ ] `ecos.html` opens without errors
+- [ ] Dashboard renders correctly
+- [ ] Sidebar renders correctly
+- [ ] Companies view opens
+- [ ] Ramon.Space profile opens — Tech / Match / Connections tabs work
+- [ ] Capabilities view opens
+- [ ] Map view opens
+- [ ] Matches view opens
+- [ ] Onboarding Readiness step renders chips
+- [ ] `join.html` opens without errors
+- [ ] `index.html` opens without errors
+- [ ] Browser console: no 404 errors
