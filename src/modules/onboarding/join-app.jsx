@@ -40,6 +40,7 @@ const SUGGESTIONS_NEEDS = [
 function JoinApp() {
   const [step, setStep] = React.useState("welcome");
   const [history, setHistory] = React.useState([]);
+  const [submission, setSubmission] = React.useState(null);
   const [data, setData] = React.useState({
     name: "",
     sectors: [],
@@ -77,6 +78,26 @@ function JoinApp() {
     const idx = STEPS_ORDER.indexOf(step);
     if (idx >= 0 && idx < STEPS_ORDER.length - 1) goto(STEPS_ORDER[idx + 1]);
   };
+  const submit = () => {
+    const saved = window.SubmissionStore.createSubmission({
+      companyName: data.name,
+      sectors: data.sectors,
+      sector: data.sectors[0],
+      blurb: data.blurb,
+      location: data.hq,
+      hq: data.hq,
+      country: data.country,
+      stage: data.stage,
+      offers: data.offers,
+      needs: data.needs,
+      capabilities: data.offers,
+      contactName: data.contactName,
+      contactRole: data.contactRole,
+      email: data.email,
+    });
+    setSubmission(saved);
+    goto("done");
+  };
 
   return (
     <div className="join-shell">
@@ -111,8 +132,8 @@ function JoinApp() {
         {step === "want"    && <StepWant data={data} setField={setField} onNext={next} onBack={back} />}
         {step === "stage"   && <StepStage data={data} setField={setField} onNext={next} onBack={back} />}
         {step === "contact" && <StepContact data={data} setField={setField} onNext={next} onBack={back} />}
-        {step === "review"  && <StepReview data={data} onNext={() => goto("done")} onBack={back} onEdit={(s) => goto(s)} />}
-        {step === "done"    && <DoneScreen data={data} />}
+        {step === "review"  && <StepReview data={data} onNext={submit} onBack={back} onEdit={(s) => goto(s)} />}
+        {step === "done"    && <DoneScreen data={data} submission={submission} />}
       </main>
     </div>
   );
@@ -612,7 +633,7 @@ function ReviewBlock({ label, children, editTo, onEdit, last }) {
 
 /* ============================ Done ============================ */
 
-function DoneScreen({ data }) {
+function DoneScreen({ data, submission }) {
   return (
     <div className="join-card slide-anim" style={{ textAlign: "center" }}>
       <div className="success-mark">
@@ -629,6 +650,11 @@ function DoneScreen({ data }) {
         {data.name ? <><b style={{ color: "var(--text-1)" }}>{data.name}</b> נמצאת ברשימת ההצטרפות. </> : null}
         תוך 24 שעות נשלח לכם מייל ב-<span className="mono ltr" style={{ color: "var(--text-1)" }}>{data.email}</span> עם פרופיל החברה מוכן וקישור לדשבורד שלכם.
       </p>
+      {submission && (
+        <div className="pill green mono" style={{ marginTop: 14 }}>
+          SUBMISSION · {submission.id}
+        </div>
+      )}
 
       <div style={{
         marginTop: 36, padding: 28,

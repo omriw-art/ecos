@@ -10,8 +10,9 @@ const STEPS = [
   { id: "review",   label: "סקירה ושיגור", short: "Review" },
 ];
 
-function OnboardView() {
+function OnboardView({ onCompaniesChanged, onOpenCompany }) {
   const [step, setStep] = React.useState(0);
+  const [pending, setPending] = React.useState(() => window.SubmissionStore ? window.SubmissionStore.getPendingSubmissions() : []);
   const [data, setData] = React.useState({
     name: "", website: "", linkedin: "",
     sectors: [], stage: "Seed", founded: 2020, size: "",
@@ -30,6 +31,20 @@ function OnboardView() {
   const [imported, setImported] = React.useState(false);
 
   const setField = (k, v) => setData((d) => ({ ...d, [k]: v }));
+  const refreshPending = () => setPending(window.SubmissionStore ? window.SubmissionStore.getPendingSubmissions() : []);
+  const approveSubmission = (submission) => {
+    const company = window.CompanyStore.createCompany(window.SubmissionStore.toCompanyInput(submission));
+    window.SubmissionStore.approveSubmission(submission.id, company.id);
+    refreshPending();
+    onCompaniesChanged && onCompaniesChanged();
+    window.toast(`${company.name} אושרה ונוספה לחברות`, "ok");
+    onOpenCompany && onOpenCompany(company.id);
+  };
+  const rejectSubmission = (submission) => {
+    window.SubmissionStore.rejectSubmission(submission.id);
+    refreshPending();
+    window.toast(`${submission.companyName} נדחתה`, "ok");
+  };
 
   const pct = Math.round(((step) / (STEPS.length - 1)) * 100);
 
@@ -72,6 +87,12 @@ function OnboardView() {
           <span className="pill mono">STEP {step+1}/{STEPS.length}</span>
         </div>
       </div>
+
+      <PendingSubmissionsPanel
+        submissions={pending}
+        onApprove={approveSubmission}
+        onReject={rejectSubmission}
+      />
 
       {/* Progress */}
       <div className="card" style={{ padding: 16 }}>
@@ -151,6 +172,68 @@ function OnboardView() {
             )}
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function PendingSubmissionsPanel({ submissions, onApprove, onReject }) {
+  return (
+    <div className="card">
+      <div className="card-hd">
+        <div className="card-title"><span className="dot amber" /> Pending Join Submissions</div>
+        <span className={"pill " + (submissions.length ? "amber" : "green")}>{submissions.length} pending</span>
+      </div>
+      {!submissions.length ? (
+        <div className="muted tiny">אין הגשות ציבוריות שממתינות לאישור כרגע.</div>
+      ) : (
+        <div className="col gap-10">
+          {submissions.map((submission) => (
+            <PendingSubmissionRow
+              key={submission.id}
+              submission={submission}
+              onApprove={() => onApprove(submission)}
+              onReject={() => onReject(submission)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PendingSubmissionRow({ submission, onApprove, onReject }) {
+  const sectors = submission.sectors || [];
+  const created = submission.createdAt ? new Date(submission.createdAt).toLocaleString("he-IL") : "—";
+  return (
+    <div style={{
+      padding: 12,
+      background: "var(--bg-2)",
+      border: "1px solid var(--line-1)",
+      borderRadius: 10,
+      display: "grid",
+      gridTemplateColumns: "1fr auto",
+      gap: 12,
+      alignItems: "center",
+    }}>
+      <div className="col gap-8" style={{ minWidth: 0 }}>
+        <div className="flex center gap-8 wrap">
+          <div style={{ fontSize: 14, fontWeight: 600 }}>{submission.companyName}</div>
+          <span className="pill mono">{created}</span>
+          {submission.email && <span className="pill">{submission.email}</span>}
+        </div>
+        <div className="muted" style={{ fontSize: 12.5, lineHeight: 1.5 }}>
+          {submission.blurb || "אין תיאור"}
+        </div>
+        <div className="flex wrap gap-6">
+          {sectors.slice(0, 3).map((sector) => <SectorPill key={sector} id={sector} />)}
+          {submission.stage && <span className="pill">{submission.stage}</span>}
+          {(submission.location || submission.hq) && <span className="pill">{submission.location || submission.hq}</span>}
+        </div>
+      </div>
+      <div className="flex center gap-8">
+        <button className="btn btn-primary" onClick={onApprove}><window.I.Check size={13} /> אשר</button>
+        <button className="btn btn-ghost" onClick={onReject}>דחה</button>
       </div>
     </div>
   );

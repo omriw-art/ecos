@@ -70,6 +70,9 @@ function App() {
     setCompanies(window.CompanyStore.getCompanies());
     return company;
   };
+  const refreshCompanies = () => {
+    setCompanies(window.CompanyStore.getCompanies());
+  };
 
   const head = VIEW_TITLES[view] || { title: "ecos", crumb: "" };
 
@@ -85,7 +88,7 @@ function App() {
         {view === "map"          && <MapView onOpenCompany={goCompany} />}
         {view === "matches"   && <MatchesView onOpenCompany={goCompany} />}
         {view === "people"    && <PeopleView onNav={goNav} />}
-        {view === "onboard"   && <OnboardView />}
+        {view === "onboard"   && <OnboardView onCompaniesChanged={refreshCompanies} onOpenCompany={goCompany} />}
         {view === "settings"  && <SettingsView />}
       </main>
 
