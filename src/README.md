@@ -40,9 +40,10 @@ All JSX and CSS runtime files have been migrated from root into `src/`. The root
 | `ecos.html` | Dashboard entry point |
 | `join.html` | Onboarding entry point |
 | `index.html` | Public landing page |
-| `data.js` | Shared data — assigns all `window.*` globals |
+| ~~`data.js`~~ | Root copy preserved for rollback — **no longer loaded by HTML** |
+| `src/data/data.js` | **Active data source** — loaded by all three HTML entry points |
 
-`data.js` is the last major root runtime dependency. Migration plan: `docs/DATA_LAYER_MIGRATION_PLAN.md`.
+Root `data.js` should be deleted after manual testing confirms all entry points work with `src/data/data.js`.
 
 ## Batch Migration History
 
@@ -56,6 +57,7 @@ All JSX and CSS runtime files have been migrated from root into `src/`. The root
 | F | Switched dashboard `<script>` tags to `src/` |
 | G | Deleted root dashboard duplicates |
 | H | Moved `join-app.jsx` to `src/modules/onboarding/`, updated `join.html` |
+| J | Copied `data.js` → `src/data/data.js`; updated all 3 HTML entry points to load from `src/data/` |
 
 ## Important Rules
 

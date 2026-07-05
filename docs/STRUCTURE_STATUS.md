@@ -1,7 +1,7 @@
 # STRUCTURE_STATUS
 
-Date: 2026-07-05
-Migration status: Batches A–H complete
+Date: 2026-07-05 (updated after Batch J)
+Migration status: Batches A–J complete. All HTML entry points load data from src/data/data.js. Root data.js preserved for rollback.
 
 ---
 
@@ -43,7 +43,8 @@ The dashboard and join app runtime have fully migrated from the root directory i
 
 | File | Loaded by | Notes |
 |---|---|---|
-| `data.js` | `ecos.html?v=3`, `join.html`, `index.html?v=4` | Last root runtime dependency. Assigns all globals. Migration planned in `docs/DATA_LAYER_MIGRATION_PLAN.md`. |
+| `data.js` | ~~loaded by HTML~~ | **No longer referenced by HTML** (Batch J). Root copy preserved for rollback. Delete after manual testing. |
+| `src/data/data.js` | `ecos.html?v=3`, `join.html`, `index.html?v=4` | **Now active.** Loaded by all three HTML entry points. |
 | `ecos.html` | Browser directly | Entry point — stays at root |
 | `join.html` | Browser directly | Entry point — stays at root |
 | `index.html` | Browser directly | Entry point — stays at root |
@@ -93,9 +94,10 @@ The dashboard and join app runtime have fully migrated from the root directory i
 
 Ordered by risk and dependency:
 
-1. **Copy `data.js` to `src/data/data.js`** — zero-risk copy-only step. No HTML changes. See `docs/DATA_LAYER_MIGRATION_PLAN.md`.
-2. **Migrate `data.js` references per-HTML-file** — update `ecos.html` first, test, then `join.html`, then `index.html`. One at a time, one commit each.
-3. **Manual testing baseline** — create a documented test checklist and run it after each structural change going forward.
-4. **UX redesign sprint** — once the structure is stable, address UI improvements with full confidence in the codebase.
-5. **MVP product modules** — governance, export, and search modules when product direction is clearer.
-6. **Supabase / backend** — real data persistence, auth, and API when MVP scope is decided. This is a major architectural shift.
+1. ~~**Copy `data.js` to `src/data/data.js`**~~ — **Done (Batch J Phase 1).**
+2. ~~**Migrate `data.js` references per-HTML-file**~~ — **Done (Batch J Phases 2–4).** All three HTML entry points now load `src/data/data.js`.
+3. **Delete root `data.js`** — cleanup batch after manual testing confirms all entry points work. `git rm data.js`.
+4. **Manual testing baseline** — test all three entry points before and after root `data.js` deletion.
+5. **UX redesign sprint** — once the structure is stable, address UI improvements with full confidence in the codebase.
+6. **MVP product modules** — governance, export, and search modules when product direction is clearer.
+7. **Supabase / backend** — real data persistence, auth, and API when MVP scope is decided. This is a major architectural shift.

@@ -147,17 +147,21 @@ The current `window.*` globals approach is a prototype pattern that should not s
 
 ---
 
-## 8. Recommendation
+## 8. Recommendation — Updated After Batch J
 
-**The next safe coding batch is Phase A: copy-only.**
+**Phases A–D completed in Batch J (2026-07-05).**
 
-```bash
-cp data.js src/data/data.js
-diff data.js src/data/data.js  # verify identical
-```
+| Phase | Status |
+|---|---|
+| A — Copy `data.js` → `src/data/data.js` | ✅ Done — commit `d29c36b` |
+| B — Update `ecos.html` | ✅ Done — commit `9e609e6` |
+| C — Update `join.html` | ✅ Done — commit `3c7ed78` |
+| D — Update `index.html` | ✅ Done — commit `3266507` |
+| E — Delete root `data.js` | ⏳ Pending — requires manual test of all 3 entry points |
 
-No HTML changes. No runtime impact. Zero risk. Establishes `src/data/` as the landing zone before any HTML is touched.
+**Root `data.js` still exists as rollback target.** Delete only after confirming:
+- `ecos.html` dashboard renders, all globals defined
+- `join.html` wizard renders, all globals defined
+- `index.html` landing loads, company directory visible
 
-Phase B (`ecos.html` update) should be a separate batch with its own manual test checkpoint before moving to Phase C.
-
-Do not combine Phase A and Phase B in the same commit. The copy-only step should be committed independently so it is independently reversible.
+Rollback path: revert script src values in all 3 HTML files back to `data.js` (or `data.js?v=3` / `data.js?v=4`).

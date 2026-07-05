@@ -1,7 +1,7 @@
 # ROOT_RUNTIME_AUDIT
 
-Date: 2026-07-05
-Status: Post Batch H (join-app.jsx migrated)
+Date: 2026-07-05 (updated after Batch J)
+Status: Post Batch J — all HTML entry points now load data from src/data/data.js. Root data.js preserved for rollback.
 
 ---
 
@@ -27,9 +27,9 @@ All three entry points remain at root. They are loaded directly by the browser a
 
 | File | Used By | Notes |
 |---|---|---|
-| `data.js` | `ecos.html`, `join.html`, `index.html` | Last major root runtime dependency. Assigns all globals via `Object.assign(window, {...})`. Migration requires updating all three HTML files. |
+| `data.js` | ~~`ecos.html`, `join.html`, `index.html`~~ | **No longer referenced by HTML** (Batch J). All three HTML files now load `src/data/data.js`. Root `data.js` preserved for rollback — delete after testing. |
 
-`data.js` is the only remaining root JSX/JS runtime dependency that is not an entry point.
+`data.js` is the only remaining root JS file that is not an entry point. It is now a stale duplicate — no longer loaded at runtime.
 
 ---
 
@@ -83,13 +83,15 @@ All JSX and CSS runtime files now load from `src/`:
 
 Every HTML file that loads `data.js`, with exact path and cache-buster:
 
-| HTML file | Exact script tag | Line |
-|---|---|---|
-| `ecos.html` | `<script src="data.js?v=3"></script>` | 21 |
-| `join.html` | `<script src="data.js"></script>` | 22 |
-| `index.html` | `<script src="data.js?v=4"></script>` | 450 |
+**Updated after Batch J — all now point to src/data/data.js:**
 
-Note: `ecos.html` uses `?v=3` and `index.html` uses `?v=4`. These cache-buster versions are different and must each be preserved or intentionally updated when migrating.
+| HTML file | Current script tag | Line |
+|---|---|---|
+| `ecos.html` | `<script src="src/data/data.js?v=3"></script>` | 21 |
+| `join.html` | `<script src="src/data/data.js"></script>` | 22 |
+| `index.html` | `<script src="src/data/data.js?v=4"></script>` | 450 |
+
+Cache-buster query strings preserved exactly. Root `data.js` no longer referenced by any HTML file.
 
 ---
 
@@ -100,8 +102,9 @@ Note: `ecos.html` uses `?v=3` and `index.html` uses `?v=4`. These cache-buster v
 | Batch D | `styles.css`, `join-styles.css`, `icons.jsx`, `atoms.jsx`, `tweaks-panel.jsx` |
 | Batch G | `app.jsx`, `shell.jsx`, `view-dashboard.jsx`, `view-companies.jsx`, `view-capabilities.jsx`, `view-map.jsx`, `view-matches.jsx`, `view-misc.jsx`, `view-onboard.jsx` |
 | Batch H | `join-app.jsx` |
+| Batch J | n/a — `data.js` HTML references migrated to `src/data/`; root `data.js` pending deletion after testing |
 
-Total root JSX/CSS files removed: **14**
+Total root JSX/CSS files removed: **14** (data.js cleanup pending)
 
 ---
 
