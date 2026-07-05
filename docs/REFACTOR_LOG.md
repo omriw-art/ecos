@@ -126,3 +126,42 @@ Prepare the future modular structure without changing current app behavior. The 
 - [ ] Ramon.Space profile opens
 - [ ] Onboarding Readiness step (step 4) renders chips
 - [ ] Browser console has no new errors
+
+---
+
+## Batch B — CSS Runtime Migration
+
+### Date
+2026-07-05
+
+### Files Modified
+- `ecos.html` — CSS link path updated
+- `join.html` — CSS link paths updated (2 links)
+- `docs/REFACTOR_LOG.md` — Batch B entry appended
+- `docs/BATCH_B_SELF_REVIEW.md` — created
+
+### CSS Paths Updated
+| File | Old href | New href |
+|---|---|---|
+| `ecos.html` | `styles.css` | `src/shared/styles/styles.css` |
+| `join.html` | `styles.css` | `src/shared/styles/styles.css` |
+| `join.html` | `join-styles.css` | `src/shared/styles/join-styles.css` |
+
+### Runtime Impact
+`ecos.html` and `join.html` now load CSS from `src/shared/styles/`. CSS file contents are unchanged. `index.html` was not affected (uses inline CSS only).
+
+### Root CSS Files
+`styles.css` and `join-styles.css` remain at root — not deleted, not moved. They are no longer loaded at runtime by the two HTML files, but are preserved as backup.
+
+### Rollback
+Revert the 3 `href` values in `ecos.html` and `join.html` back to:
+- `styles.css`
+- `join-styles.css`
+
+### Manual Test Checklist
+- [ ] `ecos.html` opens with visual design identical to before
+- [ ] `join.html` opens with visual design identical to before
+- [ ] Browser console has no CSS 404 errors
+- [ ] Network tab shows `src/shared/styles/styles.css` loaded (not root `styles.css`)
+- [ ] Network tab shows `src/shared/styles/join-styles.css` loaded for `join.html`
+- [ ] `index.html` unaffected — loads and looks identical
