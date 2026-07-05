@@ -2,53 +2,64 @@
 
 ## Purpose
 
-This folder is the future modular source structure for the Ecosystem OS MVP.
+This folder is the modular source structure for the Ecosystem OS MVP.
 
-## Current Status (after Batch E)
+## Migration Status (as of Batch H — 2026-07-05)
 
-The active runtime files for the shared layer are now loaded from `src/shared/`:
-- `src/shared/styles/styles.css` — active (loaded by `ecos.html`, `join.html`)
-- `src/shared/styles/join-styles.css` — active (loaded by `join.html`)
-- `src/shared/icons/icons.jsx` — active (loaded by `ecos.html`, `join.html`)
-- `src/shared/components/atoms.jsx` — active (loaded by `ecos.html`)
-- `src/shared/components/tweaks-panel.jsx` — active (loaded by `ecos.html`)
+All JSX and CSS runtime files have been migrated from root into `src/`. The root directory now only contains HTML entry points, `data.js`, and static assets.
 
-The core dashboard and app files are **reference copies only** — not yet active:
-- `ecos.html` still loads `app.jsx`, `shell.jsx`, and all `view-*.jsx` from the root.
+## Active src Runtime Files
 
-## Copied Files (Batch A — now active via Batches B + C)
+### Shared Layer
+- `src/shared/styles/styles.css` — loaded by `ecos.html` and `join.html`
+- `src/shared/styles/join-styles.css` — loaded by `join.html`
+- `src/shared/icons/icons.jsx` — `window.I` icon registry; loaded by `ecos.html` and `join.html`
+- `src/shared/components/atoms.jsx` — `window.ScoreRing`, `window.CoLogo`, etc.; loaded by `ecos.html`
+- `src/shared/components/tweaks-panel.jsx` — `window.TweaksPanel`; loaded by `ecos.html`
 
-- `src/shared/icons/icons.jsx` ← was root `icons.jsx` (root copy deleted in Batch D)
-- `src/shared/components/atoms.jsx` ← was root `atoms.jsx` (root copy deleted in Batch D)
-- `src/shared/components/tweaks-panel.jsx` ← was root `tweaks-panel.jsx` (root copy deleted in Batch D)
-- `src/shared/styles/styles.css` ← was root `styles.css` (root copy deleted in Batch D)
-- `src/shared/styles/join-styles.css` ← was root `join-styles.css` (root copy deleted in Batch D)
+### Dashboard App
+- `src/app/shell.jsx` — sidebar and shell layout
+- `src/app/app.jsx` — React root mount
 
-## Copied Files (Batch E — reference copies, not yet active)
+### Dashboard Modules
+- `src/modules/dashboard/view-dashboard.jsx`
+- `src/modules/organizations/view-companies.jsx`
+- `src/modules/capabilities/view-capabilities.jsx`
+- `src/modules/map/view-map.jsx`
+- `src/modules/matches/view-matches.jsx`
+- `src/modules/misc/view-misc.jsx`
+- `src/modules/onboarding/view-onboard.jsx`
 
-- `src/app/app.jsx` ← copy of root `app.jsx`
-- `src/app/shell.jsx` ← copy of root `shell.jsx`
-- `src/modules/dashboard/view-dashboard.jsx` ← copy of root `view-dashboard.jsx`
-- `src/modules/organizations/view-companies.jsx` ← copy of root `view-companies.jsx`
-- `src/modules/capabilities/view-capabilities.jsx` ← copy of root `view-capabilities.jsx`
-- `src/modules/map/view-map.jsx` ← copy of root `view-map.jsx`
-- `src/modules/matches/view-matches.jsx` ← copy of root `view-matches.jsx`
-- `src/modules/misc/view-misc.jsx` ← copy of root `view-misc.jsx`
-- `src/modules/onboarding/view-onboard.jsx` ← copy of root `view-onboard.jsx`
+### Onboarding / Join App
+- `src/modules/onboarding/join-app.jsx` — loaded by `join.html`
 
-## Important Rule
+## Active Root Files (NOT in src)
 
-Files in `src/` that are not yet active are reference copies only.
-Do not edit them expecting those changes to appear in the running app.
-Until `ecos.html` script tags are updated to point to `src/`, the root files remain the source of truth.
+| File | Role |
+|---|---|
+| `ecos.html` | Dashboard entry point |
+| `join.html` | Onboarding entry point |
+| `index.html` | Public landing page |
+| `data.js` | Shared data — assigns all `window.*` globals |
 
-## Migration Status
+`data.js` is the last major root runtime dependency. Migration plan: `docs/DATA_LAYER_MIGRATION_PLAN.md`.
 
-| Batch | Action | Status |
-|---|---|---|
-| A | Copy shared files to `src/shared/` | Done |
-| B | Switch CSS `<link>` tags to `src/shared/styles/` | Done — active |
-| C | Switch shared JSX `<script>` tags to `src/shared/` | Done — active |
-| D | Delete root shared duplicates | Done |
-| E | Copy dashboard files to `src/modules/` | Done — not yet active |
-| F (next) | Switch `<script>` tags in `ecos.html` to `src/` dashboard files | Pending approval |
+## Batch Migration History
+
+| Batch | Action |
+|---|---|
+| A | Copied shared files to `src/shared/` |
+| B | Switched CSS `<link>` tags to `src/shared/styles/` |
+| C | Switched shared JSX `<script>` tags to `src/shared/` |
+| D | Deleted root shared duplicates |
+| E | Copied dashboard files to `src/modules/` |
+| F | Switched dashboard `<script>` tags to `src/` |
+| G | Deleted root dashboard duplicates |
+| H | Moved `join-app.jsx` to `src/modules/onboarding/`, updated `join.html` |
+
+## Important Rules
+
+- Files in `src/` are all active runtime files (no longer reference-copies).
+- Do not edit root files (`ecos.html`, `join.html`, `index.html`, `data.js`) expecting it to affect `src/` copies.
+- The only remaining root runtime JS file is `data.js`.
+- See `docs/STRUCTURE_STATUS.md` for the full current state.
