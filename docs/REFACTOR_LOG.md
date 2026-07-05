@@ -219,3 +219,49 @@ Root JSX files were not deleted — reverting the src values is sufficient.
 - [ ] Browser console: no `window.I undefined` errors
 - [ ] Browser console: no `ScoreRing / CoLogo / TweaksPanel undefined` errors
 - [ ] `index.html` unaffected — loads and looks identical
+
+---
+
+## Batch D — Cleanup Migrated Root Shared Files
+
+### Date
+2026-07-05
+
+### Files Deleted
+- `styles.css`
+- `join-styles.css`
+- `icons.jsx`
+- `atoms.jsx`
+- `tweaks-panel.jsx`
+
+### Reason
+These files were migrated to `src/shared/` in Batches A–C and are no longer referenced by any runtime HTML file. Removing them eliminates the stale-duplicate editing trap.
+
+### Runtime Impact
+None. Runtime uses `src/shared/` paths exclusively since Batches B and C. `index.html` uses inline CSS only and did not reference any of these files.
+
+### Audit Result
+Searched all runtime files for bare references to the 5 root filenames:
+`ecos.html`, `join.html`, `index.html`, `app.jsx`, `shell.jsx`, `join-app.jsx`, `view-*.jsx`
+
+Result: all matches found in `ecos.html` and `join.html` already point to `src/shared/...` paths. No bare root references (`href="styles.css"`, `src="icons.jsx"`, etc.) were found in any runtime file. Deletion confirmed safe.
+
+### Rollback
+Restore deleted files from the previous commit:
+```
+git checkout HEAD~1 -- styles.css join-styles.css icons.jsx atoms.jsx tweaks-panel.jsx
+```
+
+### Manual Test Checklist
+- [ ] `ecos.html` opens without errors
+- [ ] Dashboard renders correctly
+- [ ] Sidebar icons render (window.I globals)
+- [ ] Companies view opens
+- [ ] Ramon.Space profile opens — Tech / Match / Connections tabs work
+- [ ] Onboarding Readiness step renders chips
+- [ ] `join.html` opens without errors
+- [ ] Join wizard icons render
+- [ ] Browser console: no 404 errors
+- [ ] Browser console: no `window.I undefined` errors
+- [ ] Browser console: no `ScoreRing / CoLogo / TweaksPanel undefined` errors
+- [ ] `index.html` opens and looks identical
