@@ -9,7 +9,7 @@ const NAV = [
 
   { id: "matches",   label: "התאמות לעובדים", icon: "Sparkles",  section: "Intelligence" },
   { id: "copilot",   label: "AI Copilot",     icon: "Cpu",       section: "Intelligence" },
-  { id: "people",    label: "ארגון",          icon: "Users",     section: "Intelligence", count: () => window.PEOPLE.length },
+  { id: "people",    label: "ארגון",          icon: "Users",     section: "Intelligence" },
 
   { id: "onboard",   label: "Onboarding לחברה", icon: "Rocket",  section: "פעולות" },
   { id: "settings",  label: "הגדרות",         icon: "Settings",  section: "פעולות" },
@@ -142,7 +142,7 @@ function Topbar({ title, crumb, onOpenCopilot, viewActions, onOpenCompany }) {
 
       {viewActions}
 
-      <button className="icon-btn" title="התראות">
+      <button className="icon-btn" disabled title="התראות — בקרוב">
         <window.I.Bell size={15} />
       </button>
       <button className="icon-btn glow" onClick={onOpenCopilot} title="AI Copilot">

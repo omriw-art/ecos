@@ -33,6 +33,32 @@ function OnboardView({ onCompaniesChanged, onOpenCompany }) {
 
   const setField = (k, v) => setData((d) => ({ ...d, [k]: v }));
   const refreshSubmissions = () => setSubmissions(window.SubmissionStore ? window.SubmissionStore.getSubmissions() : []);
+
+  const handleSubmit = () => {
+    if (!data.name.trim()) { window.toast("שם חברה הוא שדה חובה", "err"); return; }
+    window.SubmissionStore.createSubmission({
+      companyName: data.name,
+      name: data.name,
+      website: data.website,
+      sectors: data.sectors.length ? data.sectors : ["earth-obs"],
+      stage: data.stage,
+      blurb: data.offers.filter(Boolean).join(" · ") || data.name,
+      hq: data.hq,
+      country: data.country,
+      offers: data.offers.filter(Boolean),
+      needs: data.needs.filter(Boolean),
+      capabilities: data.tech.filter(Boolean),
+      tags: data.tech.filter(Boolean),
+      contactName: (data.contacts[0] || {}).name,
+      contactRole: (data.contacts[0] || {}).role,
+      email: (data.contacts[0] || {}).email,
+    });
+    refreshSubmissions();
+    window.toast(`${data.name} הוגשה לבדיקה — ממתינה לאישור מנהל`, "ok");
+    setStep(0);
+    setImported(false);
+    setData({ name: "", website: "", linkedin: "", sectors: [], stage: "Seed", founded: 2020, size: "", country: "ישראל", hq: "", tech: ["", "", ""], offers: ["", ""], needs: ["", ""], customers: "", readiness: "Pilot Ready", govReady: "ידני", budgetMin: 50, budgetMax: 500, interests: [], contacts: [{ name: "", role: "", email: "" }] });
+  };
   const approveSubmission = (submission) => {
     const duplicate = window.CompanyStore.findCompanyByName(submission.companyName);
     if (duplicate) {
@@ -93,7 +119,7 @@ function OnboardView({ onCompaniesChanged, onOpenCompany }) {
           <div className="sub">פרסמו את החברה שלכם באקוסיסטם החלל. ייבוא חכם או מילוי ידני, פחות מ-4 דקות.</div>
         </div>
         <div className="ops">
-          <span className="pill"><span className="swatch" style={{ background: "var(--green)" }} /> שמירה אוטומטית</span>
+          <span className="pill mono" title="נתונים נשמרים מקומית בלבד">LOCAL · DEMO</span>
           <span className="pill mono">STEP {step+1}/{STEPS.length}</span>
         </div>
       </div>
@@ -148,11 +174,11 @@ function OnboardView({ onCompaniesChanged, onOpenCompany }) {
               <window.I.ArrowRight size={13} /> חזרה
             </button>
             <div className="flex gap-8 center">
-              <button className="btn btn-ghost">שמור טיוטה</button>
+              <button className="btn btn-ghost" disabled title="שמירת טיוטה — בקרוב">שמור טיוטה</button>
               {step < STEPS.length - 1 ? (
                 <button className="btn btn-primary" onClick={() => setStep(step + 1)}>המשך <window.I.ArrowLeft size={13} /></button>
               ) : (
-                <button className="btn btn-primary"><window.I.Send size={13} /> שגר ל-ecos</button>
+                <button className="btn btn-primary" onClick={handleSubmit}><window.I.Send size={13} /> שגר ל-ecos</button>
               )}
             </div>
           </div>
@@ -314,7 +340,7 @@ function StepImport({ onImport, importing, imported, skip }) {
         }} onClick={onImport} disabled={importing}>
           <window.I.Linkedin size={26} style={{ color: "var(--blue)" }} />
           <div style={{ fontSize: 14, fontWeight: 600 }}>ייבוא מ-LinkedIn</div>
-          <div className="tiny dim">קליק אחד · OAuth מאובטח</div>
+          <div className="tiny dim">Demo · מילוי מדגם</div>
         </button>
         <button className="btn" style={{
           flexDirection: "column", padding: 24, gap: 10,
@@ -323,7 +349,7 @@ function StepImport({ onImport, importing, imported, skip }) {
         }} onClick={onImport} disabled={importing}>
           <window.I.Globe size={26} style={{ color: "var(--violet)" }} />
           <div style={{ fontSize: 14, fontWeight: 600 }}>סריקת אתר אינטרנט</div>
-          <div className="tiny dim">AI ישלוף את כל הפרטים</div>
+          <div className="tiny dim">Demo · מילוי מדגם</div>
         </button>
       </div>
 
@@ -335,7 +361,7 @@ function StepImport({ onImport, importing, imported, skip }) {
       {importing && (
         <div className="hint-ai" style={{ background: "oklch(0.18 0.07 250 / 0.4)", borderColor: "oklch(0.35 0.10 250)", color: "var(--blue)" }}>
           <div className="pulse"><window.I.Cpu size={12} /></div>
-          <span>טוען LinkedIn · מנתח אתר · מסווג פעילות · יוצר Tags · יישלם מילוי…</span>
+          <span>Demo · ממלא שדות לדוגמה…</span>
         </div>
       )}
       {imported && (
