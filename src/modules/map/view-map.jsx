@@ -192,6 +192,14 @@ function MapView({ onOpenCompany }) {
                 </text>
               );
             })}
+            {/* Center label for companies with non-canonical / imported sectors */}
+            {COMPANIES.some((c) => { const s = (c.sectors || [])[0]; return s && !SECTORS.find((x) => x.id === s); }) && (
+              <text x={W / 2} y={H / 2 - 10} textAnchor="middle"
+                    fontFamily="var(--font-mono)" fontSize="8"
+                    fill="var(--text-4)" opacity="0.4" letterSpacing="0.18em">
+                OTHER / IMPORTED
+              </text>
+            )}
           </svg>
 
           {/* Floating focused-node card */}

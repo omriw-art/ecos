@@ -210,7 +210,7 @@ function CompaniesView({ onOpenCompany, onCreateCompany }) {
                     <div style={{ fontWeight: 500 }}>{c.name} {c.strategic && <window.I.Star size={11} style={{ color: "var(--amber)", verticalAlign: 1 }} fill={true} />}</div>
                     <div className="mono tiny" style={{ color: "var(--text-4)" }}>{String(c.hq || "").toUpperCase()}</div>
                   </td>
-                  <td><div className="flex gap-4 wrap">{(c.sectors || []).slice(0,2).map((s) => <SectorPill key={s} id={s} />)}</div></td>
+                  <td><div className="flex gap-4 wrap">{(c.sectors || []).slice(0,2).map((s) => window.SECTORS.find((x) => x.id === s) ? <SectorPill key={s} id={s} /> : <span key={s} className="pill">{s}</span>)}</div></td>
                   <td>{c.flag} {c.country}</td>
                   <td><span className="pill">{c.stage}</span></td>
                   <td className="mono tabnum" style={{ color: "var(--text-2)" }}>{c.size}</td>
@@ -250,7 +250,7 @@ function CoCard({ c, onClick }) {
         display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden",
       }}>{c.blurb}</div>
       <div className="co-tags">
-        {sectors.slice(0,3).map((s) => <SectorPill key={s} id={s} />)}
+        {sectors.slice(0,3).map((s) => window.SECTORS.find((x) => x.id === s) ? <SectorPill key={s} id={s} /> : <span key={s} className="pill">{s}</span>)}
       </div>
       <div className="flex between center" style={{ marginTop: 4, paddingTop: 10, borderTop: "1px solid var(--line-1)" }}>
         <div className="flex gap-12 mono tiny" style={{ color: "var(--text-4)" }}>
@@ -321,7 +321,7 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany }) {
             </div>
             <div style={{ fontSize: 14, color: "var(--text-2)", maxWidth: "75ch", lineHeight: 1.6 }}>{c.blurb}</div>
             <div className="co-tags" style={{ marginTop: 14 }}>
-              {c.sectors.map((s) => <SectorPill key={s} id={s} />)}
+              {c.sectors.map((s) => window.SECTORS.find((x) => x.id === s) ? <SectorPill key={s} id={s} /> : <span key={s} className="pill">{s}</span>)}
             </div>
           </div>
 
@@ -581,7 +581,7 @@ function ConnectionsTab({ c, overlapCo, onOpenCompany }) {
               <CoLogo company={o} size={32} />
               <div className="col" style={{ flex: 1 }}>
                 <div style={{ fontSize: 13 }}>{o.name}</div>
-                <div className="mono tiny" style={{ color: "var(--text-4)" }}>{o.sectors.slice(0,2).map((s) => window.SECTORS.find((x) => x.id === s)?.label).join(" · ").toUpperCase()}</div>
+                <div className="mono tiny" style={{ color: "var(--text-4)" }}>{o.sectors.slice(0,2).map((s) => window.SECTORS.find((x) => x.id === s)?.label || s).join(" · ").toUpperCase()}</div>
               </div>
             </div>
           ))}
