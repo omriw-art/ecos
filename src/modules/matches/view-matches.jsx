@@ -39,10 +39,10 @@ function MatchesView({ onOpenCompany }) {
           <div className="sub">התאמות דטרמיניסטיות בין חברות, לפי יכולות, צרכים, הצעות, שלב ומוכנות.</div>
         </div>
         <div className="ops">
-          <button className="btn" disabled title="Preview only — weights are fixed in this batch">
+          <button className="btn" disabled title="עריכת משקלים — בקרוב">
             <window.I.Settings size={13} /> משקלים קבועים
           </button>
-          <button className="btn btn-primary" disabled title="Matches update automatically from current company data">
+          <button className="btn btn-primary" disabled title="ההתאמות מחושבות מהנתונים המקומיים — מתעדכן אוטומטית">
             <window.I.Sparkles size={13} /> מתעדכן מהנתונים
           </button>
         </div>

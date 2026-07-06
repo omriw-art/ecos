@@ -232,7 +232,7 @@ function MapView({ onOpenCompany }) {
             <div className="mono tiny" style={{ color: "var(--text-3)", letterSpacing: "0.14em", textTransform: "uppercase" }}>LEGEND</div>
             <div className="flex center gap-6"><span style={{ width: 10, height: 10, borderRadius: 50, background: "oklch(0.72 0.18 295)" }} /> <span style={{ color: "var(--text-2)" }}>חברה</span></div>
             <div className="flex center gap-6"><span style={{ width: 14, height: 14, borderRadius: 50, background: "oklch(0.72 0.18 295)", opacity: 0.3 }} /> <span style={{ color: "var(--text-2)" }}>אסטרטגית · pulsing</span></div>
-            <div className="flex center gap-6"><span style={{ width: 18, height: 1, background: "var(--line-3)" }} /> <span style={{ color: "var(--text-2)" }}>חיבור פעיל</span></div>
+            <div className="flex center gap-6"><span style={{ width: 18, height: 1, background: "var(--line-3)" }} /> <span style={{ color: "var(--text-2)" }}>חיבור מוגדר</span></div>
           </div>
         </div>
       </div>
