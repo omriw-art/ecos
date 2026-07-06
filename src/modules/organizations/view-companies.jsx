@@ -24,36 +24,48 @@ function parseList(value) {
     .filter(Boolean);
 }
 
-// Polished, product-facing labels/headings — deliberately not the mono/uppercase
-// console style used for dashboard chrome, since this is a data-entry form.
-// Font sizes/heights are boosted well past the shared .input/.select/.textarea
-// defaults (13px / ~38px tall) because the shared style is tuned for dense
-// dashboard chrome, not a readable data-entry form — scoped via
-// .company-editor-form so no other view is affected.
-const editorLabelStyle = { fontFamily: "inherit", fontSize: 14.5, fontWeight: 700, letterSpacing: "normal", textTransform: "none", color: "var(--text-1)" };
-const editorSectionHeadingStyle = { fontFamily: "inherit", fontSize: 19, fontWeight: 800, letterSpacing: "normal", textTransform: "none", color: "var(--text-1)", marginBottom: 16, paddingBottom: 10, borderBottom: "1px solid var(--line-1)" };
-const editorGridStyle = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 };
+// Rebuilt company editor UI (P13C). Deliberately NOT the mono/uppercase
+// console style used for dashboard chrome — this is a plain-language,
+// high-contrast data-entry form. Every size below is enforced with
+// `!important` and scoped to `.company-editor-form-v2` (a class unique to
+// this component) so it (a) cannot be beaten by the shared .input/.select/
+// .textarea rules regardless of stylesheet order, and (b) cannot leak into
+// any other form in the app.
+const editorHeadingStyle = { fontFamily: "inherit", fontSize: 26, fontWeight: 800, letterSpacing: "normal", textTransform: "none", color: "var(--text-1)", margin: 0 };
+const editorSubtitleStyle = { fontFamily: "inherit", fontSize: 16, fontWeight: 500, letterSpacing: "normal", textTransform: "none", color: "var(--text-2)", marginTop: 4 };
+const editorStatusStyle = { fontFamily: "inherit", fontSize: 12.5, letterSpacing: "normal", textTransform: "none", color: "var(--text-3)", marginTop: 6 };
+const editorSectionHeadingStyle = { fontFamily: "inherit", fontSize: 20, fontWeight: 800, letterSpacing: "normal", textTransform: "none", color: "var(--text-1)", marginBottom: 18, paddingTop: 4, paddingBottom: 10, borderBottom: "2px solid var(--line-2)" };
+const editorGridStyle = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18 };
 const editorFullRow = { gridColumn: "1 / -1" };
 const editorFieldStyle = { display: "flex", flexDirection: "column", gap: 8 };
-const editorHelpStyle = { fontSize: 12.5, color: "var(--text-3)", marginTop: 2 };
+const editorLabelStyle = { fontFamily: "inherit", fontSize: 15, fontWeight: 700, letterSpacing: "normal", textTransform: "none", color: "var(--text-1)" };
+const editorHelpStyle = { fontSize: 13, color: "var(--text-3)", marginTop: 2 };
 
-// Injected once per mount, scoped to .company-editor-form only — keeps every
-// other form/view in the app on the original shared input styling.
+// Injected once per mount. Scoped to .company-editor-form-v2 with !important
+// so no shared/global rule (whatever its source order or specificity) can
+// silently win and make this look like the old form again.
 function EditorStyleOverrides() {
   return (
     <style>{`
-      .company-editor-form input.input,
-      .company-editor-form select.select,
-      .company-editor-form textarea.textarea {
-        font-size: 16px;
-        padding: 13px 14px;
-        min-height: 50px;
-        color: var(--text-1);
-        border-color: var(--line-2);
+      .company-editor-form-v2 { background: var(--bg-2, var(--bg-1)) !important; border: 1px solid var(--line-3) !important; border-radius: 20px !important; padding: 32px !important; }
+      .company-editor-form-v2 input.input,
+      .company-editor-form-v2 select.select,
+      .company-editor-form-v2 textarea.textarea {
+        font-size: 17px !important;
+        padding: 14px 16px !important;
+        min-height: 54px !important;
+        border-radius: 14px !important;
+        color: var(--text-1) !important;
+        background: var(--bg-1) !important;
+        border: 1px solid var(--line-3) !important;
       }
-      .company-editor-form textarea.textarea { min-height: 130px; }
-      .company-editor-form input.input::placeholder,
-      .company-editor-form textarea.textarea::placeholder { color: var(--text-3); opacity: 1; }
+      .company-editor-form-v2 textarea.textarea { min-height: 140px !important; }
+      .company-editor-form-v2 input.input::placeholder,
+      .company-editor-form-v2 textarea.textarea::placeholder { color: var(--text-3) !important; opacity: 1 !important; }
+      .company-editor-form-v2 .btn { font-size: 15px !important; padding: 12px 20px !important; border-radius: 12px !important; }
+      @media (max-width: 720px) {
+        .company-editor-form-v2 { padding: 20px !important; }
+      }
     `}</style>
   );
 }
@@ -110,10 +122,14 @@ function CompanyEditor({ company, title, submitLabel, onSave, onCancel }) {
   };
 
   return (
-    <form className="card company-editor-form" style={{ maxWidth: 960, margin: "0 auto 20px" }} onSubmit={submit}>
+    <form className="company-editor-form-v2" style={{ maxWidth: 960, margin: "0 auto 20px" }} onSubmit={submit}>
       <EditorStyleOverrides />
-      <div className="card-hd">
-        <div className="card-title"><span className="dot green" /> {title}</div>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28 }}>
+        <div>
+          <h2 style={editorHeadingStyle}>{company ? "עריכת חברה" : title}</h2>
+          {company?.name && <div style={editorSubtitleStyle}>{company.name}</div>}
+          <div style={editorStatusStyle}>שמירה מקומית בדפדפן</div>
+        </div>
         {onCancel && <button type="button" className="btn btn-ghost" onClick={onCancel}>ביטול</button>}
       </div>
 
@@ -166,8 +182,8 @@ function CompanyEditor({ company, title, submitLabel, onSave, onCancel }) {
         </EditorField>
       </EditorSection>
 
-      {error && <div className="help" style={{ color: "var(--rose)", marginTop: 10, fontSize: 13 }}>{error}</div>}
-      <div className="flex center gap-8" style={{ marginTop: 18 }}>
+      {error && <div className="help" style={{ color: "var(--rose)", marginTop: 10, fontSize: 14 }}>{error}</div>}
+      <div className="flex center gap-8" style={{ marginTop: 28, paddingTop: 20, borderTop: "1px solid var(--line-2)" }}>
         {onCancel && <button type="button" className="btn" onClick={onCancel}>סגור</button>}
         <button type="submit" className="btn btn-primary"><window.I.Check size={13} /> {submitLabel}</button>
       </div>
