@@ -12,8 +12,10 @@ Last known baseline:
 - Imported companies can be displayed, edited, saved, and exported.
 - Fake user/activity/live signals were removed.
 - Fake app actions were hardened.
-- Safe reset to seed exists.
-- Last known committed feature: P10A safe local data reset.
+- Safe reset to seed: confirmed working.
+- P11A Demo Readiness QA: passed, no changes needed — app is presentable as a truthful local MVP demo.
+- AI runner workspace committed in 6b92645 (ai/ + scripts/run-claude-task.sh).
+- Last known commit: 6b92645 chore: add token-efficient Claude runner.
 - Known uncommitted file: ecos-qr.png, intentionally unstaged.
 
 Workflow:
