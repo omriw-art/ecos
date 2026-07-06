@@ -43,26 +43,69 @@ function Dashboard({ onOpenCompany, onNav }) {
     const file = e.target.files[0];
     e.target.value = "";
     if (!file) return;
+    const ext = file.name.split(".").pop().toLowerCase();
+    if (ext === "xlsx" || ext === "xls") {
+      window.toast && window.toast("ייבוא Excel: ייצא את הקובץ כ-CSV UTF-8 ואז ייבא את קובץ ה-CSV.", "err");
+      return;
+    }
     const reader = new FileReader();
     reader.onload = (ev) => {
-      try {
-        const parsed = JSON.parse(ev.target.result);
-        if (parsed.app && parsed.app !== "Ecosystem OS") {
-          window.toast && window.toast("הקובץ אינו מיצוא של Ecosystem OS", "err");
-          return;
+      if (ext === "csv") {
+        try {
+          const companies = parseCSVCompanies(ev.target.result);
+          if (!companies.length) {
+            window.toast && window.toast("לא נמצאו חברות תקינות בקובץ ה-CSV", "err");
+            return;
+          }
+          setImportPreview({ importType: "external-csv", exportedAt: null, companies, submissions: [], fileName: file.name });
+        } catch (err) {
+          window.toast && window.toast("שגיאת קריאת CSV — " + (err.message || err), "err");
         }
-        if (!Array.isArray(parsed.companies)) {
-          window.toast && window.toast("קובץ לא תקין — חסר מערך companies", "err");
-          return;
+      } else {
+        try {
+          const parsed = JSON.parse(ev.target.result);
+          if (parsed.app && parsed.app !== "Ecosystem OS") {
+            window.toast && window.toast("הקובץ אינו מיצוא של Ecosystem OS", "err");
+            return;
+          }
+          let companies, submissions, importType, exportedAt;
+          if (parsed.app === "Ecosystem OS") {
+            if (!Array.isArray(parsed.companies)) {
+              window.toast && window.toast("קובץ לא תקין — חסר מערך companies", "err");
+              return;
+            }
+            companies = parsed.companies;
+            submissions = Array.isArray(parsed.submissions) ? parsed.submissions : [];
+            importType = "ecosystem-os";
+            exportedAt = parsed.exportedAt || null;
+          } else if (Array.isArray(parsed)) {
+            companies = parsed;
+            submissions = [];
+            importType = "external-json";
+            exportedAt = null;
+          } else if (Array.isArray(parsed.companies)) {
+            companies = parsed.companies;
+            submissions = [];
+            importType = "external-json";
+            exportedAt = null;
+          } else {
+            window.toast && window.toast("קובץ לא תקין — לא נמצאו חברות", "err");
+            return;
+          }
+          const valid = companies
+            .filter(c => c && typeof c === "object" && !Array.isArray(c))
+            .map(c => importType === "external-json"
+              ? Object.assign({}, c, { name: text(c.name || c.companyName || c.company || "") })
+              : c)
+            .filter(c => text(c.name || ""));
+          if (!valid.length) {
+            window.toast && window.toast("לא נמצאו חברות תקינות בקובץ", "err");
+            return;
+          }
+          setImportPreview({ importType, exportedAt, companies: valid, submissions, fileName: file.name });
+        } catch (err) {
+          window.toast && window.toast("שגיאת קריאת JSON — " + (err.message || err), "err");
         }
-        setImportPreview({
-          exportedAt: parsed.exportedAt || null,
-          companies: parsed.companies,
-          submissions: Array.isArray(parsed.submissions) ? parsed.submissions : [],
-          fileName: file.name,
-        });
-      } catch (err) {
-        window.toast && window.toast("שגיאת קריאת JSON — " + (err.message || err), "err");
       }
     };
     reader.readAsText(file);
@@ -124,7 +167,7 @@ function Dashboard({ onOpenCompany, onNav }) {
         </div>
         <div className="ops">
           <span className="pill mono" title="נתונים מקומיים · לא מחובר לשרת">LOCAL · DEMO</span>
-          <input type="file" accept=".json,application/json" ref={importInputRef} style={{ display: "none" }} onChange={handleImportFile} />
+          <input type="file" accept=".json,.csv,.xlsx,.xls,application/json,text/csv" ref={importInputRef} style={{ display: "none" }} onChange={handleImportFile} />
           <button className="btn" onClick={exportLocalData} title="הורדה מקומית — JSON עם כל הנתונים המקומיים">
             <window.I.Upload size={13} /> הורדה מקומית
           </button>
@@ -145,6 +188,14 @@ function Dashboard({ onOpenCompany, onNav }) {
           </div>
           <div className="col gap-6" style={{ fontSize: 13, color: "var(--text-2)", marginBottom: 12 }}>
             <div><span className="mono tiny" style={{ color: "var(--text-3)" }}>קובץ: </span>{importPreview.fileName}</div>
+            <div>
+              <span className="mono tiny" style={{ color: "var(--text-3)" }}>סוג: </span>
+              <span className="pill">
+                {importPreview.importType === "ecosystem-os" ? "Ecosystem OS Export"
+                  : importPreview.importType === "external-csv" ? "External CSV"
+                  : "External JSON"}
+              </span>
+            </div>
             {importPreview.exportedAt && (
               <div><span className="mono tiny" style={{ color: "var(--text-3)" }}>יוצא בתאריך: </span>
                 {new Date(importPreview.exportedAt).toLocaleString("he-IL")}</div>
@@ -777,6 +828,110 @@ function categoryLabel(company) {
   const sectorId = asArray(company.sectors)[0];
   const sector = asArray(window.SECTORS).find((s) => s.id === sectorId);
   return (sector && sector.label) || sectorId || company.stage || "Uncategorized";
+}
+
+// ── CSV import utilities ──
+
+function parseCSVLine(line) {
+  const cells = [];
+  let i = 0;
+  while (i < line.length) {
+    if (line[i] === '"') {
+      i++;
+      let field = "";
+      while (i < line.length) {
+        if (line[i] === '"' && line[i + 1] === '"') { field += '"'; i += 2; }
+        else if (line[i] === '"') { i++; break; }
+        else { field += line[i++]; }
+      }
+      cells.push(field.trim());
+      if (line[i] === ",") i++;
+    } else {
+      const end = line.indexOf(",", i);
+      if (end === -1) { cells.push(line.slice(i).trim()); break; }
+      cells.push(line.slice(i, end).trim());
+      i = end + 1;
+    }
+  }
+  if (line.endsWith(",")) cells.push("");
+  return cells;
+}
+
+const CSV_COL_MAP = {
+  name: "name", company: "name", companyname: "name", "שם": "name", "שםחברה": "name",
+  description: "blurb", blurb: "blurb", about: "blurb", summary: "blurb", "תיאור": "blurb",
+  website: "website", url: "website", link: "website", "אתר": "website",
+  city: "hq", companyscity: "hq", companycity: "hq", "עיר": "hq",
+  location: "location", "מיקום": "location",
+  country: "country", "מדינה": "country",
+  stage: "stage", fundingstage: "stage",
+  yearestablished: "founded", founded: "founded",
+  sector: "sector", sectors: "sector", industry: "sector", category: "sector", "תחום": "sector", "סקטור": "sector",
+  subcategory: "subCategory",
+  capabilities: "tech", capability: "tech", tags: "tech", tag: "tech", tech: "tech", technology: "tech", technologies: "tech",
+  "טכנולוגיות": "tech", "יכולות": "tech", "תגיות": "tech",
+  needs: "needs", need: "needs", "צרכים": "needs", "צורך": "needs",
+  offers: "offers", offer: "offers", solutions: "offers", "הצעה": "offers", "פתרונות": "offers",
+};
+
+const SECTOR_COL_MAP = {
+  eo: "earth-obs", earthobs: "earth-obs",
+  communication: "comms", comms: "comms",
+  defense: "defense",
+  launchpropulsion: "propulsion", launchers: "launchers", propulsion: "propulsion",
+  spacesystemmanufacturing: "manufacturing", manufacturing: "manufacturing",
+  groundsystems: "manufacturing", inspacerdmanufacturing: "manufacturing",
+  inspaceservicesinfrastructure: "manufacturing", explorationresourceutilization: "manufacturing",
+  aidata: "ai-data", computingsoftwareanddatasolutions: "ai-data", pnt: "ai-data",
+  healthtech: "life-sci",
+  energy: "energy", sar: "sar",
+};
+
+function normCol(s) {
+  return String(s || "").toLowerCase().replace(/[^a-z0-9֐-׿]/g, "");
+}
+
+function parseCSVCompanies(csvText) {
+  const clean = csvText.charCodeAt(0) === 0xFEFF ? csvText.slice(1) : csvText;
+  const rows = clean.split(/\r?\n|\r/).filter(l => l.trim()).map(parseCSVLine);
+  const nameKeys = new Set(["name", "company", "companyname", "שם", "שםחברה"]);
+  let headerIdx = 0;
+  for (let i = 0; i < Math.min(rows.length, 5); i++) {
+    if (rows[i].slice(0, 6).some(c => nameKeys.has(normCol(c)))) { headerIdx = i; break; }
+  }
+  const headers = rows[headerIdx].map(normCol);
+  const usedIds = new Set();
+  return rows.slice(headerIdx + 1).map(function(row) {
+    const raw = {};
+    headers.forEach(function(h, i) {
+      const field = CSV_COL_MAP[h];
+      const val = row[i] ? row[i].trim() : "";
+      if (field && val) raw[field] = val;
+    });
+    if (!raw.name) return null;
+    const sectorKey = normCol(raw.subCategory || raw.sector || "");
+    const sector = SECTOR_COL_MAP[sectorKey] || "earth-obs";
+    const splitMV = function(v) { return v ? String(v).split(/[,;|]/).map(function(s) { return s.trim(); }).filter(Boolean) : []; };
+    const base = raw.name.toLowerCase().replace(/[^a-z0-9֐-׿]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") || "co";
+    let id = base + "-csv";
+    let n = 2;
+    while (usedIds.has(id)) id = base + "-csv-" + n++;
+    usedIds.add(id);
+    return {
+      id: id,
+      name: raw.name,
+      blurb: raw.blurb || "",
+      website: raw.website || "",
+      hq: raw.hq || raw.location || raw.country || "Israel",
+      country: raw.country || "Israel",
+      stage: raw.stage || "Seed",
+      founded: Number(raw.founded) || 0,
+      sectors: [sector],
+      tech: splitMV(raw.tech),
+      needs: splitMV(raw.needs),
+      offers: splitMV(raw.offers),
+    };
+  }).filter(function(c) { return c && c.name; });
 }
 
 window.Dashboard = Dashboard;
