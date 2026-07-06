@@ -36,6 +36,53 @@ function Dashboard({ onOpenCompany, onNav }) {
   const capabilityThemes = getCapabilityCoverage(COMPANIES);
   const copilotSuggestions = getCopilotSuggestions({ REVIEW_QUEUE, OPPORTUNITIES, COMPANIES, allNeeds });
 
+  const [importPreview, setImportPreview] = React.useState(null);
+  const importInputRef = React.useRef(null);
+
+  const handleImportFile = (e) => {
+    const file = e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const parsed = JSON.parse(ev.target.result);
+        if (parsed.app && parsed.app !== "Ecosystem OS") {
+          window.toast && window.toast("הקובץ אינו מיצוא של Ecosystem OS", "err");
+          return;
+        }
+        if (!Array.isArray(parsed.companies)) {
+          window.toast && window.toast("קובץ לא תקין — חסר מערך companies", "err");
+          return;
+        }
+        setImportPreview({
+          exportedAt: parsed.exportedAt || null,
+          companies: parsed.companies,
+          submissions: Array.isArray(parsed.submissions) ? parsed.submissions : [],
+          fileName: file.name,
+        });
+      } catch (err) {
+        window.toast && window.toast("שגיאת קריאת JSON — " + (err.message || err), "err");
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const confirmImport = () => {
+    try {
+      window.CompanyStore.saveCompanies(importPreview.companies);
+      window.SubmissionStore.saveSubmissions(importPreview.submissions);
+      window.toast && window.toast(
+        `ייבוא הושלם — ${importPreview.companies.length} חברות, ${importPreview.submissions.length} הגשות · טוען מחדש…`,
+        "ok"
+      );
+      setTimeout(() => window.location.reload(), 1200);
+    } catch (err) {
+      setImportPreview(null);
+      window.toast && window.toast("ייבוא נכשל — " + (err.message || err), "err");
+    }
+  };
+
   const exportLocalData = () => {
     try {
       const today = new Date().toISOString().slice(0, 10);
@@ -71,14 +118,45 @@ function Dashboard({ onOpenCompany, onNav }) {
         </div>
         <div className="ops">
           <span className="pill mono" title="נתונים מקומיים · לא מחובר לשרת">LOCAL · DEMO</span>
+          <input type="file" accept=".json,application/json" ref={importInputRef} style={{ display: "none" }} onChange={handleImportFile} />
           <button className="btn" onClick={exportLocalData} title="הורדה מקומית — JSON עם כל הנתונים המקומיים">
             <window.I.Upload size={13} /> הורדה מקומית
+          </button>
+          <button className="btn" onClick={() => importInputRef.current && importInputRef.current.click()} title="ייבוא מקומי — שחזור מקובץ JSON">
+            <window.I.Download size={13} /> ייבוא מקומי
           </button>
           <button className="btn btn-primary" onClick={() => onNav("onboard")}>
             <window.I.Plus size={13} /> הוסף חברה
           </button>
         </div>
       </div>
+
+      {importPreview && (
+        <div className="card" style={{ border: "1px solid oklch(0.55 0.15 80)", background: "oklch(0.14 0.04 80 / 0.35)" }}>
+          <div className="card-hd">
+            <div className="card-title"><span className="dot amber" /> אישור שחזור מקומי</div>
+            <button className="icon-btn" onClick={() => setImportPreview(null)}><window.I.X size={14} /></button>
+          </div>
+          <div className="col gap-6" style={{ fontSize: 13, color: "var(--text-2)", marginBottom: 12 }}>
+            <div><span className="mono tiny" style={{ color: "var(--text-3)" }}>קובץ: </span>{importPreview.fileName}</div>
+            {importPreview.exportedAt && (
+              <div><span className="mono tiny" style={{ color: "var(--text-3)" }}>יוצא בתאריך: </span>
+                {new Date(importPreview.exportedAt).toLocaleString("he-IL")}</div>
+            )}
+            <div><span className="mono tiny" style={{ color: "var(--text-3)" }}>חברות: </span>
+              <strong>{importPreview.companies.length}</strong></div>
+            <div><span className="mono tiny" style={{ color: "var(--text-3)" }}>הגשות: </span>
+              <strong>{importPreview.submissions.length}</strong></div>
+          </div>
+          <div className="muted tiny" style={{ marginBottom: 12 }}>
+            פעולה זו תחליף את כל הנתונים המקומיים הקיימים. הדף יטען מחדש לאחר הייבוא.
+          </div>
+          <div className="flex gap-8 center">
+            <button className="btn btn-primary" onClick={confirmImport}><window.I.Check size={13} /> אשר שחזור</button>
+            <button className="btn btn-ghost" onClick={() => setImportPreview(null)}>ביטול</button>
+          </div>
+        </div>
+      )}
 
       <StrategicBar
         companies={COMPANIES}
