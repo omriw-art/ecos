@@ -36,6 +36,30 @@ function Dashboard({ onOpenCompany, onNav }) {
   const capabilityThemes = getCapabilityCoverage(COMPANIES);
   const copilotSuggestions = getCopilotSuggestions({ REVIEW_QUEUE, OPPORTUNITIES, COMPANIES, allNeeds });
 
+  const exportLocalData = () => {
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        app: "Ecosystem OS",
+        companies: window.CompanyStore ? window.CompanyStore.getCompanies() : COMPANIES,
+        submissions: window.SubmissionStore ? window.SubmissionStore.getSubmissions() : [],
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `ecosystem-os-export-${today}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      window.toast && window.toast(`הורדה מקומית הושלמה — ${payload.companies.length} חברות, ${payload.submissions.length} הגשות`, "ok");
+    } catch (err) {
+      window.toast && window.toast("ייצוא נכשל — " + (err.message || err), "err");
+    }
+  };
+
   return (
     <div className="view">
       <div className="view-head">
@@ -47,8 +71,8 @@ function Dashboard({ onOpenCompany, onNav }) {
         </div>
         <div className="ops">
           <span className="pill mono" title="נתונים מקומיים · לא מחובר לשרת">LOCAL · DEMO</span>
-          <button className="btn" disabled title="ייצוא — בקרוב">
-            <window.I.Upload size={13} /> ייצוא דו"ח
+          <button className="btn" onClick={exportLocalData} title="הורדה מקומית — JSON עם כל הנתונים המקומיים">
+            <window.I.Upload size={13} /> הורדה מקומית
           </button>
           <button className="btn btn-primary" onClick={() => onNav("onboard")}>
             <window.I.Plus size={13} /> הוסף חברה
