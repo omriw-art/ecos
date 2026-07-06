@@ -484,7 +484,7 @@ function TechTab({ c }) {
       </div>
 
       <div className="card">
-        <div className="card-hd"><div className="card-title"><span className="dot violet" /> Tags אוטומטיים (AI)</div></div>
+        <div className="card-hd"><div className="card-title"><span className="dot violet" /> Tags</div></div>
         <div className="flex wrap gap-6">
           {[...c.tech, ...c.offers, ...c.sectors.map((s) => window.SECTORS.find((x) => x.id === s)?.label)]
             .filter(Boolean)
@@ -524,7 +524,8 @@ function MatchTab({ c, matchedPeople, onNav }) {
 }
 
 function MatchPersonRow({ p, c }) {
-  const fit = 70 + Math.floor(Math.random() * 25);
+  const sharedSectors = p.interests.filter((i) => c.sectors.includes(i)).length;
+  const fit = Math.min(99, 55 + sharedSectors * 15);
   return (
     <div className="flex center gap-12" style={{ padding: 12, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 10 }}>
       <div className="sidebar-avatar" style={{ background: `linear-gradient(135deg, ${p.color}, oklch(from ${p.color} 0.4 c h))` }}>{p.avatar}</div>
@@ -591,27 +592,15 @@ function ConnectionsTab({ c, overlapCo, onOpenCompany }) {
 }
 
 function ContactsTab({ c }) {
-  // Synthetic contacts seeded from company
-  const contacts = [
-    { name: "CEO / Founder", role: "Founding", channel: "linkedin" },
-    { name: "VP Business Development", role: "Sales", channel: "email" },
-    { name: "Head of Strategic Partnerships", role: "Partnerships", channel: "linkedin" },
-  ];
   return (
     <div className="card">
-      <div className="card-hd"><div className="card-title"><span className="dot" /> אנשי קשר ב-{c.name}</div><button className="btn" disabled title="הוספת איש קשר — בקרוב"><window.I.Plus size={12} /> הוסף איש קשר</button></div>
-      <div className="col gap-10">
-        {contacts.map((p, i) => (
-          <div key={i} className="flex center gap-10" style={{ padding: 12, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8 }}>
-            <div className="sidebar-avatar" style={{ background: "var(--bg-3)" }}>{p.name[0]}</div>
-            <div className="col grow">
-              <div style={{ fontSize: 13, fontWeight: 500 }}>{p.name}</div>
-              <div className="mono tiny" style={{ color: "var(--text-4)" }}>{p.role.toUpperCase()} · {c.name}</div>
-            </div>
-            <button className="btn btn-ghost" disabled title="אין פרטי קשר מוגדרים"><window.I.Linkedin size={13} /></button>
-            <button className="btn btn-ghost" disabled title="אין פרטי קשר מוגדרים"><window.I.Mail size={13} /></button>
-          </div>
-        ))}
+      <div className="card-hd">
+        <div className="card-title"><span className="dot" /> אנשי קשר ב-{c.name}</div>
+        <button className="btn" disabled title="הוספת איש קשר — בקרוב"><window.I.Plus size={12} /> הוסף איש קשר</button>
+      </div>
+      <div style={{ padding: "28px 0", textAlign: "center" }}>
+        <window.I.Users size={24} style={{ color: "var(--text-4)", display: "block", margin: "0 auto 10px" }} />
+        <div className="muted tiny">אין אנשי קשר מוגדרים לחברה זו עדיין.</div>
       </div>
     </div>
   );
