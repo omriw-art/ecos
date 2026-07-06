@@ -40,6 +40,7 @@ const I = {
   Mail:    (p) => <Icon {...p}><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" /></Icon>,
   Linkedin:(p) => <Icon {...p}><rect x="3" y="3" width="18" height="18" rx="3" /><path d="M8 10v7M8 7v.01M12 17v-4a2 2 0 014 0v4M12 10v7" /></Icon>,
   Upload:  (p) => <Icon {...p}><path d="M12 16V4M6 10l6-6 6 6M4 20h16" /></Icon>,
+  Download:(p) => <Icon {...p}><path d="M12 4v12M6 14l6 6 6-6M4 20h16" /></Icon>,
   Activity:(p) => <Icon {...p}><path d="M3 12h4l3-8 4 16 3-8h4" /></Icon>,
   Layers:  (p) => <Icon {...p}><path d="M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5M3 18l9 5 9-5" /></Icon>,
   Eye:     (p) => <Icon {...p}><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></Icon>,
