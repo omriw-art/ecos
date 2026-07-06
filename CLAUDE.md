@@ -37,6 +37,16 @@
 - MatchEngine provides deterministic explainable company matching.
 - Dashboard consumes CapabilityRegistry and MatchEngine signals.
 - The app still uses browser-side React/Babel/global scripts.
+- Fake live/user/activity/social-proof signals were removed in Batch P5B (ed20346).
+- Dashboard activity must be backed by real local SubmissionStore data.
+- If no real user/activity data exists, show an honest empty state.
+
+## Product Truthfulness Rules
+- UI must not imply real users exist unless backed by real data.
+- UI must not claim live sync, backend connection, AI activity, or real-time activity unless actually connected.
+- Use "local", "demo", "preview", or honest empty-state copy where appropriate.
+- Seed ecosystem company data may remain, but fake registered-user activity must not be surfaced as real.
+- Do not introduce fake users, fake live status, fake activity, fake registrations, or fake social proof.
 
 ## Validation Checklist
 Before committing, run relevant checks:
