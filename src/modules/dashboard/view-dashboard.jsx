@@ -69,6 +69,8 @@ function Dashboard({ onOpenCompany, onNav }) {
   };
 
   const confirmImport = () => {
+    const prevCompanies = window.CompanyStore ? window.CompanyStore.getCompanies() : [];
+    const prevSubmissions = window.SubmissionStore ? window.SubmissionStore.getSubmissions() : [];
     try {
       window.CompanyStore.saveCompanies(importPreview.companies);
       window.SubmissionStore.saveSubmissions(importPreview.submissions);
@@ -78,8 +80,12 @@ function Dashboard({ onOpenCompany, onNav }) {
       );
       setTimeout(() => window.location.reload(), 1200);
     } catch (err) {
+      try {
+        window.CompanyStore && window.CompanyStore.saveCompanies(prevCompanies);
+        window.SubmissionStore && window.SubmissionStore.saveSubmissions(prevSubmissions);
+      } catch (_) {}
       setImportPreview(null);
-      window.toast && window.toast("ייבוא נכשל — " + (err.message || err), "err");
+      window.toast && window.toast("ייבוא נכשל — הנתונים שוחזרו. " + (err.message || err), "err");
     }
   };
 
