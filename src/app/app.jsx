@@ -8,7 +8,7 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
 }/*EDITMODE-END*/;
 
 const VIEW_TITLES = {
-  dashboard:    { title: "Mission Control",   crumb: "DASHBOARD · LIVE"              },
+  dashboard:    { title: "Mission Control",   crumb: "DASHBOARD"                     },
   companies:    { title: "חברות",            crumb: "ECOSYSTEM · COMPANIES"          },
   company:      { title: "פרופיל חברה",      crumb: "ECOSYSTEM · COMPANIES · PROFILE" },
   capabilities: { title: "יכולות חלל",       crumb: "ECOSYSTEM · CAPABILITIES"       },

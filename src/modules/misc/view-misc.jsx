@@ -2,9 +2,7 @@
 
 function Copilot({ open, onClose }) {
   const [messages, setMessages] = React.useState([
-    { role: "ai", text: "שלום רון. אני ה-Copilot של ecos. אני יכול לחפש חברות, להציע חיבורים, לחשב התאמה לעובד, או לכתוב סיכום אקוסיסטם. ננסה?" },
-    { role: "user", text: "מי החברות הכי רלוונטיות ל-Maya Levi (R&D AI) השבוע?" },
-    { role: "ai", text: "מצאתי 3 מועמדות חזקות:\n• Ramon.Space — space-grade AI compute, חופפת ל-2 מתחומי העניין שלה.\n• HawkEye 360 — RF + AI, רלוונטית לפרויקט multi-INT שלה.\n• ASTERRA — L-band SAR + ML, פיילוט מצוין לתחום חדש.\n\nרוצה שאכין הצעת intro לכולן בבת-אחת?" },
+    { role: "ai", text: "שלום. אני ה-Copilot של ecos. אני יכול לחפש חברות, להציע חיבורים, לנתח פערי יכולות, או לכתוב סיכום אקוסיסטם. ננסה?" },
   ]);
   const [draft, setDraft] = React.useState("");
   const [busy, setBusy] = React.useState(false);
@@ -31,7 +29,7 @@ function Copilot({ open, onClose }) {
   const suggested = [
     "מצא לי חברות ISAM ישראליות מוכנות לפיילוט",
     "סכם את האקוסיסטם של SAR נכון להיום",
-    "אילו עובדים מתאימים ל-Astroscale?",
+    "אילו חברות עונות על הצרכים של Elbit Systems?",
     "Hawkeye vs Spire — מי מתאים יותר ל-ISR?",
   ];
 
@@ -47,7 +45,7 @@ function Copilot({ open, onClose }) {
           </div>
           <div className="col" style={{ flex: 1 }}>
             <div style={{ fontSize: 14, fontWeight: 600 }}>ecos · Copilot</div>
-            <div className="mono tiny" style={{ color: "var(--text-4)" }}>{busy ? "חושב…" : "מקושר למאגר · live"}</div>
+            <div className="mono tiny" style={{ color: "var(--text-4)" }}>{busy ? "חושב…" : "demo · נתונים מקומיים"}</div>
           </div>
           <button className="icon-btn" onClick={onClose}><window.I.X size={14} /></button>
         </div>
@@ -101,13 +99,12 @@ function Copilot({ open, onClose }) {
 /* ────────────────────────── People (Org) ────────────────────────── */
 
 function PeopleView({ onNav }) {
-  const { PEOPLE, COMPANIES } = window;
   return (
     <div className="view">
       <div className="view-head">
         <div>
           <h2>הארגון שלי</h2>
-          <div className="sub">{PEOPLE.length} עובדים פעילים</div>
+          <div className="sub">0 עובדים רשומים</div>
         </div>
         <div className="ops">
           <button className="btn" disabled title="ייבוא מ-Workday — בקרוב"><window.I.Upload size={13} /> ייבוא מ-Workday</button>
@@ -115,40 +112,10 @@ function PeopleView({ onNav }) {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))", gap: 14 }}>
-        {PEOPLE.map((p) => (
-          <div key={p.id} className="card" style={{ position: "relative" }}>
-            <div className="flex center gap-12">
-              <div className="sidebar-avatar" style={{ width: 48, height: 48, fontSize: 15,
-                   background: `linear-gradient(135deg, ${p.color}, oklch(from ${p.color} 0.4 c h))` }}>{p.avatar}</div>
-              <div className="col grow">
-                <div style={{ fontSize: 15, fontFamily: "var(--font-display)", fontWeight: 600 }}>{p.name}</div>
-                <div className="mono tiny" style={{ color: "var(--text-3)", letterSpacing: "0.05em" }}>{p.role.toUpperCase()}</div>
-              </div>
-              <span className="pill mono">{p.matches.length} matches</span>
-            </div>
-
-            <div className="divider" />
-
-            <div className="mono tiny" style={{ color: "var(--text-3)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 6 }}>תחומי עניין</div>
-            <div className="flex wrap gap-4" style={{ marginBottom: 10 }}>
-              {p.interests.map((i) => <SectorPill key={i} id={i} />)}
-            </div>
-
-            <div className="mono tiny" style={{ color: "var(--text-3)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 6 }}>חברות חמות עבורו</div>
-            <div className="flex wrap gap-6">
-              {p.matches.slice(0, 4).map((id) => {
-                const c = COMPANIES.find((x) => x.id === id); if (!c) return null;
-                return <span key={id} className="chip"><CoLogo company={c} size={16} /> {c.name}</span>;
-              })}
-            </div>
-
-            <div className="flex between center" style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--line-1)" }}>
-              <button className="btn btn-ghost" disabled title="פרופיל מלא — בקרוב"><window.I.Eye size={12} /> פרופיל מלא</button>
-              <button className="btn" onClick={() => onNav("matches")}><window.I.Sparkles size={12} /> פתח matches</button>
-            </div>
-          </div>
-        ))}
+      <div className="card" style={{ padding: "48px 24px", textAlign: "center" }}>
+        <window.I.Users size={32} style={{ color: "var(--text-4)", marginBottom: 12 }} />
+        <div style={{ fontSize: 14, color: "var(--text-3)", marginBottom: 6 }}>אין עובדים רשומים עדיין</div>
+        <div className="mono tiny" style={{ color: "var(--text-4)" }}>ייבא מ-Workday או הוסף עובדים ידנית כדי לראות התאמות לחברות באקוסיסטם.</div>
       </div>
     </div>
   );

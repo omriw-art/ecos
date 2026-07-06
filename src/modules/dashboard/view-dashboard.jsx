@@ -5,7 +5,20 @@ function Dashboard({ onOpenCompany, onNav }) {
   const COMPANIES = asArray(window.COMPANIES);
   const OPPORTUNITIES = asArray(window.OPPORTUNITIES);
   const REVIEW_QUEUE = asArray(window.REVIEW_QUEUE);
-  const ACTIVITY = asArray(window.ACTIVITY);
+  const rawSubmissions = window.SubmissionStore ? window.SubmissionStore.getSubmissions() : [];
+  const recentActivity = rawSubmissions
+    .slice()
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 8)
+    .map((s) => ({
+      id: s.id,
+      tag: s.status === "approved" ? "opp" : s.status === "rejected" ? "reject" : "flag",
+      who: "System",
+      what: s.status === "approved" ? "אושרה והוספה לאקוסיסטם:" :
+            s.status === "rejected" ? "נדחתה:" : "הוגשה לבדיקה:",
+      to: s.companyName || s.name || "חברה",
+      t: s.createdAt ? new Date(s.createdAt).toLocaleDateString("he-IL") : "",
+    }));
   const SECTOR_DIST = asArray(window.SECTOR_DIST);
   const FUNNEL = asArray(window.FUNNEL);
   const READINESS = asArray(window.READINESS);
@@ -33,10 +46,7 @@ function Dashboard({ onOpenCompany, onNav }) {
           </div>
         </div>
         <div className="ops">
-          <span className="pill green">
-            <span className="swatch" style={{ background: "var(--green)" }} />
-            <span className="mono">SYNC · LIVE</span>
-          </span>
+          <span className="pill mono" title="נתונים מקומיים · לא מחובר לשרת">LOCAL · DEMO</span>
           <button className="btn" disabled title="ייצוא — בקרוב">
             <window.I.Upload size={13} /> ייצוא דו"ח
           </button>
@@ -80,7 +90,7 @@ function Dashboard({ onOpenCompany, onNav }) {
       </div>
 
       <div style={grid("1fr 1fr", 14)}>
-        <RecentActivity activity={ACTIVITY} />
+        <RecentActivity activity={recentActivity} />
         <CopilotSuggestions suggestions={copilotSuggestions} />
       </div>
     </div>
