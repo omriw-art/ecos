@@ -12,7 +12,7 @@ const SECTORS = [
   { id: "sar",           label: "SAR / מכ\"מ",       color: "oklch(0.68 0.18 30)"  },
 ];
 
-const STAGES = ["Seed", "Series A", "Series B", "Series C", "Growth", "Public"];
+const STAGES = ["Concept", "Seed", "Series A", "Series B", "Series C", "Growth", "Mature", "Public", "Unknown"];
 
 const READINESS = ["Initial contact", "Mapped", "Verified", "Active", "Strategic", "Needs update"];
 

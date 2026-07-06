@@ -26,25 +26,53 @@ function parseList(value) {
 
 // Polished, product-facing labels/headings — deliberately not the mono/uppercase
 // console style used for dashboard chrome, since this is a data-entry form.
-const editorLabelStyle = { fontFamily: "inherit", fontSize: 12.5, fontWeight: 600, letterSpacing: "normal", textTransform: "none", color: "var(--text-2)" };
-const editorSectionHeadingStyle = { fontFamily: "inherit", fontSize: 13.5, fontWeight: 700, letterSpacing: "normal", textTransform: "none", color: "var(--text-1)", marginBottom: 12 };
-const editorGridStyle = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 };
+// Font sizes/heights are boosted well past the shared .input/.select/.textarea
+// defaults (13px / ~38px tall) because the shared style is tuned for dense
+// dashboard chrome, not a readable data-entry form — scoped via
+// .company-editor-form so no other view is affected.
+const editorLabelStyle = { fontFamily: "inherit", fontSize: 14.5, fontWeight: 700, letterSpacing: "normal", textTransform: "none", color: "var(--text-1)" };
+const editorSectionHeadingStyle = { fontFamily: "inherit", fontSize: 19, fontWeight: 800, letterSpacing: "normal", textTransform: "none", color: "var(--text-1)", marginBottom: 16, paddingBottom: 10, borderBottom: "1px solid var(--line-1)" };
+const editorGridStyle = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 };
 const editorFullRow = { gridColumn: "1 / -1" };
+const editorFieldStyle = { display: "flex", flexDirection: "column", gap: 8 };
+const editorHelpStyle = { fontSize: 12.5, color: "var(--text-3)", marginTop: 2 };
+
+// Injected once per mount, scoped to .company-editor-form only — keeps every
+// other form/view in the app on the original shared input styling.
+function EditorStyleOverrides() {
+  return (
+    <style>{`
+      .company-editor-form input.input,
+      .company-editor-form select.select,
+      .company-editor-form textarea.textarea {
+        font-size: 16px;
+        padding: 13px 14px;
+        min-height: 50px;
+        color: var(--text-1);
+        border-color: var(--line-2);
+      }
+      .company-editor-form textarea.textarea { min-height: 130px; }
+      .company-editor-form input.input::placeholder,
+      .company-editor-form textarea.textarea::placeholder { color: var(--text-3); opacity: 1; }
+    `}</style>
+  );
+}
 
 function EditorSection({ heading, children }) {
   return (
-    <div style={{ marginBottom: 22 }}>
+    <div style={{ marginBottom: 32 }}>
       <div style={editorSectionHeadingStyle}>{heading}</div>
       <div style={editorGridStyle}>{children}</div>
     </div>
   );
 }
 
-function EditorField({ label, required, full, children }) {
+function EditorField({ label, required, full, hint, children }) {
   return (
-    <div className="field" style={full ? editorFullRow : undefined}>
+    <div className="field" style={Object.assign({}, editorFieldStyle, full ? editorFullRow : null)}>
       <label style={editorLabelStyle}>{label} {required && <span className="req">*</span>}</label>
       {children}
+      {hint && <div style={editorHelpStyle}>{hint}</div>}
     </div>
   );
 }
@@ -82,7 +110,8 @@ function CompanyEditor({ company, title, submitLabel, onSave, onCancel }) {
   };
 
   return (
-    <form className="card" style={{ maxWidth: 680, margin: "0 auto 20px" }} onSubmit={submit}>
+    <form className="card company-editor-form" style={{ maxWidth: 960, margin: "0 auto 20px" }} onSubmit={submit}>
+      <EditorStyleOverrides />
       <div className="card-hd">
         <div className="card-title"><span className="dot green" /> {title}</div>
         {onCancel && <button type="button" className="btn btn-ghost" onClick={onCancel}>ביטול</button>}
@@ -115,27 +144,30 @@ function CompanyEditor({ company, title, submitLabel, onSave, onCancel }) {
         <EditorField label="שלב">
           <select className="select" value={form.stage} onChange={(e) => setField("stage", e.target.value)}>
             {window.STAGES.map((s) => <option key={s} value={s}>{s}</option>)}
+            {!window.STAGES.includes(form.stage) && form.stage && (
+              <option value={form.stage}>{form.stage} · imported</option>
+            )}
           </select>
         </EditorField>
       </EditorSection>
 
       <EditorSection heading="יכולות והתאמה">
-        <EditorField label="יכולות / Capabilities" full>
+        <EditorField label="יכולות / Capabilities" full hint="הפרד ערכים בפסיק או נקודה-פסיק · לדוגמה: Earth Observation; Analytics; Communication">
           <input className="input" value={form.capabilitiesText} onChange={(e) => setField("capabilitiesText", e.target.value)} placeholder="Earth Observation; Analytics; Communication" />
         </EditorField>
-        <EditorField label="תגיות / Tags" full>
+        <EditorField label="תגיות / Tags" full hint="הפרד ערכים בפסיק או נקודה-פסיק · לדוגמה: Satellite, AI, Payload">
           <input className="input" value={form.tagsText} onChange={(e) => setField("tagsText", e.target.value)} placeholder="Satellite, AI, Payload" />
         </EditorField>
-        <EditorField label="צרכים / Needs" full>
+        <EditorField label="צרכים / Needs" full hint="לדוגמה: Funding; Lab access; Pilot customers">
           <input className="input" value={form.needsText} onChange={(e) => setField("needsText", e.target.value)} placeholder="Funding; Lab access; Pilot customers" />
         </EditorField>
-        <EditorField label="הצעות / Offers" full>
+        <EditorField label="הצעות / Offers" full hint="לדוגמה: SAR data; Analytics platform">
           <input className="input" value={form.offersText} onChange={(e) => setField("offersText", e.target.value)} placeholder="SAR data; Analytics platform" />
         </EditorField>
       </EditorSection>
 
-      {error && <div className="help" style={{ color: "var(--rose)", marginTop: 10 }}>{error}</div>}
-      <div className="flex center gap-8" style={{ marginTop: 14 }}>
+      {error && <div className="help" style={{ color: "var(--rose)", marginTop: 10, fontSize: 13 }}>{error}</div>}
+      <div className="flex center gap-8" style={{ marginTop: 18 }}>
         {onCancel && <button type="button" className="btn" onClick={onCancel}>סגור</button>}
         <button type="submit" className="btn btn-primary"><window.I.Check size={13} /> {submitLabel}</button>
       </div>
