@@ -558,19 +558,30 @@ function StepReview({ data }) {
       <PreviewCard data={data} large />
 
       <div className="card" style={{ background: "var(--bg-1)" }}>
-        <div className="card-title" style={{ marginBottom: 10 }}><span className="dot violet" /> AI בודק את התקציר</div>
+        <div className="card-title" style={{ marginBottom: 10 }}><span className="dot violet" /> תובנות על ההגשה</div>
         <div className="col gap-6" style={{ fontSize: 12 }}>
-          {[
-            ["סווגנו תחום ראשי ככ-‎\"" + (window.SECTORS.find((s)=>s.id===data.sectors[0])?.label || "—") + "\"", "ok"],
-            ["נמצאו 12 חברות עם חפיפת תחום או טכנולוגיה", "ok"],
-            ["3 עובדים בארגון מתאימים בקרוב", "ok"],
-            ["מומלץ להעמיק את שדה 'מה אתם מחפשים' — פחות מ-20 מילים", "warn"],
-          ].map(([t, st], i) => (
-            <div key={i} className="flex center gap-8">
-              {st === "ok" ? <window.I.Check size={12} style={{ color: "var(--green)" }} /> : <window.I.Flag size={12} style={{ color: "var(--amber)" }} />}
-              <span style={{ color: "var(--text-2)" }}>{t}</span>
-            </div>
-          ))}
+          {(() => {
+            const sectorLabel = window.SECTORS.find((s) => s.id === data.sectors[0])?.label || "—";
+            const overlapCount = (window.COMPANIES || []).filter((c) =>
+              (c.sectors || []).includes(data.sectors[0]) ||
+              (data.tech || []).filter(Boolean).some((t) =>
+                (c.tech || []).some((ct) => ct.toLowerCase().includes(t.toLowerCase()))
+              )
+            ).length;
+            const rows = [
+              ["סווגנו תחום ראשי כ-\"" + sectorLabel + "\"", "ok"],
+              [overlapCount > 0
+                ? "נמצאו " + overlapCount + " חברות באקוסיסטם עם חפיפת תחום או טכנולוגיה"
+                : "טרם נמצאה חפיפה ישירה — ההגשה תועבר לבדיקה ידנית", "ok"],
+              ["מומלץ להעמיק את שדה 'מה אתם מחפשים' — פחות מ-20 מילים", "warn"],
+            ];
+            return rows.map(([t, st], i) => (
+              <div key={i} className="flex center gap-8">
+                {st === "ok" ? <window.I.Check size={12} style={{ color: "var(--green)" }} /> : <window.I.Flag size={12} style={{ color: "var(--amber)" }} />}
+                <span style={{ color: "var(--text-2)" }}>{t}</span>
+              </div>
+            ));
+          })()}
         </div>
       </div>
     </div>
