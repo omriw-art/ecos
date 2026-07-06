@@ -180,6 +180,18 @@ function Dashboard({ onOpenCompany, onNav }) {
     URL.revokeObjectURL(url);
   };
 
+  const resetLocalData = () => {
+    if (!window.confirm("איפוס לנתוני ברירת מחדל?\n\nפעולה זו תמחק את כל השינויים המקומיים ותשחזר את חברות ה-seed המקוריות. כל הייבואים וההגשות יימחקו.")) return;
+    try {
+      window.CompanyStore.resetCompaniesToSeed();
+      window.SubmissionStore.saveSubmissions([]);
+      window.toast && window.toast("איפוס הושלם — נתוני ברירת מחדל שוחזרו · טוען מחדש…", "ok");
+      setTimeout(() => window.location.reload(), 1200);
+    } catch (err) {
+      window.toast && window.toast("איפוס נכשל — " + (err.message || err), "err");
+    }
+  };
+
   return (
     <div className="view">
       <div className="view-head">
@@ -200,6 +212,9 @@ function Dashboard({ onOpenCompany, onNav }) {
           </button>
           <button className="btn" onClick={() => importInputRef.current && importInputRef.current.click()} title="ייבוא מקומי — שחזור מקובץ JSON">
             <window.I.Download size={13} /> ייבוא מקומי
+          </button>
+          <button className="btn" onClick={resetLocalData} title="מוחק שינויים מקומיים ומשחזר את נתוני ה-seed המקוריים">
+            <window.I.Bolt size={13} /> איפוס לדאטה התחלתי
           </button>
           <button className="btn btn-primary" onClick={() => onNav("onboard")}>
             <window.I.Plus size={13} /> הוסף חברה
