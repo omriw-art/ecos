@@ -165,7 +165,7 @@ function Welcome({ onGo }) {
       </h1>
       <p className="join-sub" style={{ margin: "0 auto" }}>
         ecos הוא מאגר חכם של מאות חברות חלל, סוכנויות ומובילי תעשייה.
-        הצטרפו פעם אחת — והמערכת מחברת אתכם אוטומטית לשותפים, ללקוחות ולפרויקטים שמתאימים לכם.
+        הגישו פרופיל פעם אחת — ותופיעו במפת האקוסיסטם ובניתוחי ההתאמה.
       </p>
 
       <div className="welcome-grid">
@@ -648,7 +648,7 @@ function DoneScreen({ data, submission }) {
       </h2>
       <p className="join-sub" style={{ margin: "0 auto" }}>
         {data.name ? <><b style={{ color: "var(--text-1)" }}>{data.name}</b> נמצאת ברשימת ההצטרפות. </> : null}
-        תוך 24 שעות נשלח לכם מייל ב-<span className="mono ltr" style={{ color: "var(--text-1)" }}>{data.email}</span> עם פרופיל החברה מוכן וקישור לדשבורד שלכם.
+        ההגשה שמורה ומחכה לאישור מנהל האקוסיסטם.
       </p>
       {submission && (
         <div className="pill green mono" style={{ marginTop: 14 }}>

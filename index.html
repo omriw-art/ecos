@@ -826,7 +826,7 @@ function linkedInGo(){
   doRegister(d);
   closeLiModal();
   document.getElementById('liInput').value='';
-  toast('✓ נרשמתם דרך LinkedIn!','ok');
+  toast('✓ הפרטים הושלמו מ-LinkedIn','ok');
   setTimeout(()=>{ showView('growth'); },600);
 }
 
@@ -842,7 +842,7 @@ function collectData(){
   return data;
 }
 function doRegister(data){ const db=getDB(); db.push(data); saveDB(db); unlockGrowth(); renderDirectory(); updateStat(); }
-function submitForm(){ if(!validateStep(current)) return; const d=collectData(); doRegister(d); toast('✓ '+(d.companyName||'החברה')+' נרשמה בהצלחה!','ok'); setTimeout(()=>{ showView('growth'); },600); }
+function submitForm(){ if(!validateStep(current)) return; const d=collectData(); doRegister(d); toast('✓ '+(d.companyName||'החברה')+' — ההגשה נשמרה','ok'); setTimeout(()=>{ showView('growth'); },600); }
 
 /* ============ Storage ============ */
 function getDB(){ try{return JSON.parse(localStorage.getItem('ecos_companies')||'[]')}catch(e){return []} }
@@ -853,8 +853,8 @@ function renderSuccess(data){
   document.querySelector('.reg-card').innerHTML=`
     <div class="success-banner">
       <div class="check-ring">✓</div>
-      <h2>${data.companyName||'החברה'} נרשמה בהצלחה!</h2>
-      <p>תודה שהצטרפתם ל-ecos. כעת נפתחו עבורכם <b style="color:var(--accent-2)">כלי הצמיחה</b> — מענקים ומסלולים ממשלתיים שיכולים להאיץ אתכם.</p>
+      <h2>${data.companyName||'החברה'} — ההגשה נשמרה</h2>
+      <p>תודה. כעת נפתחו עבורכם <b style="color:var(--accent-2)">כלי הצמיחה</b> — מענקים ומסלולים ממשלתיים שיכולים להאיץ אתכם.</p>
       <div class="sb-cta">
         <button class="btn btn-primary" onclick="openGrowth()">צפייה בכלי הצמיחה ←</button>
         <a class="btn btn-primary" href="ecos.html" style="background:linear-gradient(90deg,var(--accent-2),var(--violet));box-shadow:0 14px 30px -10px rgba(94,234,212,.5)">כניסה ל-Dashboard ↗</a>
