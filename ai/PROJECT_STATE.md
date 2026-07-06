@@ -20,6 +20,10 @@ Last known baseline:
 - AI runner workspace committed in 6b92645 (ai/ + scripts/run-claude-task.sh).
 - Known uncommitted file: ecos-qr.png, intentionally unstaged.
 - Demo is ready for manual browser walkthrough using docs/DEMO_CHECKLIST.md.
+- P12A: company logos extracted from the official Israel Space Ecosystem Mapping 2026 PDF (assets/source/, untracked by design), cropped into assets/logos/, and wired into 89/90 companies via logoUrl/logoSource/logoSourcePage in src/data/data.js (97f568d, 8fcf5a0). Logo backgrounds cleaned to transparent (66dc39e).
+- P12B: manual browser QA completed and passed — index.html, join.html, ecos.html, join→pending→approve→company flow, company edit/save/refresh, dashboard, capabilities, map, matches, export/import/reset, console errors, and logo rendering all checked.
+- STATUS: DEMO READY (local MVP). All data is browser-local (localStorage); no backend, cloud, email, or live sync exists unless explicitly implemented.
+- Known uncommitted/untracked files remain intentional: ecos-qr.png (unstaged), assets/source/israel-space-ecosystem-mapping-2026.pdf (untracked).
 
 Workflow:
 - ChatGPT prepares ai/NEXT_TASK.md content.
