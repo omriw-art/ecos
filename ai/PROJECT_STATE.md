@@ -13,10 +13,13 @@ Last known baseline:
 - Fake user/activity/live signals were removed.
 - Fake app actions were hardened.
 - Safe reset to seed: confirmed working.
-- P11A Demo Readiness QA: passed, no changes needed — app is presentable as a truthful local MVP demo.
+- P11A Demo Readiness QA: passed, no changes needed.
+- P11C: Onboarding confirm card uses real computed overlap data (no fake AI/social proof).
+- P11D completed in b834999: public entry copy is now truthfulness-aligned (no fake email, no fake registration, no fake 24h promise).
+- P11E completed: final demo wrap-up done. All fake claims removed. docs/DEMO_CHECKLIST.md created.
 - AI runner workspace committed in 6b92645 (ai/ + scripts/run-claude-task.sh).
-- Last known commit: 6b92645 chore: add token-efficient Claude runner.
 - Known uncommitted file: ecos-qr.png, intentionally unstaged.
+- Demo is ready for manual browser walkthrough using docs/DEMO_CHECKLIST.md.
 
 Workflow:
 - ChatGPT prepares ai/NEXT_TASK.md content.
@@ -38,6 +41,3 @@ Stage only:
 - ai/PROJECT_STATE.md
 
 Do not stage ecos-qr.png.
-
-Commit:
-git commit -m "docs: add AI handoff workspace"

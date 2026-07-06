@@ -567,7 +567,7 @@ function StepReview({ data, onNext, onBack, onEdit }) {
     <div className="join-card slide-anim">
       <div className="join-eyebrow"><span className="dot" /> סקירה אחרונה</div>
       <h2 className="join-title" style={{ fontSize: 34 }}>אלה הפרטים שלכם.<br /><span className="accent">נראה טוב?</span></h2>
-      <p className="join-sub">בדקו והגישו. נחזור אליכם תוך 24 שעות עם פרופיל מוכן.</p>
+      <p className="join-sub">בדקו והגישו. ההגשה תועבר לאישור מנהל האקוסיסטם.</p>
 
       <div style={{ marginTop: 32 }}>
         <ReviewBlock label="חברה" editTo="who" onEdit={onEdit}>
