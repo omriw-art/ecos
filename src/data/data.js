@@ -38,6 +38,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "AI-powered Weather Intelligence Platform",
+    website: "https://tomorrow.io",
+    logoUrl: "https://logo.clearbit.com/tomorrow.io",
   },
   {
     id: "israel-aerospace-industries",
@@ -60,6 +62,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Military and Commercial Aerospace Technology",
+    website: "https://iai.co.il",
+    logoUrl: "https://logo.clearbit.com/iai.co.il",
   },
   {
     id: "spacepharma",
@@ -82,6 +86,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Microgravity Assays for R&D Pipelines",
+    website: "https://spacepharma.health",
+    logoUrl: "https://logo.clearbit.com/spacepharma.health",
   },
   {
     id: "ramon-space",
@@ -104,6 +110,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Space-resilient Super-computer Systems",
+    website: "https://ramon.space",
+    logoUrl: "https://logo.clearbit.com/ramon.space",
   },
   {
     id: "spacecom-communications",
@@ -126,6 +134,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Fixed-satellite Communication Services",
+    website: "https://amos-spacecom.com",
+    logoUrl: "https://logo.clearbit.com/amos-spacecom.com",
   },
   {
     id: "spaceil",
@@ -148,6 +158,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Lunar Landing Spacecraft",
+    website: "https://spaceil.com",
+    logoUrl: "https://logo.clearbit.com/spaceil.com",
   },
   {
     id: "foxcom",
@@ -170,6 +182,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "RF-over-fiber Solutions",
+    website: "https://foxcom.com",
+    logoUrl: "https://logo.clearbit.com/foxcom.com",
   },
   {
     id: "ast-spacemobile",
@@ -192,6 +206,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Direct-to-cellular satellite broadband connectivity",
+    website: "https://ast-science.com",
+    logoUrl: "https://logo.clearbit.com/ast-science.com",
   },
   {
     id: "accubeat",
@@ -214,6 +230,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "High-accuracy Frequency and Timing Solutions for Space and Defense",
+    website: "https://accubeat.com",
+    logoUrl: "https://logo.clearbit.com/accubeat.com",
   },
   {
     id: "acktar",
@@ -236,6 +254,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Black light-absorbing coatings for space and optical applications",
+    website: "https://acktar.com",
+    logoUrl: "https://logo.clearbit.com/acktar.com",
   },
   {
     id: "amorphical",
@@ -302,6 +322,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "GEO satellite life extension and servicing",
+    website: "https://astroscale.com",
+    logoUrl: "https://logo.clearbit.com/astroscale.com",
   },
   {
     id: "arazim",
@@ -390,6 +412,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Space-based geospatial intelligence and EO satellite constellation",
+    website: "https://imagesatintl.com",
+    logoUrl: "https://logo.clearbit.com/imagesatintl.com",
   },
   {
     id: "montfort-brain-monitor-mon4t",
@@ -434,6 +458,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "LEO Ka-band satellite connectivity constellation",
+    website: "https://beetlesat.com",
+    logoUrl: "https://logo.clearbit.com/beetlesat.com",
   },
   {
     id: "moonshot-space",
@@ -500,6 +526,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Piezoelectric servo motors and precision positioning systems",
+    website: "https://nanomotion.com",
+    logoUrl: "https://logo.clearbit.com/nanomotion.com",
   },
   {
     id: "odysight-ai",
@@ -522,6 +550,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Video-based predictive maintenance for critical systems",
+    website: "https://odysight.ai",
+    logoUrl: "https://logo.clearbit.com/odysight.ai",
   },
   {
     id: "brain-space",
@@ -544,6 +574,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Non-invasive brain activity mapping and AI-powered EEG analysis",
+    website: "https://brain.space",
+    logoUrl: "https://logo.clearbit.com/brain.space",
   },
   {
     id: "healthy-io",
@@ -566,6 +598,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Smartphone-based urinalysis and digitized wound care",
+    website: "https://healthy.io",
+    logoUrl: "https://logo.clearbit.com/healthy.io",
   },
   {
     id: "orbit-communication-systems",
@@ -588,6 +622,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Satellite communication and tracking systems for all domains",
+    website: "https://orbit-cs.com",
+    logoUrl: "https://logo.clearbit.com/orbit-cs.com",
   },
   {
     id: "gilat-satellite-networks",
@@ -610,6 +646,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Satellite-based broadband communications technology and solutions",
+    website: "https://gilat.com",
+    logoUrl: "https://logo.clearbit.com/gilat.com",
   },
   {
     id: "over-sat",
@@ -654,6 +692,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Micronized satellite communication terminals",
+    website: "https://getsat.com",
+    logoUrl: "https://logo.clearbit.com/getsat.com",
   },
   {
     id: "gorilla-link",
@@ -698,6 +738,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "SAR-based crop monitoring and agricultural intelligence via AI",
+    website: "https://planetwatchers.com",
+    logoUrl: "https://logo.clearbit.com/planetwatchers.com",
   },
   {
     id: "sital-technology",
@@ -720,6 +762,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Communication bus IPs and testers for avionics and space",
+    website: "https://sitaltech.com",
+    logoUrl: "https://logo.clearbit.com/sitaltech.com",
   },
   {
     id: "spacetenna",
@@ -786,6 +830,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Nonlinear optical crystals for laser and space applications",
+    website: "https://raicol.com",
+    logoUrl: "https://logo.clearbit.com/raicol.com",
   },
   {
     id: "noga3d-innovations",
@@ -874,6 +920,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Oxygen extraction from metal oxides for lunar and green iron production",
+    website: "https://heliosproject.io",
+    logoUrl: "https://logo.clearbit.com/heliosproject.io",
   },
   {
     id: "stemrad",
@@ -896,6 +944,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Wearable radiation shielding for astronauts and first responders",
+    website: "https://stemrad.com",
+    logoUrl: "https://logo.clearbit.com/stemrad.com",
   },
   {
     id: "polymertal",
@@ -940,6 +990,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "SAR satellite data turned into large-scale infrastructure decision tools",
+    website: "https://asterra.io",
+    logoUrl: "https://logo.clearbit.com/asterra.io",
   },
   {
     id: "ricor-cryogenic-vacuum-systems",
@@ -962,6 +1014,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Advanced miniature cryocoolers for infrared detectors",
+    website: "https://ricor.com",
+    logoUrl: "https://logo.clearbit.com/ricor.com",
   },
   {
     id: "remondo",
@@ -1028,6 +1082,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Cooled and uncooled infrared detectors for defense and space",
+    website: "https://scd-infrared.com",
+    logoUrl: "https://logo.clearbit.com/scd-infrared.com",
   },
   {
     id: "astrobuild-ai",
@@ -1072,6 +1128,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Military Defense Systems and Related Commercial Applications",
+    website: "https://rafael.co.il",
+    logoUrl: "https://logo.clearbit.com/rafael.co.il",
   },
   {
     id: "satixfy-mda-space",
@@ -1094,6 +1152,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Chips and systems for satellite communication and multi-beam digital antennas",
+    website: "https://satixfy.com",
+    logoUrl: "https://logo.clearbit.com/satixfy.com",
   },
   {
     id: "sim-space",
@@ -1138,6 +1198,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Defense electronics: radar, EW, ISR, and ground surveillance systems",
+    website: "https://iai.co.il",
+    logoUrl: "https://logo.clearbit.com/iai.co.il",
   },
   {
     id: "powder-fuels",
@@ -1226,6 +1288,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Defense, homeland security and commercial aerospace technologies",
+    website: "https://elbitsystems.com",
+    logoUrl: "https://logo.clearbit.com/elbitsystems.com",
   },
   {
     id: "starburst",
@@ -1270,6 +1334,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Composite and metallic structural components for aerospace",
+    website: "https://kanfit.com",
+    logoUrl: "https://logo.clearbit.com/kanfit.com",
   },
   {
     id: "aitech-systems",
@@ -1292,6 +1358,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Rugged COTS embedded computing for defense, aerospace and space",
+    website: "https://aitechsystems.com",
+    logoUrl: "https://logo.clearbit.com/aitechsystems.com",
   },
   {
     id: "ace-capital-partners",
@@ -1358,6 +1426,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "High-performance cameras for space, aerospace, and harsh environments",
+    website: "https://kayainst.com",
+    logoUrl: "https://logo.clearbit.com/kayainst.com",
   },
   {
     id: "iasma",
@@ -1468,6 +1538,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Educational programs inspired by Ilan and Asaf Ramon legacy",
+    website: "https://ramon-foundation.org",
+    logoUrl: "https://logo.clearbit.com/ramon-foundation.org",
   },
   {
     id: "deep-insight",
@@ -1512,6 +1584,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Advanced microwave modules and sub-systems for satellite and space missions",
+    website: "https://kratosdefense.com",
+    logoUrl: "https://logo.clearbit.com/kratosdefense.com",
   },
   {
     id: "novelsat-ayecka",
@@ -1666,6 +1740,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Leading commercial law firm for cross-border transactions",
+    website: "https://ebn.co.il",
+    logoUrl: "https://logo.clearbit.com/ebn.co.il",
   },
   {
     id: "moon2mars-ventures",
@@ -1754,6 +1830,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Academic hub for space engineering research, nanosatellites and ground stations",
+    website: "https://tau.ac.il",
+    logoUrl: "https://logo.clearbit.com/tau.ac.il",
   },
   {
     id: "wispace",
@@ -1864,6 +1942,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "High-precision manufacturing for medical, aerospace and space industries",
+    website: "https://suron.co.il",
+    logoUrl: "https://logo.clearbit.com/suron.co.il",
   },
   {
     id: "monogoto",
@@ -1886,6 +1966,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "Satellite and cellular IoT connectivity platform",
+    website: "https://monogoto.io",
+    logoUrl: "https://logo.clearbit.com/monogoto.io",
   },
   {
     id: "addionics",
@@ -1908,6 +1990,8 @@ const COMPANIES = [
     partners: [],
     overlap: [],
     blurb: "3D metallic electrode architecture for high-performance batteries",
+    website: "https://addionics.com",
+    logoUrl: "https://logo.clearbit.com/addionics.com",
   },
   {
     id: "nexttenna",

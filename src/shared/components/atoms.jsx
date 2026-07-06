@@ -50,19 +50,27 @@ function Sparkline({ data = [], width = 100, height = 30, color = "var(--blue)" 
 
 // Company logo block — initials inside a stylized chip
 function CoLogo({ company, size = 40 }) {
+  const [imgFailed, setImgFailed] = React.useState(false);
   const initials = (company.name || "")
     .replace(/[^\p{L}\s]/gu, "")
     .split(/\s+/).filter(Boolean).slice(0, 2)
     .map((w) => w[0]).join("").toUpperCase() || "•";
   const sector = window.SECTORS.find((s) => s.id === company.sectors[0]);
+  const bg = `linear-gradient(135deg, ${sector ? sector.color : "oklch(0.3 0.06 270)"} -20%, oklch(0.18 0.04 270) 80%)`;
+  const showImg = company.logoUrl && !imgFailed;
   return (
     <div className="co-logo" style={{
       width: size, height: size,
-      background: `linear-gradient(135deg, ${sector ? sector.color : "oklch(0.3 0.06 270)"} -20%, oklch(0.18 0.04 270) 80%)`,
+      background: showImg ? "var(--bg-1)" : bg,
       borderColor: "var(--line-2)",
       fontSize: size * 0.32,
+      padding: showImg ? size * 0.1 : 0,
     }}>
-      <span style={{ textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}>{initials}</span>
+      {showImg
+        ? <img src={company.logoUrl} alt={company.name} onError={() => setImgFailed(true)}
+            style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: 3 }} />
+        : <span style={{ textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}>{initials}</span>
+      }
     </div>
   );
 }
