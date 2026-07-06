@@ -875,6 +875,7 @@ const CSV_COL_MAP = {
 };
 
 const SECTOR_COL_MAP = {
+  // Space/tech → canonical sector IDs
   eo: "earth-obs", earthobs: "earth-obs",
   communication: "comms", comms: "comms",
   defense: "defense",
@@ -885,6 +886,15 @@ const SECTOR_COL_MAP = {
   aidata: "ai-data", computingsoftwareanddatasolutions: "ai-data", pnt: "ai-data",
   healthtech: "life-sci",
   energy: "energy", sar: "sar",
+  // Non-canonical → honest descriptive labels (not real sector IDs)
+  education: "education", educationoutreach: "education",
+  research: "research", researchanddevelopment: "research",
+  academic: "academic", academicandresearchinstitutions: "academic",
+  accelerator: "accelerator", acceleratorsinnovationhubs: "accelerator",
+  investment: "investment", investmentventuresupport: "investment",
+  consulting: "consulting", consultingengineeringservices: "consulting",
+  government: "government",
+  legal: "legal", legalinsurancepolicy: "legal",
 };
 
 function normCol(s) {
@@ -910,7 +920,8 @@ function parseCSVCompanies(csvText) {
     });
     if (!raw.name) return null;
     const sectorKey = normCol(raw.subCategory || raw.sector || "");
-    const sector = SECTOR_COL_MAP[sectorKey] || "earth-obs";
+    const rawSectorText = (raw.subCategory || raw.sector || "").trim();
+    const sector = SECTOR_COL_MAP[sectorKey] || rawSectorText || "other";
     const splitMV = function(v) { return v ? String(v).split(/[,;|]/).map(function(s) { return s.trim(); }).filter(Boolean) : []; };
     const base = raw.name.toLowerCase().replace(/[^a-z0-9֐-׿]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") || "co";
     let id = base + "-csv";
