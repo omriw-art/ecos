@@ -11,12 +11,14 @@ function companyEditorInitial(company) {
     website: company?.website || "",
     stage: company?.stage || "Seed",
     techText: (company?.capabilities?.length ? company.capabilities : (company?.tech || [])).join(", "),
+    needsText: (company?.needs || []).join(", "),
+    offersText: (company?.offers || []).join(", "),
   };
 }
 
 function parseList(value) {
   return String(value || "")
-    .split(",")
+    .split(/[,;]/)
     .map((item) => item.trim())
     .filter(Boolean);
 }
@@ -47,6 +49,8 @@ function CompanyEditor({ company, title, submitLabel, onSave, onCancel }) {
       stage: form.stage,
       tech: parseList(form.techText),
       capabilities: parseList(form.techText),
+      needs: parseList(form.needsText),
+      offers: parseList(form.offersText),
     });
   };
 
@@ -65,6 +69,9 @@ function CompanyEditor({ company, title, submitLabel, onSave, onCancel }) {
           <label>תחום ראשי</label>
           <select className="select" value={form.sector} onChange={(e) => setField("sector", e.target.value)}>
             {window.SECTORS.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+            {!window.SECTORS.find((s) => s.id === form.sector) && form.sector && (
+              <option value={form.sector}>{form.sector} · imported</option>
+            )}
           </select>
         </div>
         <div className="field">
@@ -84,6 +91,14 @@ function CompanyEditor({ company, title, submitLabel, onSave, onCancel }) {
         <div className="field">
           <label>יכולות / Tags</label>
           <input className="input" value={form.techText} onChange={(e) => setField("techText", e.target.value)} placeholder="Satellite, AI, Payload" />
+        </div>
+        <div className="field">
+          <label>צרכים (Needs)</label>
+          <input className="input" value={form.needsText} onChange={(e) => setField("needsText", e.target.value)} placeholder="Funding; Lab access; Pilot customers" />
+        </div>
+        <div className="field">
+          <label>הצעות (Offers)</label>
+          <input className="input" value={form.offersText} onChange={(e) => setField("offersText", e.target.value)} placeholder="SAR data; Analytics platform" />
         </div>
         <div className="field" style={{ gridColumn: "1 / -1" }}>
           <label>תיאור קצר</label>
