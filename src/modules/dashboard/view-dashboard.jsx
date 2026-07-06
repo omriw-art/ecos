@@ -156,6 +156,30 @@ function Dashboard({ onOpenCompany, onNav }) {
     }
   };
 
+  const downloadCSVTemplate = () => {
+    const headers = "name,description,website,sector,location,capabilities,needs,offers";
+    const example = [
+      "Example Company",
+      "Short description of what the company does",
+      "https://example.com",
+      "earth-obs",
+      "Tel Aviv",
+      "SAR imaging;AI analysis",
+      "Pilot customers;Funding",
+      "Remote sensing data",
+    ].map((v) => `"${v}"`).join(",");
+    const csv = "﻿" + headers + "\n" + example + "\n";
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "ecosystem-os-companies-template.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="view">
       <div className="view-head">
@@ -170,6 +194,9 @@ function Dashboard({ onOpenCompany, onNav }) {
           <input type="file" accept=".json,.csv,.xlsx,.xls,application/json,text/csv" ref={importInputRef} style={{ display: "none" }} onChange={handleImportFile} />
           <button className="btn" onClick={exportLocalData} title="הורדה מקומית — JSON עם כל הנתונים המקומיים">
             <window.I.Upload size={13} /> הורדה מקומית
+          </button>
+          <button className="btn" onClick={downloadCSVTemplate} title="ערכו באקסל ושמרו כ-CSV UTF-8 לפני ייבוא">
+            <window.I.Download size={13} /> תבנית CSV
           </button>
           <button className="btn" onClick={() => importInputRef.current && importInputRef.current.click()} title="ייבוא מקומי — שחזור מקובץ JSON">
             <window.I.Download size={13} /> ייבוא מקומי
