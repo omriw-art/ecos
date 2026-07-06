@@ -10,7 +10,8 @@ function companyEditorInitial(company) {
     hq: company?.hq || "",
     website: company?.website || "",
     stage: company?.stage || "Seed",
-    techText: (company?.capabilities?.length ? company.capabilities : (company?.tech || [])).join(", "),
+    capabilitiesText: (company?.capabilities?.length ? company.capabilities : (company?.tech || [])).join(", "),
+    tagsText: (company?.tags || []).join(", "),
     needsText: (company?.needs || []).join(", "),
     offersText: (company?.offers || []).join(", "),
   };
@@ -21,6 +22,31 @@ function parseList(value) {
     .split(/[,;]/)
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+// Polished, product-facing labels/headings — deliberately not the mono/uppercase
+// console style used for dashboard chrome, since this is a data-entry form.
+const editorLabelStyle = { fontFamily: "inherit", fontSize: 12.5, fontWeight: 600, letterSpacing: "normal", textTransform: "none", color: "var(--text-2)" };
+const editorSectionHeadingStyle = { fontFamily: "inherit", fontSize: 13.5, fontWeight: 700, letterSpacing: "normal", textTransform: "none", color: "var(--text-1)", marginBottom: 12 };
+const editorGridStyle = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 };
+const editorFullRow = { gridColumn: "1 / -1" };
+
+function EditorSection({ heading, children }) {
+  return (
+    <div style={{ marginBottom: 22 }}>
+      <div style={editorSectionHeadingStyle}>{heading}</div>
+      <div style={editorGridStyle}>{children}</div>
+    </div>
+  );
+}
+
+function EditorField({ label, required, full, children }) {
+  return (
+    <div className="field" style={full ? editorFullRow : undefined}>
+      <label style={editorLabelStyle}>{label} {required && <span className="req">*</span>}</label>
+      {children}
+    </div>
+  );
 }
 
 function CompanyEditor({ company, title, submitLabel, onSave, onCancel }) {
@@ -47,68 +73,71 @@ function CompanyEditor({ company, title, submitLabel, onSave, onCancel }) {
       hq: form.hq,
       website: form.website,
       stage: form.stage,
-      tech: parseList(form.techText),
-      capabilities: parseList(form.techText),
+      tech: parseList(form.capabilitiesText),
+      capabilities: parseList(form.capabilitiesText),
+      tags: parseList(form.tagsText),
       needs: parseList(form.needsText),
       offers: parseList(form.offersText),
     });
   };
 
   return (
-    <form className="card" onSubmit={submit}>
+    <form className="card" style={{ maxWidth: 680, margin: "0 auto 20px" }} onSubmit={submit}>
       <div className="card-hd">
         <div className="card-title"><span className="dot green" /> {title}</div>
         {onCancel && <button type="button" className="btn btn-ghost" onClick={onCancel}>ביטול</button>}
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-        <div className="field">
-          <label>שם חברה <span className="req">*</span></label>
+
+      <EditorSection heading="פרטי חברה">
+        <EditorField label="שם חברה" required>
           <input className="input" value={form.name} onChange={(e) => setField("name", e.target.value)} />
-        </div>
-        <div className="field">
-          <label>תחום ראשי</label>
+        </EditorField>
+        <EditorField label="אתר">
+          <input className="input" value={form.website} onChange={(e) => setField("website", e.target.value)} placeholder="https://..." dir="ltr" />
+        </EditorField>
+        <EditorField label="מיקום">
+          <input className="input" value={form.hq} onChange={(e) => setField("hq", e.target.value)} placeholder="תל אביב" />
+        </EditorField>
+        <EditorField label="תיאור קצר" full>
+          <textarea className="textarea" value={form.blurb} onChange={(e) => setField("blurb", e.target.value)} />
+        </EditorField>
+      </EditorSection>
+
+      <EditorSection heading="סיווג">
+        <EditorField label="תחום">
           <select className="select" value={form.sector} onChange={(e) => setField("sector", e.target.value)}>
             {window.SECTORS.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
             {!window.SECTORS.find((s) => s.id === form.sector) && form.sector && (
               <option value={form.sector}>{form.sector} · imported</option>
             )}
           </select>
-        </div>
-        <div className="field">
-          <label>מיקום</label>
-          <input className="input" value={form.hq} onChange={(e) => setField("hq", e.target.value)} placeholder="תל אביב" />
-        </div>
-        <div className="field">
-          <label>שלב</label>
+        </EditorField>
+        <EditorField label="שלב">
           <select className="select" value={form.stage} onChange={(e) => setField("stage", e.target.value)}>
             {window.STAGES.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
-        </div>
-        <div className="field">
-          <label>אתר</label>
-          <input className="input" value={form.website} onChange={(e) => setField("website", e.target.value)} placeholder="https://..." dir="ltr" />
-        </div>
-        <div className="field">
-          <label>יכולות / Tags</label>
-          <input className="input" value={form.techText} onChange={(e) => setField("techText", e.target.value)} placeholder="Satellite, AI, Payload" />
-        </div>
-        <div className="field">
-          <label>צרכים (Needs)</label>
+        </EditorField>
+      </EditorSection>
+
+      <EditorSection heading="יכולות והתאמה">
+        <EditorField label="יכולות / Capabilities" full>
+          <input className="input" value={form.capabilitiesText} onChange={(e) => setField("capabilitiesText", e.target.value)} placeholder="Earth Observation; Analytics; Communication" />
+        </EditorField>
+        <EditorField label="תגיות / Tags" full>
+          <input className="input" value={form.tagsText} onChange={(e) => setField("tagsText", e.target.value)} placeholder="Satellite, AI, Payload" />
+        </EditorField>
+        <EditorField label="צרכים / Needs" full>
           <input className="input" value={form.needsText} onChange={(e) => setField("needsText", e.target.value)} placeholder="Funding; Lab access; Pilot customers" />
-        </div>
-        <div className="field">
-          <label>הצעות (Offers)</label>
+        </EditorField>
+        <EditorField label="הצעות / Offers" full>
           <input className="input" value={form.offersText} onChange={(e) => setField("offersText", e.target.value)} placeholder="SAR data; Analytics platform" />
-        </div>
-        <div className="field" style={{ gridColumn: "1 / -1" }}>
-          <label>תיאור קצר</label>
-          <textarea className="textarea" value={form.blurb} onChange={(e) => setField("blurb", e.target.value)} />
-        </div>
-      </div>
+        </EditorField>
+      </EditorSection>
+
       {error && <div className="help" style={{ color: "var(--rose)", marginTop: 10 }}>{error}</div>}
       <div className="flex center gap-8" style={{ marginTop: 14 }}>
-        <button type="submit" className="btn btn-primary"><window.I.Check size={13} /> {submitLabel}</button>
         {onCancel && <button type="button" className="btn" onClick={onCancel}>סגור</button>}
+        <button type="submit" className="btn btn-primary"><window.I.Check size={13} /> {submitLabel}</button>
       </div>
     </form>
   );
