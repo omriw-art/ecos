@@ -6,6 +6,7 @@ const NAV = [
   { id: "companies",    label: "ארגונים",         icon: "Building", section: "מבט-על", count: () => (window.COMPANIES || []).length },
   { id: "capabilities", label: "יכולות חלל",      icon: "Layers",   section: "מבט-על" },
   { id: "map",          label: "מפת אקוסיסטם",    icon: "Network",  section: "מבט-על" },
+  { id: "needs",        label: "צרכים",           icon: "Compass",  section: "מבט-על" },
 
   { id: "matches",   label: "התאמות לצרכים", icon: "Sparkles",  section: "Intelligence" },
   { id: "copilot",   label: "חיפוש חכם",     icon: "Cpu",       section: "Intelligence" },

@@ -13,6 +13,7 @@ const VIEW_TITLES = {
   company:      { title: "פרופיל ארגון",     crumb: "ECOSYSTEM · COMPANIES · PROFILE" },
   capabilities: { title: "יכולות חלל",       crumb: "ECOSYSTEM · CAPABILITIES"       },
   map:          { title: "מפת אקוסיסטם",     crumb: "ECOSYSTEM · GRAPH"              },
+  needs:        { title: "לוח צרכים",        crumb: "צרכים"                          },
   matches:      { title: "התאמות לצרכים",    crumb: "INTELLIGENCE · MATCH"           },
   copilot:      { title: "חיפוש חכם",         crumb: "INTELLIGENCE · COPILOT"         },
   people:       { title: "ארגון",             crumb: "INTELLIGENCE · PEOPLE"          },
@@ -86,6 +87,7 @@ function App() {
         {view === "company"      && <CompanyProfile id={companyId} onBack={() => setView("companies")} onNav={goNav} onOpenCompany={goCompany} onUpdateCompany={updateCompany} />}
         {view === "capabilities" && <CapabilitiesView onOpenCompany={goCompany} onNav={goNav} />}
         {view === "map"          && <MapView onOpenCompany={goCompany} />}
+        {view === "needs"     && <NeedsView onOpenCompany={goCompany} />}
         {view === "matches"   && <MatchesView onOpenCompany={goCompany} />}
         {view === "people"    && <PeopleView onNav={goNav} />}
         {view === "onboard"   && <OnboardView onCompaniesChanged={refreshCompanies} onOpenCompany={goCompany} />}

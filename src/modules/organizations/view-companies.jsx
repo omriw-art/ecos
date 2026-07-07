@@ -708,4 +708,4 @@ function ContactsTab({ c }) {
   );
 }
 
-Object.assign(window, { CompaniesView, CompanyProfile });
+Object.assign(window, { CompaniesView, CompanyProfile, orgTypeLabel, spaceSegmentLabel, spaceSegmentShortLabel });
