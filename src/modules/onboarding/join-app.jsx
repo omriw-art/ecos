@@ -171,8 +171,8 @@ function Welcome({ onGo }) {
       <div className="welcome-grid">
         <div className="welcome-option" onClick={() => onGo("import")}>
           <div className="ic-bg linkedin"><window.I.Linkedin size={22} style={{ color: "white" }} /></div>
-          <h3>הירשמו עם LinkedIn</h3>
-          <div className="meta">המהיר ביותר. נמלא עבורכם 80% מהפרטים אוטומטית מהפרופיל של החברה.</div>
+          <h3>ייבוא מדגם (Demo)</h3>
+          <div className="meta">ימלא טופס לדוגמה על בסיס פרופיל LinkedIn — תוכלו להחליף לפרטים האמיתיים שלכם בהמשך.</div>
           <div className="time"><span className="dot" /> כמינוט אחד</div>
         </div>
         <div className="welcome-option" onClick={() => onGo("who")}>
@@ -184,13 +184,12 @@ function Welcome({ onGo }) {
       </div>
 
       <div className="trust-strip">
-        <span className="label">חברים באקוסיסטם</span>
+        <span className="label">לדוגמה מהמאגר המקומי</span>
         <span className="item">IAI</span>
         <span className="item">רפאל</span>
         <span className="item">ICEYE</span>
         <span className="item">Planet</span>
         <span className="item">Ramon.Space</span>
-        <span className="item">+ 280</span>
       </div>
     </div>
   );
@@ -229,7 +228,7 @@ function ImportScreen({ onDone }) {
         רגע אחד, אנחנו <span className="accent">מכירים אתכם</span>
       </h2>
       <p className="join-sub" style={{ margin: "0 auto" }}>
-        ה-AI שלנו ממלא עבורכם את הטופס. אל תסגרו את החלון.
+        משלימים מילוי לדוגמה (Demo) על הטופס. אל תסגרו את החלון.
       </p>
       <div className="import-log">
         {log.map((l, i) => (
@@ -367,7 +366,7 @@ function StepDescribe({ data, setField, onNext, onBack }) {
       />
       <div style={{ marginTop: 10, fontSize: 12, color: "var(--text-4)", display: "flex", justifyContent: "space-between" }}>
         <span>{data.blurb.length} תווים</span>
-        <span>✨ AI יסכם וייצר תיוגים אוטומטיים</span>
+        <span>✨ תיאור קצר וממוקד עוזר להתאמות מדויקות יותר</span>
       </div>
     </StepShell>
   );
@@ -666,9 +665,9 @@ function DoneScreen({ data, submission }) {
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 18 }}>
           {[
-            ["1", "ביקורת AI", "ה-AI עובר על הפרטים ויוצר Tags + פרופיל ציבורי", "oklch(0.7 0.18 260)"],
-            ["2", "אישור צוות", "מנהל אקוסיסטם אישי בודק ומאשר ב-24 שעות", "oklch(0.72 0.18 295)"],
-            ["3", "התאמות חיות", "תקבלו 5 חיבורים מומלצים ראשונים במייל", "oklch(0.7 0.18 150)"],
+            ["1", "שמירה מקומית", "הפרטים נשמרים במאגר המקומי וממתינים לבדיקה", "oklch(0.7 0.18 260)"],
+            ["2", "בדיקה ואישור", "מנהל האקוסיסטם בודק את הפרופיל ומאשר אותו באופן ידני", "oklch(0.72 0.18 295)"],
+            ["3", "פרסום באקוסיסטם", "לאחר האישור, הפרופיל יופיע במפת האקוסיסטם ובמנוע ההתאמות", "oklch(0.7 0.18 150)"],
           ].map(([n, t, d, c]) => (
             <div key={n} style={{ textAlign: "start" }}>
               <div style={{

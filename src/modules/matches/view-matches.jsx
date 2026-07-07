@@ -110,7 +110,7 @@ function MatchesView({ onOpenCompany }) {
           {/* Matches */}
           <div className="card flush" style={{ padding: 0 }}>
             <div className="flex center between" style={{ padding: "14px 18px", borderBottom: "1px solid var(--line-1)" }}>
-              <div className="card-title"><span className="dot violet" /> Suggested matches for {source.name}</div>
+              <div className="card-title"><span className="dot violet" /> התאמות מוצעות עבור {source.name}</div>
               <div className="flex center gap-8">
                 <span className="pill violet">Deterministic · Explainable</span>
                 <button className="btn btn-ghost" disabled title="Filtering is not wired in this batch"><window.I.Filter size={12} /></button>
@@ -154,7 +154,7 @@ function MatchesView({ onOpenCompany }) {
           </div>
 
           <div className="card">
-            <div className="card-hd"><div className="card-title"><span className="dot green" /> System-wide top signals</div><span className="pill">{overview.length}</span></div>
+            <div className="card-hd"><div className="card-title"><span className="dot green" /> האותות המובילים במאגר</div><span className="pill">{overview.length}</span></div>
             <div className="flex wrap gap-6">
               {overview.slice(0, 10).map((match) => (
                 <span key={match.id} className="chip">
