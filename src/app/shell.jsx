@@ -7,8 +7,8 @@ const NAV = [
   { id: "capabilities", label: "יכולות חלל",      icon: "Layers",   section: "מבט-על" },
   { id: "map",          label: "מפת אקוסיסטם",    icon: "Network",  section: "מבט-על" },
 
-  { id: "matches",   label: "התאמות לעובדים", icon: "Sparkles",  section: "Intelligence" },
-  { id: "copilot",   label: "AI Copilot",     icon: "Cpu",       section: "Intelligence" },
+  { id: "matches",   label: "התאמות לצרכים", icon: "Sparkles",  section: "Intelligence" },
+  { id: "copilot",   label: "חיפוש חכם",     icon: "Cpu",       section: "Intelligence" },
   { id: "people",    label: "ארגון",          icon: "Users",     section: "Intelligence" },
 
   { id: "onboard",   label: "Onboarding לחברה", icon: "Rocket",  section: "פעולות" },
@@ -145,7 +145,7 @@ function Topbar({ title, crumb, onOpenCopilot, viewActions, onOpenCompany }) {
       <button className="icon-btn" disabled title="התראות — בקרוב">
         <window.I.Bell size={15} />
       </button>
-      <button className="icon-btn glow" onClick={onOpenCopilot} title="AI Copilot">
+      <button className="icon-btn glow" onClick={onOpenCopilot} title="חיפוש חכם">
         <window.I.Sparkles size={15} />
       </button>
     </header>

@@ -8,13 +8,13 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
 }/*EDITMODE-END*/;
 
 const VIEW_TITLES = {
-  dashboard:    { title: "Mission Control",   crumb: "DASHBOARD"                     },
+  dashboard:    { title: "לוח ניהול",         crumb: "דשבורד"                        },
   companies:    { title: "חברות",            crumb: "ECOSYSTEM · COMPANIES"          },
   company:      { title: "פרופיל חברה",      crumb: "ECOSYSTEM · COMPANIES · PROFILE" },
   capabilities: { title: "יכולות חלל",       crumb: "ECOSYSTEM · CAPABILITIES"       },
   map:          { title: "מפת אקוסיסטם",     crumb: "ECOSYSTEM · GRAPH"              },
-  matches:      { title: "התאמות לעובדים",   crumb: "INTELLIGENCE · MATCH"           },
-  copilot:      { title: "AI Copilot",        crumb: "INTELLIGENCE · COPILOT"         },
+  matches:      { title: "התאמות לצרכים",    crumb: "INTELLIGENCE · MATCH"           },
+  copilot:      { title: "חיפוש חכם",         crumb: "INTELLIGENCE · COPILOT"         },
   people:       { title: "ארגון",             crumb: "INTELLIGENCE · PEOPLE"          },
   onboard:      { title: "Onboarding",        crumb: "ACTIONS · NEW COMPANY"          },
   settings:     { title: "הגדרות",           crumb: "ACTIONS · SETTINGS"             },
