@@ -183,7 +183,9 @@ function MatchRow({ match, idx, onOpenCompany }) {
           <div style={{ fontSize: 13.5, fontWeight: 500 }}>{match.target.name}</div>
           <span className={"pill " + meta.tone} style={{ padding: "1px 5px" }}>{meta.label}</span>
         </div>
-        <div className="mono tiny" style={{ color: "var(--text-4)" }}>{match.target.flag} {String(match.target.hq || "").toUpperCase()}</div>
+        <div style={{ fontSize: 12, color: "var(--text-3)" }}>
+          {match.target.flag} {String(match.target.hq || "").toUpperCase()} · {(window.ORGANIZATION_TYPES || []).find((t) => t.id === match.target.organizationType)?.label || "אחר"}
+        </div>
       </div>
 
       <div className="col" style={{ flex: 1, gap: 6 }}>

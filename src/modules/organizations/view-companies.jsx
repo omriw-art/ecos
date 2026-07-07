@@ -2,6 +2,21 @@
 // List: searchable, filterable, grid view + table view toggle.
 // Profile: full deep-dive (tabs, score breakdown, connections, contacts, etc.)
 
+// P15A — dual organization taxonomy display helpers.
+function orgTypeLabel(id) {
+  const found = (window.ORGANIZATION_TYPES || []).find((t) => t.id === id);
+  return found ? found.label : "אחר";
+}
+function spaceSegmentLabel(id) {
+  const found = (window.SPACE_SEGMENTS || []).find((s) => s.id === id);
+  return found ? found.label : "אחר";
+}
+function spaceSegmentShortLabel(id) {
+  const full = spaceSegmentLabel(id);
+  const parts = full.split(" / ");
+  return parts.length > 1 ? parts[1] : full;
+}
+
 function companyEditorInitial(company) {
   return {
     name: company?.name || "",
@@ -10,6 +25,8 @@ function companyEditorInitial(company) {
     hq: company?.hq || "",
     website: company?.website || "",
     stage: company?.stage || "Seed",
+    organizationType: company?.organizationType || "other",
+    spaceSegment: company?.spaceSegment || "other",
     capabilitiesText: (company?.capabilities?.length ? company.capabilities : (company?.tech || [])).join(", "),
     tagsText: (company?.tags || []).join(", "),
     needsText: (company?.needs || []).join(", "),
@@ -113,6 +130,8 @@ function CompanyEditor({ company, title, submitLabel, onSave, onCancel }) {
       hq: form.hq,
       website: form.website,
       stage: form.stage,
+      organizationType: form.organizationType,
+      spaceSegment: form.spaceSegment,
       tech: parseList(form.capabilitiesText),
       capabilities: parseList(form.capabilitiesText),
       tags: parseList(form.tagsText),
@@ -165,6 +184,16 @@ function CompanyEditor({ company, title, submitLabel, onSave, onCancel }) {
             )}
           </select>
         </EditorField>
+        <EditorField label="סוג ארגון">
+          <select className="select" value={form.organizationType} onChange={(e) => setField("organizationType", e.target.value)}>
+            {(window.ORGANIZATION_TYPES || []).map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
+          </select>
+        </EditorField>
+        <EditorField label="סגמנט פעילות">
+          <select className="select" value={form.spaceSegment} onChange={(e) => setField("spaceSegment", e.target.value)}>
+            {(window.SPACE_SEGMENTS || []).map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+          </select>
+        </EditorField>
       </EditorSection>
 
       <EditorSection heading="יכולות והתאמה">
@@ -195,6 +224,7 @@ function CompaniesView({ onOpenCompany, onCreateCompany }) {
   const { COMPANIES, SECTORS } = window;
   const [activeSectors, setActiveSectors] = React.useState([]);
   const [stage,         setStage]         = React.useState("all");
+  const [orgType,       setOrgType]       = React.useState("all");
   const [view,          setView]          = React.useState("grid");
   const [q,             setQ]             = React.useState("");
   const [showCreate,    setShowCreate]    = React.useState(false);
@@ -212,6 +242,7 @@ function CompaniesView({ onOpenCompany, onCreateCompany }) {
     const tech = c.tech || [];
     if (activeSectors.length && !activeSectors.some((s) => sectors.includes(s))) return false;
     if (stage !== "all" && c.stage !== stage) return false;
+    if (orgType !== "all" && (c.organizationType || "other") !== orgType) return false;
     if (q && !`${c.name} ${c.country} ${c.hq} ${c.blurb} ${tech.join(" ")} ${sectors.join(" ")}`.toLowerCase().includes(q.toLowerCase())) return false;
     return true;
   });
@@ -220,8 +251,8 @@ function CompaniesView({ onOpenCompany, onCreateCompany }) {
     <div className="view">
       <div className="view-head">
         <div>
-          <h2>חברות באקוסיסטם</h2>
-          <div className="sub">{filtered.length} מתוך {COMPANIES.length} חברות</div>
+          <h2>ארגונים באקוסיסטם</h2>
+          <div className="sub">{filtered.length} מתוך {COMPANIES.length} ארגונים</div>
         </div>
         <div className="ops">
           <div className="seg">
@@ -233,14 +264,14 @@ function CompaniesView({ onOpenCompany, onCreateCompany }) {
             </button>
           </div>
           <button className="btn" disabled title="סינון מתקדם — בקרוב"><window.I.Filter size={13} /> סינון מתקדם</button>
-          <button className="btn btn-primary" onClick={() => setShowCreate((v) => !v)}><window.I.Plus size={13} /> חברה חדשה</button>
+          <button className="btn btn-primary" onClick={() => setShowCreate((v) => !v)}><window.I.Plus size={13} /> הוספת ארגון</button>
         </div>
       </div>
 
       {showCreate && (
         <CompanyEditor
-          title="חברה חדשה"
-          submitLabel="שמור חברה"
+          title="הוספת ארגון"
+          submitLabel="שמור ארגון"
           onSave={create}
           onCancel={() => setShowCreate(false)}
         />
@@ -270,6 +301,16 @@ function CompaniesView({ onOpenCompany, onCreateCompany }) {
             <window.I.Search size={13} />
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="שם, טכנולוגיה, מדינה…" />
           </div>
+        </div>
+        <div className="divider" />
+        <div className="flex center gap-8 wrap">
+          <span className="mono tiny" style={{ color: "var(--text-3)", letterSpacing: "0.12em", textTransform: "uppercase", marginInlineEnd: 6 }}>סוג ארגון</span>
+          <span className={"chip" + (orgType === "all" ? " active" : "")} onClick={() => setOrgType("all")}>הכל</span>
+          {(window.ORGANIZATION_TYPES || []).map((t) => (
+            <span key={t.id} className={"chip" + (orgType === t.id ? " active" : "")} onClick={() => setOrgType(t.id)}>
+              {t.label}
+            </span>
+          ))}
         </div>
       </div>
 
@@ -336,6 +377,10 @@ function CoCard({ c, onClick }) {
             {c.strategic && <window.I.Star size={11} style={{ color: "var(--amber)", verticalAlign: 1, marginInlineStart: 6 }} fill={true} />}
           </div>
           <div className="co-meta">{c.flag} {String(c.hq || "").toUpperCase()} · {c.stage}</div>
+          <div className="flex gap-6 wrap" style={{ marginTop: 5 }}>
+            <span className="pill" style={{ fontSize: 11 }}>{orgTypeLabel(c.organizationType)}</span>
+            <span className="pill" style={{ fontSize: 11 }}>{spaceSegmentShortLabel(c.spaceSegment)}</span>
+          </div>
         </div>
       </div>
       <div className="co-blurb" style={{
@@ -396,7 +441,7 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany }) {
         }
       `}</style>
       <div className="flex center gap-8" style={{ fontSize: 12, color: "var(--text-3)" }}>
-        <span style={{ cursor: "default" }} onClick={onBack}>חברות</span>
+        <span style={{ cursor: "default" }} onClick={onBack}>ארגונים</span>
         <window.I.ArrowLeft size={11} />
         <span style={{ color: "var(--text-1)" }}>{c.name}</span>
       </div>
@@ -417,8 +462,12 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany }) {
                 {c.readiness}
               </span>
             </div>
-            <div style={{ fontSize: 14, color: "var(--text-2)", marginBottom: 12 }}>
+            <div style={{ fontSize: 14, color: "var(--text-2)", marginBottom: 8 }}>
               {c.flag} {c.hq.toUpperCase()} · FOUNDED {c.founded} · {c.size} EMPLOYEES{c.fundingM > 0 ? ` · $${c.fundingM}M RAISED` : ""}
+            </div>
+            <div className="flex gap-8 wrap" style={{ marginBottom: 12 }}>
+              <span className="pill">סוג ארגון: {orgTypeLabel(c.organizationType)}</span>
+              <span className="pill">סגמנט פעילות: {spaceSegmentLabel(c.spaceSegment)}</span>
             </div>
             <div style={{ fontSize: 18, color: "var(--text-1)", maxWidth: "75ch", lineHeight: 1.6 }}>{c.blurb}</div>
             <div className="co-tags" style={{ marginTop: 14 }}>

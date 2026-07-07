@@ -68,6 +68,8 @@
       score: Number(source.score) || 50,
       strategic: source.strategic === true,
       readiness: text(source.readiness) || "Mapped",
+      organizationType: text(source.organizationType) || "other",
+      spaceSegment: text(source.spaceSegment) || "other",
       sectors,
       tech: fallbackTech,
       capabilities,

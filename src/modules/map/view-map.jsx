@@ -225,11 +225,16 @@ function MapView({ onOpenCompany }) {
                 <CoLogo company={focusedCo} size={32} />
                 <div className="col" style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 600 }}>{focusedCo.name}</div>
-                  <div className="mono tiny" style={{ color: "var(--text-4)" }}>{focusedCo.flag} {focusedCo.hq.toUpperCase()}</div>
+                  <div style={{ fontSize: 12, color: "var(--text-3)" }}>{focusedCo.flag} {focusedCo.hq.toUpperCase()}</div>
                 </div>
                 <ScoreRing value={focusedCo.score} size={36} stroke={3} />
               </div>
-              <div className="flex wrap gap-4" style={{ marginTop: 10 }}>
+              <div className="flex wrap gap-4" style={{ marginTop: 8 }}>
+                <span className="pill" style={{ fontSize: 11 }}>
+                  {(window.ORGANIZATION_TYPES || []).find((t) => t.id === focusedCo.organizationType)?.label || "אחר"}
+                </span>
+              </div>
+              <div className="flex wrap gap-4" style={{ marginTop: 6 }}>
                 {(focusedCo.sectors || []).slice(0,3).map((s) => <SectorPill key={s} id={s} />)}
               </div>
             </div>

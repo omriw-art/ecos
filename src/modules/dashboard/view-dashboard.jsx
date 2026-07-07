@@ -247,7 +247,7 @@ function Dashboard({ onOpenCompany, onNav }) {
         <div>
           <h2>לוח ניהול אקו־סיסטם</h2>
           <div className="sub">
-            מיפוי חברות, יכולות, צרכים והזדמנויות — דמו מקומי
+            מיפוי ארגונים (חברות, משקיעים, עמותות, אקדמיה ועוד), יכולות, צרכים והזדמנויות — דמו מקומי
           </div>
         </div>
         <div className="ops">
@@ -356,8 +356,8 @@ function StrategicBar({ companies, activeCompanies, strategicCompanies, openOppo
   return (
     <div className="kpi-grid">
       <Kpi label="סך ארגונים" value={companies.length} trend="כל הרשומות במאגר המקומי" accent="oklch(0.7 0.18 250 / 0.18)" onClick={() => onNav("companies")} />
-      <Kpi label="חברות פעילות" value={activeCompanies.length} trend="חברות שסומנו כפעילות או אסטרטגיות" accent="oklch(0.7 0.15 145 / 0.18)" onClick={() => onNav("companies")} />
-      <Kpi label="חברות אסטרטגיות" value={strategicCompanies.length} trend="דורשות בדיקה או החלטה" accent="oklch(0.78 0.15 80 / 0.18)" onClick={() => onNav("companies")} />
+      <Kpi label="ארגונים פעילים" value={activeCompanies.length} trend="ארגונים שסומנו כפעילים או אסטרטגיים" accent="oklch(0.7 0.15 145 / 0.18)" onClick={() => onNav("companies")} />
+      <Kpi label="שחקנים אסטרטגיים" value={strategicCompanies.length} trend="דורשים בדיקה או החלטה" accent="oklch(0.78 0.15 80 / 0.18)" onClick={() => onNav("companies")} />
       <Kpi label="הזדמנויות פתוחות" value={openOpportunities.length} trend="פעילות, בבדיקה או בסגירה" accent="oklch(0.7 0.18 295 / 0.18)" />
       <Kpi label="צרכים פתוחים" value={needs.length} trend={`${unique(needs.map((n) => n.companyId)).length} חברות עם צרכים שהוזנו`} accent="oklch(0.65 0.20 200 / 0.18)" />
       <Kpi label="ממתין לאישור" value={pendingReviews.length} trend="הגשות שממתינות לאישור ידני" accent="oklch(0.72 0.20 30 / 0.18)" />

@@ -9,8 +9,8 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
 
 const VIEW_TITLES = {
   dashboard:    { title: "לוח ניהול",         crumb: "דשבורד"                        },
-  companies:    { title: "חברות",            crumb: "ECOSYSTEM · COMPANIES"          },
-  company:      { title: "פרופיל חברה",      crumb: "ECOSYSTEM · COMPANIES · PROFILE" },
+  companies:    { title: "ארגונים",           crumb: "ECOSYSTEM · COMPANIES"          },
+  company:      { title: "פרופיל ארגון",     crumb: "ECOSYSTEM · COMPANIES · PROFILE" },
   capabilities: { title: "יכולות חלל",       crumb: "ECOSYSTEM · CAPABILITIES"       },
   map:          { title: "מפת אקוסיסטם",     crumb: "ECOSYSTEM · GRAPH"              },
   matches:      { title: "התאמות לצרכים",    crumb: "INTELLIGENCE · MATCH"           },

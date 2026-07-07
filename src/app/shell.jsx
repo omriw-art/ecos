@@ -3,7 +3,7 @@
 
 const NAV = [
   { id: "dashboard",    label: "דשבורד",          icon: "Grid",     section: "מבט-על" },
-  { id: "companies",    label: "חברות",           icon: "Building", section: "מבט-על", count: () => (window.COMPANIES || []).length },
+  { id: "companies",    label: "ארגונים",         icon: "Building", section: "מבט-על", count: () => (window.COMPANIES || []).length },
   { id: "capabilities", label: "יכולות חלל",      icon: "Layers",   section: "מבט-על" },
   { id: "map",          label: "מפת אקוסיסטם",    icon: "Network",  section: "מבט-על" },
 
