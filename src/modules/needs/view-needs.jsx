@@ -1,10 +1,11 @@
-// ecos — Needs Board (P16A)
+// ecos — Needs Board (P16A) + local need-to-organization matching (P16D)
 // Flattens organization.needs across all local organizations into one
 // searchable board, and lets the user append a local need to an existing
 // organization. No new store: organization.needs (string array) stays the
 // single source of truth — this view only derives from it and writes back
 // through the existing CompanyStore.updateCompany, exactly like the company
-// editor does. No matching-around-needs yet (that's a later batch).
+// editor does. Matches are computed live via MatchEngine.rankOrganizationsForNeed
+// (deterministic keyword overlap, no AI, no network).
 
 function needText(rawNeed) {
   if (typeof rawNeed === "string") return rawNeed;
@@ -39,6 +40,52 @@ function flattenNeeds(companies) {
     });
   });
   return rows;
+}
+
+function NeedMatches({ need, companies, onOpenCompany }) {
+  const [showAll, setShowAll] = React.useState(false);
+  const matches = React.useMemo(() => {
+    if (!window.MatchEngine || typeof window.MatchEngine.rankOrganizationsForNeed !== "function") return [];
+    return window.MatchEngine.rankOrganizationsForNeed(need.text, companies, { limit: 8, minScore: 15, excludeId: need.companyId });
+  }, [need, companies]);
+
+  const visible = showAll ? matches : matches.slice(0, 3);
+  const confidenceLabel = (c) => c === "high" ? "התאמה גבוהה" : c === "medium" ? "התאמה בינונית" : "התאמה נמוכה";
+
+  return (
+    <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid var(--line-1)" }}>
+      <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-2)", marginBottom: 4 }}>ארגונים מתאימים</div>
+      <div className="muted tiny" style={{ marginBottom: 8 }}>התאמות מחושבות מהמאגר המקומי · מבוסס על יכולות, תגיות והצעות · ללא AI וללא מקור חיצוני</div>
+      {!matches.length ? (
+        <div className="muted" style={{ fontSize: 13 }}>לא נמצאו התאמות במאגר המקומי</div>
+      ) : (
+        <>
+          <div className="col gap-6">
+            {visible.map((m) => (
+              <div key={m.id} className="flex center gap-10" onClick={() => onOpenCompany && onOpenCompany(m.organization.id)}
+                   style={{ padding: 8, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8, cursor: "default" }}>
+                <window.CoLogo company={m.organization} size={28} />
+                <div className="col grow" style={{ minWidth: 0 }}>
+                  <div className="flex center gap-6 wrap">
+                    <span style={{ fontSize: 14, color: "var(--text-1)" }}>{m.organization.name}</span>
+                    <span className="pill" style={{ fontSize: 10.5 }}>{window.orgTypeLabel ? window.orgTypeLabel(m.organization.organizationType) : ""}</span>
+                    <span className="pill" style={{ fontSize: 10.5 }}>{window.spaceSegmentShortLabel ? window.spaceSegmentShortLabel(m.organization.spaceSegment) : ""}</span>
+                  </div>
+                  {!!m.reasons.length && <div style={{ fontSize: 12, color: "var(--text-3)" }}>{m.reasons.join(" · ")}</div>}
+                </div>
+                <span className="pill" style={{ fontSize: 11 }}>{confidenceLabel(m.confidence)}</span>
+              </div>
+            ))}
+          </div>
+          {matches.length > 3 && (
+            <button type="button" className="btn btn-ghost" style={{ marginTop: 8, fontSize: 12.5 }} onClick={() => setShowAll((v) => !v)}>
+              {showAll ? "הצג פחות" : `הצג עוד (${matches.length - 3})`}
+            </button>
+          )}
+        </>
+      )}
+    </div>
+  );
 }
 
 function NeedsView({ onOpenCompany }) {
@@ -166,6 +213,7 @@ function NeedsView({ onOpenCompany }) {
                     </div>
                   </div>
                 </div>
+                <NeedMatches need={n} companies={companies} onOpenCompany={onOpenCompany} />
               </div>
             );
           })}

@@ -151,6 +151,49 @@
       .slice(0, opts.limit);
   }
 
+  // Ranks local organizations against a single free-text need string (e.g.
+  // from the Needs Board). Deterministic keyword-overlap scoring only — no
+  // AI, no network calls, no randomness. Reuses the same tokens()/intersect()
+  // machinery as scoreCompanyPair, applied to org offers/capabilities/tags/
+  // sectors/name/blurb instead of another organization's needs.
+  function rankOrganizationsForNeed(needTextValue, organizations, options) {
+    const opts = Object.assign({ limit: 5, minScore: 15, excludeId: null }, options || {});
+    const needTokens = tokens([needTextValue]);
+    if (!needTokens.size) return [];
+
+    const list = toArray(organizations).filter((org) => org && org.id && org.id !== opts.excludeId);
+
+    const results = list.map((org) => {
+      const corpus = []
+        .concat(getCompanyOffers(org), toArray(org.sectors), toArray(org.tags), [org.name, org.blurb]);
+      const orgTokens = tokens(corpus);
+      const overlap = intersect(needTokens, orgTokens);
+
+      let rawScore = Math.min(70, overlap.length * 16);
+      rawScore += readinessBonus(org, null); // small bonus if this org's own readiness is mature/active
+
+      const reasons = [];
+      if (overlap.length) reasons.push(`חפיפת מילות מפתח: ${overlap.slice(0, 4).join(", ")}`);
+      const caps = capabilityIds(org);
+      if (caps.length) reasons.push(`יכולות רשומות: ${capabilityLabels(caps).slice(0, 2).join(", ")}`);
+
+      const score = Math.max(0, Math.min(100, Math.round(rawScore)));
+      return {
+        id: `need__${org.id}`,
+        organization: org,
+        score,
+        confidence: confidence(score),
+        reasons: reasons.slice(0, 3),
+        keywordOverlap: overlap.slice(0, 8),
+      };
+    });
+
+    return results
+      .filter((r) => r.score >= opts.minScore && r.keywordOverlap.length)
+      .sort((a, b) => b.score - a.score || getCompanyName(a.organization).localeCompare(getCompanyName(b.organization)))
+      .slice(0, opts.limit);
+  }
+
   window.MatchEngine = {
     normalizeText,
     toArray,
@@ -160,5 +203,6 @@
     scoreCompanyPair,
     generateCompanyMatches,
     generateMatchesForCompany,
+    rankOrganizationsForNeed,
   };
 })();
