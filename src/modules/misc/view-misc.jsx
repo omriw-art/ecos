@@ -15,25 +15,15 @@ function Copilot({ open, onClose }) {
     setBusy(true);
     setTimeout(() => {
       const ql = q.toLowerCase();
-      // Keyword-specific demo templates
-      const keyReplies = {
-        "iceye":  "ICEYE: SAR Finland, 25cm רזולוציה, Defense Cleared. חופפת חזק ל-Capella ו-Umbra; שיתוף פעולה אפשרי על fusion עם HawkEye 360.",
-        "lunar":  "באקוסיסטם הירחי: WeSpace (hopper), Helios (ISRU). מומלץ להזמין שיחה משולבת ב-Q3 בשיתוף ESA-LSI.",
-      };
-      const keyMatch = Object.keys(keyReplies).find((k) => ql.includes(k));
-      let reply;
-      if (keyMatch) {
-        reply = keyReplies[keyMatch];
-      } else {
-        // Real local search: filter COMPANIES by keyword overlap
-        const hits = (window.COMPANIES || []).filter((c) => {
-          const hay = [c.name, c.blurb, ...(c.tech || []), ...(c.sectors || [])].join(" ").toLowerCase();
-          return ql.split(/\s+/).some((w) => w.length > 2 && hay.includes(w));
-        }).slice(0, 5);
-        reply = hits.length > 0
-          ? `מצאתי ${hits.length} חברות רלוונטיות בנתונים המקומיים: ${hits.map((c) => c.name).join(", ")}. לפרטים — פתח את פרופיל החברה ישירות.`
-          : "לא מצאתי חברות תואמות בנתונים המקומיים. נסה מילת חיפוש ספציפית יותר, או השתמש בחיפוש הגלובלי.";
-      }
+      // Local keyword search only — filters the actual local COMPANIES records.
+      // No canned/invented replies: every response here is derived from local data.
+      const hits = (window.COMPANIES || []).filter((c) => {
+        const hay = [c.name, c.blurb, ...(c.tech || []), ...(c.sectors || [])].join(" ").toLowerCase();
+        return ql.split(/\s+/).some((w) => w.length > 2 && hay.includes(w));
+      }).slice(0, 5);
+      const reply = hits.length > 0
+        ? `מצאתי ${hits.length} חברות רלוונטיות בנתונים המקומיים: ${hits.map((c) => c.name).join(", ")}. לפרטים — פתח את פרופיל החברה ישירות.`
+        : "לא נמצאו תוצאות במאגר המקומי";
       setMessages((m) => [...m, { role: "ai", text: reply }]);
       setBusy(false);
     }, 900);

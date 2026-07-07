@@ -2,7 +2,15 @@
 // Positions are precomputed via a small force-directed sim on first render.
 
 function MapView({ onOpenCompany }) {
-  const { COMPANIES, SECTORS, CONNECTIONS } = window;
+  const { COMPANIES, SECTORS } = window;
+  // Connections are derived live from MatchEngine (capability overlap +
+  // need/offer keyword matching) instead of a fixed seed list, so the graph
+  // reflects the current local company data rather than a static demo edge set.
+  const CONNECTIONS = React.useMemo(() => {
+    if (!window.MatchEngine) return [];
+    return window.MatchEngine.generateCompanyMatches(COMPANIES, { limit: 30, minScore: 30 })
+      .map((m) => ({ from: m.source.id, to: m.target.id }));
+  }, [COMPANIES]);
   const [hover, setHover] = React.useState(null);
   const [pinned, setPinned] = React.useState(null);
   const [showLabels, setShowLabels] = React.useState(true);
@@ -80,7 +88,7 @@ function MapView({ onOpenCompany }) {
       <div className="view-head">
         <div>
           <h2>מפת אקוסיסטם</h2>
-          <div className="sub">{COMPANIES.length} חברות, {CONNECTIONS.length} חיבורים — קיבוץ אוטומטי לפי תחום ראשי.</div>
+          <div className="sub">{COMPANIES.length} חברות, {CONNECTIONS.length} קשרים מחושבים מהמאגר המקומי (יכולות משותפות והתאמת צרכים/הצעות) · קיבוץ אוטומטי לפי תחום ראשי.</div>
         </div>
         <div className="ops">
           <div className="seg">

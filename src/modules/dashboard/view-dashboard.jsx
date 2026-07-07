@@ -30,7 +30,22 @@ function Dashboard({ onOpenCompany, onNav }) {
   const companiesWithReadiness = COMPANIES.filter((c) => text(c.readiness));
   const allNeeds = collectCompanyItems(COMPANIES, "needs");
   const openOpportunities = OPPORTUNITIES.filter((o) => !["expired", "closed", "archived"].includes(norm(o.status)));
-  const pendingReviews = REVIEW_QUEUE.filter((q) => !["approved", "done", "resolved", "dismissed", "archived"].includes(norm(q.status)));
+  // Action Queue / "ממתין לאישור" reflect only real local join submissions —
+  // the static REVIEW_QUEUE seed data is no longer surfaced here so it can't
+  // be mistaken for live admin activity (it's still used by CopilotSuggestions
+  // below, which is already labeled as computed-from-local-data).
+  const pendingReviews = rawSubmissions
+    .filter((s) => s.status === "pending")
+    .map((s) => ({
+      id: s.id,
+      type: "New Company Submission",
+      title: `הגשת חברה חדשה: ${s.companyName || s.name || "חברה"}`,
+      objectType: "company",
+      objectName: s.companyName || s.name,
+      priority: "Medium",
+      status: "Pending Review",
+      recommendedAction: "בדוק פרטים ואשר או דחה בעמוד ה-Onboarding",
+    }));
   const opportunityCounts = getOpportunityCounts(OPPORTUNITIES);
   const needThemes = getNeedThemes(allNeeds);
   const capabilityThemes = getCapabilityCoverage(COMPANIES);
@@ -38,6 +53,10 @@ function Dashboard({ onOpenCompany, onNav }) {
 
   const [importPreview, setImportPreview] = React.useState(null);
   const importInputRef = React.useRef(null);
+  const RESET_BACKUP_KEY = "ecosystemOS.lastResetBackup.v1";
+  const [hasResetBackup, setHasResetBackup] = React.useState(() => {
+    try { return !!window.localStorage.getItem(RESET_BACKUP_KEY); } catch (e) { return false; }
+  });
 
   const handleImportFile = (e) => {
     const file = e.target.files[0];
@@ -181,14 +200,44 @@ function Dashboard({ onOpenCompany, onNav }) {
   };
 
   const resetLocalData = () => {
-    if (!window.confirm("איפוס לנתוני ברירת מחדל?\n\nפעולה זו תמחק את כל השינויים המקומיים ותשחזר את חברות ה-seed המקוריות. כל הייבואים וההגשות יימחקו.")) return;
+    if (!window.confirm(
+      "איפוס לנתוני ברירת מחדל?\n\n" +
+      "פעולה זו תמחק את כל השינויים המקומיים ותשחזר את חברות ה-seed המקוריות. כל הייבואים וההגשות יימחקו.\n\n" +
+      "מומלץ לבצע הורדה מקומית לפני האיפוס. המצב הנוכחי יישמר אוטומטית כגיבוי מקומי אחד שניתן לשחזר מהכפתור \"שחזר גיבוי אחרון\"."
+    )) return;
     try {
+      window.localStorage.setItem(RESET_BACKUP_KEY, JSON.stringify({
+        companies: window.CompanyStore.getCompanies(),
+        submissions: window.SubmissionStore.getSubmissions(),
+        backedUpAt: new Date().toISOString(),
+      }));
       window.CompanyStore.resetCompaniesToSeed();
       window.SubmissionStore.saveSubmissions([]);
-      window.toast && window.toast("איפוס הושלם — נתוני ברירת מחדל שוחזרו · טוען מחדש…", "ok");
+      setHasResetBackup(true);
+      window.toast && window.toast("איפוס הושלם — גיבוי מקומי נשמר, ניתן לשחזר מהכפתור \"שחזר גיבוי אחרון\" · טוען מחדש…", "ok");
       setTimeout(() => window.location.reload(), 1200);
     } catch (err) {
       window.toast && window.toast("איפוס נכשל — " + (err.message || err), "err");
+    }
+  };
+
+  const restoreLastBackup = () => {
+    let backup;
+    try {
+      backup = JSON.parse(window.localStorage.getItem(RESET_BACKUP_KEY) || "null");
+    } catch (e) { backup = null; }
+    if (!backup) {
+      window.toast && window.toast("לא נמצא גיבוי מקומי לשחזור", "err");
+      return;
+    }
+    if (!window.confirm("שחזור הגיבוי האחרון ידרוס את הנתונים המקומיים הנוכחיים. להמשיך?")) return;
+    try {
+      window.CompanyStore.saveCompanies(backup.companies || []);
+      window.SubmissionStore.saveSubmissions(backup.submissions || []);
+      window.toast && window.toast("הגיבוי האחרון שוחזר · טוען מחדש…", "ok");
+      setTimeout(() => window.location.reload(), 1200);
+    } catch (err) {
+      window.toast && window.toast("שחזור נכשל — " + (err.message || err), "err");
     }
   };
 
@@ -216,6 +265,11 @@ function Dashboard({ onOpenCompany, onNav }) {
           <button className="btn" onClick={resetLocalData} title="מוחק שינויים מקומיים ומשחזר את נתוני ה-seed המקוריים">
             <window.I.Bolt size={13} /> איפוס לדאטה התחלתי
           </button>
+          {hasResetBackup && (
+            <button className="btn" onClick={restoreLastBackup} title="משחזר את החברות וההגשות מהגיבוי המקומי האחרון שנשמר לפני האיפוס">
+              <window.I.Download size={13} /> שחזר גיבוי אחרון
+            </button>
+          )}
           <button className="btn btn-primary" onClick={() => onNav("onboard")}>
             <window.I.Plus size={13} /> הוסף חברה
           </button>
@@ -364,7 +418,7 @@ function ActionQueue({ items }) {
         {sorted.map((item) => (
           <QueueRow key={item.id || item.title} item={item} />
         ))}
-        {!sorted.length && <EmptyState text="אין פעולות שממתינות לטיפול." />}
+        {!sorted.length && <EmptyState text="אין כרגע פעולות שממתינות לטיפול" />}
       </div>
     </div>
   );
