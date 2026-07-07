@@ -413,6 +413,9 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany }) {
   const [editing, setEditing] = React.useState(false);
 
   const overlapCo = (c.overlap || []).map((id) => window.COMPANIES.find((x) => x.id === id)).filter(Boolean);
+  const capabilitiesCount = (c.capabilities && c.capabilities.length) ? c.capabilities.length : (c.tech || []).length;
+  const needsCount = (c.needs || []).length;
+  const offersCount = (c.offers || []).length;
   const saveEdit = (patch) => {
     const updated = onUpdateCompany(c.id, patch);
     setEditing(false);
@@ -496,6 +499,18 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany }) {
         </div>
       </div>
 
+      {/* Management summary strip — real local data only */}
+      <div className="card" style={{ padding: 14 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 10 }}>
+          <SummaryTile label="סטטוס במאגר" value={c.readiness || "—"} />
+          <SummaryTile label="סוג ארגון" value={orgTypeLabel(c.organizationType)} />
+          <SummaryTile label="סגמנט פעילות" value={spaceSegmentShortLabel(c.spaceSegment)} />
+          <SummaryTile label="יכולות מזוהות" value={capabilitiesCount} />
+          <SummaryTile label="צרכים" value={needsCount} />
+          <SummaryTile label="הצעות" value={offersCount} />
+        </div>
+      </div>
+
       {editing && (
         <CompanyEditor
           key={c.id}
@@ -512,9 +527,10 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany }) {
         <div className="stepper" style={{ borderBottom: "1px solid var(--line-1)" }}>
           {[
             ["overview", "סקירה"],
-            ["tech", "טכנולוגיות ויכולות"],
-            ["connections", "חיבורים"],
-            ["contacts", "אנשי קשר"],
+            ["tech", "יכולות"],
+            ["needs", "צרכים והצעות"],
+            ["matches", "התאמות"],
+            ["connections", "קשרים והמשך טיפול"],
           ].map(([id, lbl]) => (
             <div key={id} className={"step" + (tab === id ? " active" : "")} onClick={() => setTab(id)} style={{ cursor: "default" }}>
               {lbl}
@@ -525,8 +541,18 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany }) {
 
       {tab === "overview" && <OverviewTab c={c} />}
       {tab === "tech" && <TechTab c={c} />}
-      {tab === "connections" && <ConnectionsTab c={c} overlapCo={overlapCo} onOpenCompany={onOpenCompany} />}
-      {tab === "contacts" && <ContactsTab c={c} />}
+      {tab === "needs" && <NeedsOffersTab c={c} onNav={onNav} />}
+      {tab === "matches" && <MatchesTab c={c} onOpenCompany={onOpenCompany} />}
+      {tab === "connections" && <ConnectionsTab c={c} overlapCo={overlapCo} onOpenCompany={onOpenCompany} linkedInUrl={linkedInUrl} openExternalLink={openExternalLink} onEdit={() => setEditing(true)} />}
+    </div>
+  );
+}
+
+function SummaryTile({ label, value }) {
+  return (
+    <div style={{ padding: "10px 12px", background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 10 }}>
+      <div style={{ fontSize: 12.5, color: "var(--text-3)", marginBottom: 3 }}>{label}</div>
+      <div className="mono tabnum" style={{ fontSize: 16, fontWeight: 700, color: "var(--text-1)" }}>{value}</div>
     </div>
   );
 }
@@ -536,65 +562,32 @@ function OverviewTab({ c }) {
     <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 14 }}>
       <div className="col gap-14">
         <div className="card">
-          <div className="card-hd"><div className="card-title"><span className="dot" /> מציעה ללקוחות</div></div>
-          <div className="col gap-8">
-            {c.offers.map((o, i) => (
-              <div key={i} className="flex gap-8 center" style={{ fontSize: 15, color: "var(--text-1)" }}>
-                <window.I.Check size={14} style={{ color: "var(--green)" }} />
-                <span>{o}</span>
-              </div>
-            ))}
+          <div className="card-hd"><div className="card-title"><span className="dot amber" /> תיאור קצר</div></div>
+          <div style={{ fontSize: 16, color: "var(--text-1)", lineHeight: 1.65 }}>
+            {c.blurb || <span className="muted">לא הוזן תיאור לארגון זה</span>}
           </div>
         </div>
 
         <div className="card">
-          <div className="card-hd"><div className="card-title"><span className="dot violet" /> מחפשת לשיתוף פעולה</div></div>
-          <div className="col gap-8">
-            {c.needs.map((o, i) => (
-              <div key={i} className="flex gap-8 center" style={{ fontSize: 15, color: "var(--text-1)" }}>
-                <window.I.Compass size={14} style={{ color: "var(--violet)" }} />
-                <span>{o}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="card-hd"><div className="card-title"><span className="dot green" /> לקוחות ושותפים</div></div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-2)", marginBottom: 8 }}>Customers</div>
-              <div className="flex wrap gap-6">
-                {c.customers.map((x) => <span key={x} className="chip">{x}</span>)}
-              </div>
-            </div>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-2)", marginBottom: 8 }}>Partners</div>
-              <div className="flex wrap gap-6">
-                {c.partners.map((x) => <span key={x} className="chip">{x}</span>)}
-              </div>
-            </div>
+          <div className="card-hd"><div className="card-title"><span className="dot" /> סיווג</div></div>
+          <div className="col gap-10">
+            <KV k="סוג ארגון" v={orgTypeLabel(c.organizationType)} />
+            <KV k="סגמנט פעילות" v={spaceSegmentLabel(c.spaceSegment)} />
           </div>
         </div>
       </div>
 
       <div className="col gap-14">
         <div className="card">
-          <div className="card-hd"><div className="card-title"><span className="dot amber" /> סקירה</div></div>
-          <div style={{ fontSize: 16, color: "var(--text-1)", lineHeight: 1.65 }}>
-            {c.blurb}
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="card-hd"><div className="card-title"><span className="dot" /> נתונים מהירים</div></div>
+          <div className="card-hd"><div className="card-title"><span className="dot" /> פרטי בסיס</div></div>
           <div className="col gap-10">
+            <KV k="מיקום" v={c.hq} />
+            <KV k="אתר" v={c.website || "—"} />
             <KV k="שלב" v={c.stage} />
-            <KV k="מועסקים" v={c.size} />
             <KV k="שנת הקמה" v={c.founded} />
-            <KV k="מטה" v={c.hq} />
+            <KV k="מועסקים" v={c.size} />
+            <KV k="סטטוס" v={c.readiness} />
             {c.fundingM > 0 && <KV k="גיוס מצטבר" v={`$${c.fundingM}M`} />}
-            <KV k="Readiness" v={c.readiness} />
           </div>
         </div>
       </div>
@@ -612,12 +605,15 @@ function KV({ k, v }) {
 }
 
 function TechTab({ c }) {
+  const capabilities = (c.capabilities && c.capabilities.length) ? c.capabilities : (c.tech || []);
+  const tags = c.tags && c.tags.length ? c.tags : [];
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
       <div className="card">
-        <div className="card-hd"><div className="card-title"><span className="dot" /> טכנולוגיות ליבה</div></div>
+        <div className="card-hd"><div className="card-title"><span className="dot" /> יכולות</div></div>
+        {!capabilities.length && <div className="muted" style={{ padding: "8px 0" }}>לא הוזנו יכולות לארגון זה</div>}
         <div className="col gap-10">
-          {c.tech.map((t, i) => (
+          {capabilities.map((t, i) => (
             <div key={i} style={{ padding: 12, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8 }}>
               <div className="flex center gap-8">
                 <window.I.Cpu size={14} style={{ color: "var(--blue)" }} />
@@ -629,62 +625,49 @@ function TechTab({ c }) {
       </div>
 
       <div className="card">
-        <div className="card-hd"><div className="card-title"><span className="dot violet" /> Tags</div></div>
+        <div className="card-hd"><div className="card-title"><span className="dot violet" /> תגיות</div></div>
+        {!tags.length && <div className="muted" style={{ padding: "8px 0" }}>לא הוזנו תגיות לארגון זה</div>}
         <div className="flex wrap gap-6">
-          {[...c.tech, ...c.offers, ...c.sectors.map((s) => window.SECTORS.find((x) => x.id === s)?.label)]
-            .filter(Boolean)
-            .flatMap((t) => String(t).split(/[\s/]+/))
-            .filter((t) => t.length > 2)
-            .slice(0, 28)
-            .map((t, i) => (
-              <span key={i} className="chip" style={{ fontSize: 11 }}>
-                <span style={{ color: "var(--violet)" }}>#</span>{t}
-              </span>
-            ))}
+          {tags.map((t, i) => (
+            <span key={i} className="chip" style={{ fontSize: 12 }}>
+              <span style={{ color: "var(--violet)" }}>#</span>{t}
+            </span>
+          ))}
         </div>
       </div>
     </div>
   );
 }
 
-function ConnectionsTab({ c, overlapCo, onOpenCompany }) {
-  const lines = window.CONNECTIONS.filter((cn) => cn.from === c.id || cn.to === c.id);
+function NeedsOffersTab({ c, onNav }) {
+  const needs = c.needs || [];
+  const offers = c.offers || [];
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
       <div className="card">
-        <div className="card-hd"><div className="card-title"><span className="dot" /> חיבורים פעילים</div></div>
-        {lines.length === 0 && <div className="muted">אין חיבורים מסומנים — סמן באמצעות Pin.</div>}
+        <div className="card-hd">
+          <div className="card-title"><span className="dot violet" /> צרכים</div>
+          {onNav && <button className="btn btn-ghost" onClick={() => onNav("needs")}>פתח בלוח צרכים</button>}
+        </div>
+        {!needs.length && <div className="muted" style={{ padding: "8px 0" }}>לא הוזנו צרכים לארגון זה</div>}
         <div className="col gap-8">
-          {lines.map((ln, i) => {
-            const otherId = ln.from === c.id ? ln.to : ln.from;
-            const other = window.COMPANIES.find((x) => x.id === otherId);
-            if (!other) return null;
-            return (
-              <div key={i} className="flex center gap-10" onClick={() => onOpenCompany(other.id)}
-                   style={{ padding: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8, cursor: "default" }}>
-                <CoLogo company={other} size={32} />
-                <div className="col" style={{ flex: 1 }}>
-                  <div style={{ fontSize: 15, color: "var(--text-1)" }}>{other.name}</div>
-                  <div style={{ fontSize: 13, color: "var(--text-3)" }}>{ln.type.toUpperCase()}</div>
-                </div>
-                <window.I.Link size={13} style={{ color: "var(--text-3)" }} />
-              </div>
-            );
-          })}
+          {needs.map((o, i) => (
+            <div key={i} className="flex gap-8 center" style={{ fontSize: 15, color: "var(--text-1)" }}>
+              <window.I.Compass size={14} style={{ color: "var(--violet)" }} />
+              <span>{o}</span>
+            </div>
+          ))}
         </div>
       </div>
 
       <div className="card">
-        <div className="card-hd"><div className="card-title"><span className="dot violet" /> חברות דומות / משלימות</div></div>
+        <div className="card-hd"><div className="card-title"><span className="dot green" /> הצעות</div></div>
+        {!offers.length && <div className="muted" style={{ padding: "8px 0" }}>לא הוזנו הצעות לארגון זה</div>}
         <div className="col gap-8">
-          {overlapCo.map((o) => (
-            <div key={o.id} className="flex center gap-10" onClick={() => onOpenCompany(o.id)}
-                 style={{ padding: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8, cursor: "default" }}>
-              <CoLogo company={o} size={32} />
-              <div className="col" style={{ flex: 1 }}>
-                <div style={{ fontSize: 15, color: "var(--text-1)" }}>{o.name}</div>
-                <div style={{ fontSize: 13, color: "var(--text-3)" }}>{o.sectors.slice(0,2).map((s) => window.SECTORS.find((x) => x.id === s)?.label || s).join(" · ").toUpperCase()}</div>
-              </div>
+          {offers.map((o, i) => (
+            <div key={i} className="flex gap-8 center" style={{ fontSize: 15, color: "var(--text-1)" }}>
+              <window.I.Check size={14} style={{ color: "var(--green)" }} />
+              <span>{o}</span>
             </div>
           ))}
         </div>
@@ -693,16 +676,113 @@ function ConnectionsTab({ c, overlapCo, onOpenCompany }) {
   );
 }
 
-function ContactsTab({ c }) {
+function MatchesTab({ c, onOpenCompany }) {
+  const matches = React.useMemo(() => {
+    if (!window.MatchEngine || typeof window.MatchEngine.generateMatchesForCompany !== "function") return [];
+    return window.MatchEngine.generateMatchesForCompany(c, window.COMPANIES || [], { limit: 5, minScore: 20 });
+  }, [c]);
+
   return (
     <div className="card">
-      <div className="card-hd">
-        <div className="card-title"><span className="dot" /> אנשי קשר ב-{c.name}</div>
-        <button className="btn" disabled title="הוספת איש קשר — בקרוב"><window.I.Plus size={12} /> הוסף איש קשר</button>
+      <div className="card-hd"><div className="card-title"><span className="dot" /> התאמות מחושבות מהמאגר המקומי</div></div>
+      <div className="muted tiny" style={{ marginBottom: 10 }}>מבוסס על יכולות, תגיות, צרכים והצעות · דטרמיניסטי, ללא AI</div>
+      {!matches.length && <div className="muted" style={{ padding: "8px 0" }}>לא נמצאו התאמות מספיק חזקות לארגון זה במאגר המקומי</div>}
+      <div className="col gap-8">
+        {matches.map((m) => (
+          <div key={m.target.id} className="flex center gap-10" onClick={() => onOpenCompany(m.target.id)}
+               style={{ padding: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8, cursor: "default" }}>
+            <CoLogo company={m.target} size={32} />
+            <div className="col grow" style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 15, color: "var(--text-1)" }}>{m.target.name}</div>
+              <div style={{ fontSize: 13, color: "var(--text-3)" }}>{m.reasons && m.reasons[0] ? m.reasons[0] : "אותות משלימים"}</div>
+            </div>
+            <span className="pill" style={{ fontSize: 12 }}>{m.score}%</span>
+          </div>
+        ))}
       </div>
-      <div style={{ padding: "28px 0", textAlign: "center" }}>
-        <window.I.Users size={24} style={{ color: "var(--text-4)", display: "block", margin: "0 auto 10px" }} />
-        <div className="muted tiny">אין אנשי קשר מוגדרים לחברה זו עדיין.</div>
+    </div>
+  );
+}
+
+function ConnectionsTab({ c, overlapCo, onOpenCompany, linkedInUrl, openExternalLink, onEdit }) {
+  const lines = window.CONNECTIONS.filter((cn) => cn.from === c.id || cn.to === c.id);
+  const customers = c.customers || [];
+  const partners = c.partners || [];
+  const hasFollowUp = lines.length || overlapCo.length || customers.length || partners.length;
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+      <div className="col gap-14">
+        <div className="card">
+          <div className="card-hd"><div className="card-title"><span className="dot" /> חיבורים פעילים</div></div>
+          {lines.length === 0 && <div className="muted">אין חיבורים מסומנים לארגון זה.</div>}
+          <div className="col gap-8">
+            {lines.map((ln, i) => {
+              const otherId = ln.from === c.id ? ln.to : ln.from;
+              const other = window.COMPANIES.find((x) => x.id === otherId);
+              if (!other) return null;
+              return (
+                <div key={i} className="flex center gap-10" onClick={() => onOpenCompany(other.id)}
+                     style={{ padding: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8, cursor: "default" }}>
+                  <CoLogo company={other} size={32} />
+                  <div className="col" style={{ flex: 1 }}>
+                    <div style={{ fontSize: 15, color: "var(--text-1)" }}>{other.name}</div>
+                    <div style={{ fontSize: 13, color: "var(--text-3)" }}>{ln.type.toUpperCase()}</div>
+                  </div>
+                  <window.I.Link size={13} style={{ color: "var(--text-3)" }} />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-hd"><div className="card-title"><span className="dot violet" /> ארגונים דומים / משלימים</div></div>
+          {overlapCo.length === 0 && <div className="muted">אין ארגונים דומים מסומנים.</div>}
+          <div className="col gap-8">
+            {overlapCo.map((o) => (
+              <div key={o.id} className="flex center gap-10" onClick={() => onOpenCompany(o.id)}
+                   style={{ padding: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8, cursor: "default" }}>
+                <CoLogo company={o} size={32} />
+                <div className="col" style={{ flex: 1 }}>
+                  <div style={{ fontSize: 15, color: "var(--text-1)" }}>{o.name}</div>
+                  <div style={{ fontSize: 13, color: "var(--text-3)" }}>{o.sectors.slice(0,2).map((s) => window.SECTORS.find((x) => x.id === s)?.label || s).join(" · ").toUpperCase()}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="col gap-14">
+        <div className="card">
+          <div className="card-hd"><div className="card-title"><span className="dot green" /> לקוחות ושותפים</div></div>
+          {customers.length === 0 && partners.length === 0 && <div className="muted">לא הוזנו לקוחות או שותפים לארגון זה.</div>}
+          {customers.length > 0 && (
+            <>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-2)", marginBottom: 8 }}>לקוחות</div>
+              <div className="flex wrap gap-6" style={{ marginBottom: partners.length ? 14 : 0 }}>
+                {customers.map((x) => <span key={x} className="chip">{x}</span>)}
+              </div>
+            </>
+          )}
+          {partners.length > 0 && (
+            <>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-2)", marginBottom: 8 }}>שותפים</div>
+              <div className="flex wrap gap-6">
+                {partners.map((x) => <span key={x} className="chip">{x}</span>)}
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="card">
+          <div className="card-hd"><div className="card-title"><span className="dot" /> המשך טיפול</div></div>
+          {!hasFollowUp && <div className="muted" style={{ padding: "8px 0" }}>אין עדיין פרטי קשר או המשך טיפול במאגר המקומי</div>}
+          <div className="flex gap-8 wrap" style={{ marginTop: hasFollowUp ? 10 : 0 }}>
+            <button className="btn" onClick={onEdit}><window.I.Settings size={13} /> ערוך פרטים</button>
+            {linkedInUrl && <button className="btn btn-ghost" onClick={openExternalLink}><window.I.Linkedin size={13} /> פתח אתר</button>}
+          </div>
+        </div>
       </div>
     </div>
   );
