@@ -385,7 +385,17 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany }) {
   };
 
   return (
-    <div className="view">
+    <div className="view company-profile-view">
+      <style>{`
+        .company-profile-view .card-title {
+          font-family: inherit;
+          font-size: 15px;
+          font-weight: 700;
+          letter-spacing: normal;
+          text-transform: none;
+          color: var(--text-1);
+        }
+      `}</style>
       <div className="flex center gap-8" style={{ fontSize: 12, color: "var(--text-3)" }}>
         <span style={{ cursor: "default" }} onClick={onBack}>חברות</span>
         <window.I.ArrowLeft size={11} />
@@ -408,10 +418,10 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany }) {
                 {c.readiness}
               </span>
             </div>
-            <div className="mono tiny" style={{ color: "var(--text-3)", letterSpacing: "0.06em", marginBottom: 12 }}>
+            <div style={{ fontSize: 14, color: "var(--text-2)", marginBottom: 12 }}>
               {c.flag} {c.hq.toUpperCase()} · FOUNDED {c.founded} · {c.size} EMPLOYEES{c.fundingM > 0 ? ` · $${c.fundingM}M RAISED` : ""}
             </div>
-            <div style={{ fontSize: 14, color: "var(--text-2)", maxWidth: "75ch", lineHeight: 1.6 }}>{c.blurb}</div>
+            <div style={{ fontSize: 18, color: "var(--text-1)", maxWidth: "75ch", lineHeight: 1.6 }}>{c.blurb}</div>
             <div className="co-tags" style={{ marginTop: 14 }}>
               {c.sectors.map((s) => window.SECTORS.find((x) => x.id === s) ? <SectorPill key={s} id={s} /> : <span key={s} className="pill">{s}</span>)}
             </div>
@@ -420,7 +430,7 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany }) {
           {/* Score panel */}
           <div className="col gap-10" style={{ minWidth: 260, padding: 16, background: "var(--bg-2)", border: "1px solid var(--line-2)", borderRadius: 12 }}>
             <div className="flex center between">
-              <span className="mono tiny" style={{ color: "var(--text-3)", letterSpacing: "0.14em", textTransform: "uppercase" }}>Compatibility</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-2)" }}>Compatibility</span>
               <ScoreRing value={c.score} size={56} stroke={4} />
             </div>
             <FitBar label="התאמה לעובדים" score={Math.min(99, c.score + 2)} color="var(--blue)" />
@@ -486,7 +496,7 @@ function OverviewTab({ c }) {
           <div className="card-hd"><div className="card-title"><span className="dot" /> מציעה ללקוחות</div></div>
           <div className="col gap-8">
             {c.offers.map((o, i) => (
-              <div key={i} className="flex gap-8 center" style={{ fontSize: 13, color: "var(--text-1)" }}>
+              <div key={i} className="flex gap-8 center" style={{ fontSize: 15, color: "var(--text-1)" }}>
                 <window.I.Check size={14} style={{ color: "var(--green)" }} />
                 <span>{o}</span>
               </div>
@@ -498,7 +508,7 @@ function OverviewTab({ c }) {
           <div className="card-hd"><div className="card-title"><span className="dot violet" /> מחפשת לשיתוף פעולה</div></div>
           <div className="col gap-8">
             {c.needs.map((o, i) => (
-              <div key={i} className="flex gap-8 center" style={{ fontSize: 13, color: "var(--text-1)" }}>
+              <div key={i} className="flex gap-8 center" style={{ fontSize: 15, color: "var(--text-1)" }}>
                 <window.I.Compass size={14} style={{ color: "var(--violet)" }} />
                 <span>{o}</span>
               </div>
@@ -510,13 +520,13 @@ function OverviewTab({ c }) {
           <div className="card-hd"><div className="card-title"><span className="dot green" /> לקוחות ושותפים</div></div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
             <div>
-              <div className="mono tiny" style={{ color: "var(--text-3)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>Customers</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-2)", marginBottom: 8 }}>Customers</div>
               <div className="flex wrap gap-6">
                 {c.customers.map((x) => <span key={x} className="chip">{x}</span>)}
               </div>
             </div>
             <div>
-              <div className="mono tiny" style={{ color: "var(--text-3)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>Partners</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-2)", marginBottom: 8 }}>Partners</div>
               <div className="flex wrap gap-6">
                 {c.partners.map((x) => <span key={x} className="chip">{x}</span>)}
               </div>
@@ -528,7 +538,7 @@ function OverviewTab({ c }) {
       <div className="col gap-14">
         <div className="card">
           <div className="card-hd"><div className="card-title"><span className="dot amber" /> סקירה</div></div>
-          <div style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.65 }}>
+          <div style={{ fontSize: 16, color: "var(--text-1)", lineHeight: 1.65 }}>
             {c.blurb}
           </div>
         </div>
@@ -551,9 +561,9 @@ function OverviewTab({ c }) {
 
 function KV({ k, v }) {
   return (
-    <div className="flex between center" style={{ fontSize: 13 }}>
-      <span style={{ color: "var(--text-3)" }}>{k}</span>
-      <span className="mono tabnum" style={{ color: "var(--text-1)" }}>{v}</span>
+    <div className="flex between center" style={{ fontSize: 15 }}>
+      <span style={{ color: "var(--text-2)", fontWeight: 600 }}>{k}</span>
+      <span className="mono tabnum" style={{ color: "var(--text-1)", fontSize: 16 }}>{v}</span>
     </div>
   );
 }
@@ -568,7 +578,7 @@ function TechTab({ c }) {
             <div key={i} style={{ padding: 12, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8 }}>
               <div className="flex center gap-8">
                 <window.I.Cpu size={14} style={{ color: "var(--blue)" }} />
-                <div style={{ fontSize: 13, fontWeight: 500 }}>{t}</div>
+                <div style={{ fontSize: 15, fontWeight: 500, color: "var(--text-1)" }}>{t}</div>
               </div>
             </div>
           ))}
@@ -622,13 +632,13 @@ function MatchPersonRow({ p, c }) {
     <div className="flex center gap-12" style={{ padding: 12, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 10 }}>
       <div className="sidebar-avatar" style={{ background: `linear-gradient(135deg, ${p.color}, oklch(from ${p.color} 0.4 c h))` }}>{p.avatar}</div>
       <div className="col" style={{ minWidth: 180 }}>
-        <div style={{ fontSize: 13, fontWeight: 500 }}>{p.name}</div>
-        <div className="mono tiny" style={{ color: "var(--text-4)" }}>{p.role.toUpperCase()}</div>
+        <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text-1)" }}>{p.name}</div>
+        <div style={{ fontSize: 13, color: "var(--text-3)" }}>{p.role.toUpperCase()}</div>
       </div>
       <div className="col grow gap-4">
-        <div className="flex between" style={{ fontSize: 11.5 }}>
-          <span style={{ color: "var(--text-3)" }}>סיבת ההתאמה: חופף ב-{p.interests.filter((i) => c.sectors.includes(i)).length} תחומים</span>
-          <span className="mono tabnum" style={{ color: "var(--blue)" }}>{fit}%</span>
+        <div className="flex between" style={{ fontSize: 13 }}>
+          <span style={{ color: "var(--text-2)" }}>סיבת ההתאמה: חופף ב-{p.interests.filter((i) => c.sectors.includes(i)).length} תחומים</span>
+          <span className="mono tabnum" style={{ color: "var(--blue)", fontWeight: 700 }}>{fit}%</span>
         </div>
         <MiniBar value={fit} color="var(--blue)" />
       </div>
@@ -654,8 +664,8 @@ function ConnectionsTab({ c, overlapCo, onOpenCompany }) {
                    style={{ padding: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8, cursor: "default" }}>
                 <CoLogo company={other} size={32} />
                 <div className="col" style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13 }}>{other.name}</div>
-                  <div className="mono tiny" style={{ color: "var(--text-4)" }}>{ln.type.toUpperCase()}</div>
+                  <div style={{ fontSize: 15, color: "var(--text-1)" }}>{other.name}</div>
+                  <div style={{ fontSize: 13, color: "var(--text-3)" }}>{ln.type.toUpperCase()}</div>
                 </div>
                 <window.I.Link size={13} style={{ color: "var(--text-3)" }} />
               </div>
@@ -672,8 +682,8 @@ function ConnectionsTab({ c, overlapCo, onOpenCompany }) {
                  style={{ padding: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8, cursor: "default" }}>
               <CoLogo company={o} size={32} />
               <div className="col" style={{ flex: 1 }}>
-                <div style={{ fontSize: 13 }}>{o.name}</div>
-                <div className="mono tiny" style={{ color: "var(--text-4)" }}>{o.sectors.slice(0,2).map((s) => window.SECTORS.find((x) => x.id === s)?.label || s).join(" · ").toUpperCase()}</div>
+                <div style={{ fontSize: 15, color: "var(--text-1)" }}>{o.name}</div>
+                <div style={{ fontSize: 13, color: "var(--text-3)" }}>{o.sectors.slice(0,2).map((s) => window.SECTORS.find((x) => x.id === s)?.label || s).join(" · ").toUpperCase()}</div>
               </div>
             </div>
           ))}
