@@ -105,6 +105,66 @@
     return next;
   }
 
+  function getLocalCompanies() {
+    if (window.CompanyStore && typeof window.CompanyStore.getCompanies === "function") {
+      return window.CompanyStore.getCompanies();
+    }
+    return window.COMPANIES || [];
+  }
+
+  // Unified view of both need sources — organization.needs (unchanged, still
+  // read-only here) and this store's admin-created needs/opportunities.
+  // Used by the dashboard so it never has to duplicate the flattening logic.
+  function listNeeds() {
+    const items = [];
+    asArray(getLocalCompanies()).forEach((c) => {
+      asArray(c.needs).forEach((rawNeed, idx) => {
+        const title = (typeof rawNeed === "string" ? rawNeed : text(rawNeed && rawNeed.text)).trim();
+        if (!title) return;
+        items.push({
+          id: `${c.id}::${idx}`,
+          kind: "organization",
+          title,
+          sourceLabel: "צורך של ארגון",
+          sourceOrgId: c.id,
+          sourceOrgName: c.name,
+          spaceSegment: c.spaceSegment || "other",
+          needType: null,
+          priority: null,
+          status: "new",
+          createdAt: null,
+        });
+      });
+    });
+    getNeeds().forEach((n) => {
+      items.push({
+        id: n.id,
+        kind: "admin",
+        title: n.title,
+        sourceLabel: n.sourceType === "opportunity" ? "הזדמנות שזוהתה" : "צורך פנימי",
+        sourceOrgId: n.sourceOrganizationId,
+        sourceOrgName: null,
+        spaceSegment: n.spaceSegment,
+        needType: n.needType,
+        priority: n.priority,
+        status: n.status,
+        createdAt: n.createdAt,
+      });
+    });
+    return items;
+  }
+
+  // Simple real-data counts for the dashboard — no invented metrics.
+  function getNeedStats() {
+    const all = listNeeds();
+    return {
+      openTotal: all.length,
+      highPriority: all.filter((n) => n.priority === "high").length,
+      opportunities: all.filter((n) => n.sourceLabel === "הזדמנות שזוהתה").length,
+      inProgress: all.filter((n) => n.kind === "admin" && n.status && n.status !== "new").length,
+    };
+  }
+
   window.NeedsStore = {
     key: STORAGE_KEY,
     SOURCE_TYPES,
@@ -117,5 +177,7 @@
     updateNeed,
     deleteNeed,
     normalizeNeed,
+    listNeeds,
+    getNeedStats,
   };
 })();

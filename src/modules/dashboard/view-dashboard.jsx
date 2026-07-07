@@ -51,6 +51,25 @@ function Dashboard({ onOpenCompany, onNav }) {
   const capabilityThemes = getCapabilityCoverage(COMPANIES);
   const copilotSuggestions = getCopilotSuggestions({ REVIEW_QUEUE, OPPORTUNITIES, COMPANIES, allNeeds });
 
+  // Real local needs/opportunities — organization.needs + NeedsStore admin
+  // needs, combined. No invented data: both sources already exist and are
+  // written through their own stores (CompanyStore / NeedsStore).
+  const needsList = window.NeedsStore ? window.NeedsStore.listNeeds() : [];
+  const needStats = window.NeedsStore ? window.NeedsStore.getNeedStats() : { openTotal: 0, highPriority: 0, opportunities: 0, inProgress: 0 };
+  const needQueueItems = needsList
+    .filter((n) => n.kind === "admin" && (n.priority === "high" || n.status === "reviewing" || n.status === "matching"))
+    .map((n) => ({
+      id: n.id,
+      type: n.sourceLabel,
+      title: n.title,
+      objectType: "need",
+      objectName: n.sourceOrgName || "לוח צרכים",
+      priority: n.priority === "high" ? "High" : n.priority === "medium" ? "Medium" : "Low",
+      status: n.status === "reviewing" ? "בבדיקה" : n.status === "matching" ? "בהתאמה" : "בטיפול",
+      recommendedAction: "בדוק בלוח הצרכים ועדכן סטטוס",
+    }));
+  const combinedQueue = [...pendingReviews, ...needQueueItems];
+
   const [importPreview, setImportPreview] = React.useState(null);
   const importInputRef = React.useRef(null);
   const RESET_BACKUP_KEY = "ecosystemOS.lastResetBackup.v1";
@@ -316,7 +335,7 @@ function Dashboard({ onOpenCompany, onNav }) {
         activeCompanies={activeCompanies}
         strategicCompanies={strategicCompanies}
         openOpportunities={openOpportunities}
-        needs={allNeeds}
+        openNeedsTotal={needStats.openTotal}
         pendingReviews={pendingReviews}
         onNav={onNav}
       />
@@ -331,8 +350,10 @@ function Dashboard({ onOpenCompany, onNav }) {
           readiness={READINESS}
           funnel={FUNNEL}
         />
-        <ActionQueue items={pendingReviews} />
+        <ActionQueue items={combinedQueue} />
       </div>
+
+      <NeedsOpportunitiesPanel needsList={needsList} needStats={needStats} onNav={onNav} onOpenCompany={onOpenCompany} />
 
       <div style={grid("1fr 1fr", 14)}>
         <OpportunitiesRadar opportunities={OPPORTUNITIES} counts={opportunityCounts} />
@@ -352,14 +373,14 @@ function Dashboard({ onOpenCompany, onNav }) {
   );
 }
 
-function StrategicBar({ companies, activeCompanies, strategicCompanies, openOpportunities, needs, pendingReviews, onNav }) {
+function StrategicBar({ companies, activeCompanies, strategicCompanies, openOpportunities, openNeedsTotal, pendingReviews, onNav }) {
   return (
     <div className="kpi-grid">
       <Kpi label="סך ארגונים" value={companies.length} trend="כל הרשומות במאגר המקומי" accent="oklch(0.7 0.18 250 / 0.18)" onClick={() => onNav("companies")} />
       <Kpi label="ארגונים פעילים" value={activeCompanies.length} trend="ארגונים שסומנו כפעילים או אסטרטגיים" accent="oklch(0.7 0.15 145 / 0.18)" onClick={() => onNav("companies")} />
       <Kpi label="שחקנים אסטרטגיים" value={strategicCompanies.length} trend="דורשים בדיקה או החלטה" accent="oklch(0.78 0.15 80 / 0.18)" onClick={() => onNav("companies")} />
       <Kpi label="הזדמנויות פתוחות" value={openOpportunities.length} trend="פעילות, בבדיקה או בסגירה" accent="oklch(0.7 0.18 295 / 0.18)" />
-      <Kpi label="צרכים פתוחים" value={needs.length} trend={`${unique(needs.map((n) => n.companyId)).length} חברות עם צרכים שהוזנו`} accent="oklch(0.65 0.20 200 / 0.18)" />
+      <Kpi label="צרכים פתוחים" value={openNeedsTotal} trend="צרכים מארגונים + צרכים פנימיים והזדמנויות" accent="oklch(0.65 0.20 200 / 0.18)" onClick={() => onNav("needs")} />
       <Kpi label="ממתין לאישור" value={pendingReviews.length} trend="הגשות שממתינות לאישור ידני" accent="oklch(0.72 0.20 30 / 0.18)" />
     </div>
   );
@@ -420,6 +441,59 @@ function ActionQueue({ items }) {
         ))}
         {!sorted.length && <EmptyState text="אין כרגע פעולות שממתינות לטיפול" />}
       </div>
+    </div>
+  );
+}
+
+const NEED_STATUS_LABEL_HE = { new: "חדש", reviewing: "בבדיקה", matching: "בהתאמה", "in-progress": "בטיפול" };
+const NEED_PRIORITY_LABEL_HE = { high: "גבוהה", medium: "בינונית", low: "נמוכה" };
+
+function NeedsOpportunitiesPanel({ needsList, needStats, onNav, onOpenCompany }) {
+  const latest = needsList
+    .slice()
+    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+    .slice(0, 5);
+
+  return (
+    <div className="card">
+      <div className="card-hd">
+        <div className="card-title"><span className="dot violet" /> צרכים והזדמנויות</div>
+        <button className="btn btn-primary" onClick={() => onNav("needs")}>פתח בלוח צרכים</button>
+      </div>
+      <div className="muted tiny" style={{ marginBottom: 10 }}>נתונים מהמאגר המקומי · צרכי ארגונים + צרכים פנימיים והזדמנויות שזוהו</div>
+      <div style={grid("repeat(4, 1fr)", 10)}>
+        <Metric label="צרכים פתוחים" value={needStats.openTotal} />
+        <Metric label="עדיפות גבוהה" value={needStats.highPriority} tone="amber" />
+        <Metric label="הזדמנויות שזוהו" value={needStats.opportunities} tone="violet" />
+        <Metric label="בהתאמה / בבדיקה / בטיפול" value={needStats.inProgress} />
+      </div>
+      <div className="divider" />
+      {!latest.length ? (
+        <div className="muted" style={{ padding: 16, border: "1px dashed var(--line-2)", borderRadius: 8, textAlign: "center" }}>
+          <div style={{ marginBottom: 10 }}>אין עדיין צרכים או הזדמנויות במאגר המקומי</div>
+          <button className="btn" onClick={() => onNav("needs")}>הוסף צורך בלוח הצרכים</button>
+        </div>
+      ) : (
+        <div className="col gap-8">
+          {latest.map((n) => (
+            <div key={n.id} className="flex center gap-10" style={{ padding: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8 }}>
+              <div className="col grow" style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 14, color: "var(--text-1)" }}>{n.title}</div>
+                <div className="flex center gap-6 wrap" style={{ marginTop: 2 }}>
+                  <span className="pill" style={{ fontSize: 10.5 }}>{n.sourceLabel}</span>
+                  {n.sourceOrgName && (
+                    <span style={{ fontSize: 12, color: "var(--blue)", cursor: "default" }} onClick={() => onOpenCompany && n.sourceOrgId && onOpenCompany(n.sourceOrgId)}>
+                      {n.sourceOrgName}
+                    </span>
+                  )}
+                  {n.priority && <span className="pill" style={{ fontSize: 10.5 }}>עדיפות {NEED_PRIORITY_LABEL_HE[n.priority] || n.priority}</span>}
+                  {n.status && <span className="pill" style={{ fontSize: 10.5 }}>{NEED_STATUS_LABEL_HE[n.status] || n.status}</span>}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
