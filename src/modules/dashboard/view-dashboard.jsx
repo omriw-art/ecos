@@ -311,6 +311,17 @@ function StrategicBar({ companies, activeCompanies, strategicCompanies, openOppo
   );
 }
 
+// Display-only Hebrew labels for the readiness field's raw English values
+// (c.readiness in data.js stays untouched — matching logic compares raw values).
+const READINESS_LABEL_HE = {
+  "Initial contact": "קשר ראשוני",
+  "Mapped": "ממופה",
+  "Verified": "מאומת",
+  "Active": "פעיל",
+  "Strategic": "אסטרטגי",
+  "Needs update": "דורש עדכון",
+};
+
 function EcosystemHealth({ companies, companiesWithReadiness, companiesWithNeeds, companiesWithTech, strategicCompanies, readiness, funnel }) {
   const readinessRows = getReadinessDistribution(companies, readiness);
   const completeness = Math.round(((companiesWithReadiness.length + companiesWithNeeds.length + companiesWithTech.length) / Math.max(companies.length * 3, 1)) * 100);
@@ -318,19 +329,19 @@ function EcosystemHealth({ companies, companiesWithReadiness, companiesWithNeeds
     <div className="card">
       <div className="card-hd">
         <div className="card-title"><span className="dot green" /> מצב האקו־סיסטם</div>
-        <span className="pill mono">{completeness}% COMPLETE</span>
+        <span className="pill">{completeness}% הושלם</span>
       </div>
       <div style={grid("repeat(5, 1fr)", 10)}>
-        <Metric label="With readiness" value={companiesWithReadiness.length} />
-        <Metric label="Missing readiness" value={companies.length - companiesWithReadiness.length} tone="amber" />
-        <Metric label="With needs" value={companiesWithNeeds.length} />
-        <Metric label="With tech" value={companiesWithTech.length} />
-        <Metric label="Strategic" value={strategicCompanies.length} tone="violet" />
+        <Metric label="עם סטטוס" value={companiesWithReadiness.length} />
+        <Metric label="חסר סטטוס" value={companies.length - companiesWithReadiness.length} tone="amber" />
+        <Metric label="עם צרכים" value={companiesWithNeeds.length} />
+        <Metric label="עם יכולות" value={companiesWithTech.length} />
+        <Metric label="אסטרטגיות" value={strategicCompanies.length} tone="violet" />
       </div>
       <div className="divider" />
       <div className="col gap-8">
-        {readinessRows.map((row) => <BarRow key={row.label} label={row.label} value={row.count} max={row.max} color={row.color} />)}
-        {!readinessRows.length && <EmptyState text="No readiness data available yet." />}
+        {readinessRows.map((row) => <BarRow key={row.label} label={READINESS_LABEL_HE[row.label] || row.label} value={row.count} max={row.max} color={row.color} />)}
+        {!readinessRows.length && <EmptyState text="אין נתוני מוכנות עדיין." />}
       </div>
       {!!funnel.length && (
         <div className="muted tiny" style={{ marginTop: 10 }}>
@@ -347,13 +358,13 @@ function ActionQueue({ items }) {
     <div className="card">
       <div className="card-hd">
         <div className="card-title"><span className="dot amber" /> פעולות נדרשות</div>
-        <span className="pill amber">{items.length} pending</span>
+        <span className="pill amber">{items.length} ממתינות</span>
       </div>
       <div className="col gap-8">
         {sorted.map((item) => (
           <QueueRow key={item.id || item.title} item={item} />
         ))}
-        {!sorted.length && <EmptyState text="No review items waiting for admin action." />}
+        {!sorted.length && <EmptyState text="אין פעולות שממתינות לטיפול." />}
       </div>
     </div>
   );
@@ -492,18 +503,48 @@ function CopilotSuggestions({ suggestions }) {
   );
 }
 
+// Display-only Hebrew labels for the demo REVIEW_QUEUE seed data — the raw
+// English values in data.js stay untouched since priorityRank/priorityTone
+// and status filtering compare against them directly.
+const QUEUE_PRIORITY_HE = { High: "גבוה", Medium: "בינוני", Low: "נמוך" };
+const QUEUE_STATUS_HE = {
+  "Pending Review": "ממתין לבדיקה",
+  "Needs Admin Decision": "דורש הכרעת מנהל",
+  "Ready To Publish": "מוכן לפרסום",
+};
+const QUEUE_TYPE_HE = {
+  "Company Profile Update": "עדכון פרופיל חברה",
+  "Data Quality Issue": "בעיית איכות נתונים",
+  "Imported Opportunity": "הזדמנות מיובאת",
+  "New Company Submission": "הגשת חברה חדשה",
+  "Stale Profile": "פרופיל לא מעודכן",
+  "Sub-Technology Merge": "מיזוג תת-טכנולוגיה",
+  "System Suggestion": "הצעת מערכת",
+  "Technology Approval": "אישור טכנולוגיה",
+};
+function queueTitleHe(title) {
+  if (!title) return title;
+  if (title.startsWith("New company application:")) return title.replace("New company application:", "בקשת חברה חדשה:");
+  return title;
+}
+function queueActionHe(action) {
+  if (!action) return action;
+  if (/^Verify/i.test(action)) return "בדוק פרטים ואשר או דחה";
+  return action;
+}
+
 function QueueRow({ item }) {
   const tone = priorityTone(item.priority);
   return (
     <div style={rowStyle()}>
-      <span className={`pill ${tone}`}>{item.priority || "Medium"}</span>
+      <span className={`pill ${tone}`}>{QUEUE_PRIORITY_HE[item.priority] || item.priority || "בינוני"}</span>
       <div className="col grow" style={{ minWidth: 0 }}>
         <div className="flex between center gap-8">
-          <span style={{ fontWeight: 600, fontSize: 12.5 }}>{item.title || item.type || "Review item"}</span>
-          <span className="mono tiny" style={{ color: "var(--text-4)" }}>{item.status || "Pending"}</span>
+          <span style={{ fontWeight: 600, fontSize: 14 }}>{queueTitleHe(item.title) || QUEUE_TYPE_HE[item.type] || item.type || "פריט לבדיקה"}</span>
+          <span style={{ fontSize: 12.5, color: "var(--text-3)" }}>{QUEUE_STATUS_HE[item.status] || item.status || "ממתין"}</span>
         </div>
-        <div className="mono tiny" style={{ color: "var(--text-4)" }}>{item.type || item.objectType || "Review"} · {item.objectName || item.owner || "ecosystem"}</div>
-        {item.recommendedAction && <div className="muted tiny" style={{ marginTop: 4 }}>{item.recommendedAction}</div>}
+        <div style={{ fontSize: 12.5, color: "var(--text-3)" }}>{QUEUE_TYPE_HE[item.type] || item.type || item.objectType || "בדיקה"} · {item.objectName || item.owner || "אקוסיסטם"}</div>
+        {item.recommendedAction && <div style={{ fontSize: 12.5, color: "var(--text-3)", marginTop: 4 }}>{queueActionHe(item.recommendedAction)}</div>}
       </div>
     </div>
   );
@@ -546,7 +587,7 @@ function CapabilityList({ title, items, tone }) {
 function Metric({ label, value, tone }) {
   return (
     <div style={{ padding: 10, border: "1px solid var(--line-1)", borderRadius: 8, background: "var(--bg-1)" }}>
-      <div className="mono tiny" style={{ color: "var(--text-4)", textTransform: "uppercase" }}>{label}</div>
+      <div style={{ fontSize: 13, color: "var(--text-2)" }}>{label}</div>
       <div className={`tabnum ${tone || ""}`} style={{ fontSize: 22, fontWeight: 700, color: toneColor(tone) }}>{value}</div>
     </div>
   );
