@@ -1,8 +1,8 @@
-// ecos — AI Copilot drawer + People (Org) view + small Settings view.
+// ecos — local smart-search drawer + People (Org) view + small Settings view.
 
 function Copilot({ open, onClose }) {
   const [messages, setMessages] = React.useState([
-    { role: "ai", text: "שלום. אני ה-Copilot של ecos. אני יכול לחפש חברות, להציע חיבורים, לנתח פערי יכולות, או לכתוב סיכום אקוסיסטם. ננסה?" },
+    { role: "ai", text: "שלום. אני חיפוש חכם על מאגר החברות המקומי — אפשר לשאול אותי על חברה, טכנולוגיה או תחום." },
   ]);
   const [draft, setDraft] = React.useState("");
   const [busy, setBusy] = React.useState(false);
@@ -57,8 +57,8 @@ function Copilot({ open, onClose }) {
             <window.I.Sparkles size={14} style={{ color: "white" }} />
           </div>
           <div className="col" style={{ flex: 1 }}>
-            <div style={{ fontSize: 14, fontWeight: 600 }}>ecos · Copilot</div>
-            <div className="mono tiny" style={{ color: "var(--text-4)" }}>{busy ? "חושב…" : "demo · נתונים מקומיים"}</div>
+            <div style={{ fontSize: 14, fontWeight: 600 }}>ecos · חיפוש חכם</div>
+            <div className="mono tiny" style={{ color: "var(--text-4)" }}>{busy ? "מחפש…" : "demo · נתונים מקומיים"}</div>
           </div>
           <button className="icon-btn" onClick={onClose}><window.I.X size={14} /></button>
         </div>
@@ -92,7 +92,7 @@ function Copilot({ open, onClose }) {
             background: "var(--bg-1)", border: "1px solid var(--line-1)", borderRadius: 10, padding: 8,
           }}>
             <input style={{ flex: 1, background: "transparent", border: 0, outline: 0, color: "var(--text-1)", fontSize: 13, fontFamily: "inherit" }}
-                   placeholder="שאל את ה-Copilot…"
+                   placeholder="חפש חברה, טכנולוגיה או תחום…"
                    value={draft} onChange={(e) => setDraft(e.target.value)}
                    onKeyDown={(e) => e.key === "Enter" && send()} />
             <button className="btn btn-primary" style={{ padding: "5px 10px" }} onClick={send}>
@@ -117,18 +117,14 @@ function PeopleView({ onNav }) {
       <div className="view-head">
         <div>
           <h2>הארגון שלי</h2>
-          <div className="sub">0 עובדים רשומים</div>
-        </div>
-        <div className="ops">
-          <button className="btn" disabled title="ייבוא מ-Workday — בקרוב"><window.I.Upload size={13} /> ייבוא מ-Workday</button>
-          <button className="btn btn-primary" disabled title="הוספת עובד — בקרוב"><window.I.Plus size={13} /> הוסף עובד</button>
+          <div className="sub">ניהול אנשי צוות אינו חלק מהדמו המקומי הנוכחי</div>
         </div>
       </div>
 
       <div className="card" style={{ padding: "48px 24px", textAlign: "center" }}>
         <window.I.Users size={32} style={{ color: "var(--text-4)", marginBottom: 12 }} />
-        <div style={{ fontSize: 14, color: "var(--text-3)", marginBottom: 6 }}>אין עובדים רשומים עדיין</div>
-        <div className="mono tiny" style={{ color: "var(--text-4)" }}>ייבא מ-Workday או הוסף עובדים ידנית כדי לראות התאמות לחברות באקוסיסטם.</div>
+        <div style={{ fontSize: 14, color: "var(--text-3)", marginBottom: 6 }}>אין נתונים זמינים בשלב הדמו המקומי</div>
+        <div style={{ fontSize: 12.5, color: "var(--text-4)" }}>האקוסיסטם כאן מתועד לפי חברות, יכולות וצרכים — לא לפי אנשי צוות.</div>
       </div>
     </div>
   );
@@ -177,7 +173,7 @@ function SettingsView() {
           <div className="card-hd"><div className="card-title"><span className="dot violet" /> משקלי Scoring</div></div>
           <div className="col gap-14">
             {[
-              ["התאמה לעובדים", 35, "var(--blue)"],
+              ["התאמה לצרכים", 35, "var(--blue)"],
               ["פוטנציאל שיתוף פעולה", 25, "var(--violet)"],
               ["חדשנות", 15, "var(--cyan)"],
               ["רלוונטיות אסטרטגית", 15, "var(--amber)"],

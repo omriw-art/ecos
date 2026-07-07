@@ -1,4 +1,4 @@
-// ecos — Dashboard (Admin Mission Control)
+// ecos — Dashboard (לוח ניהול אקו־סיסטם)
 // Answers: what needs attention, what opportunities are active, and where ecosystem gaps exist.
 
 function Dashboard({ onOpenCompany, onNav }) {
@@ -196,9 +196,9 @@ function Dashboard({ onOpenCompany, onNav }) {
     <div className="view">
       <div className="view-head">
         <div>
-          <h2>Admin Mission Control</h2>
+          <h2>לוח ניהול אקו־סיסטם</h2>
           <div className="sub">
-            Ecosystem OS · Israeli Space Ecosystem — admin intelligence, governance, opportunities, and gaps
+            מיפוי חברות, יכולות, צרכים והזדמנויות — דמו מקומי
           </div>
         </div>
         <div className="ops">
@@ -301,12 +301,12 @@ function Dashboard({ onOpenCompany, onNav }) {
 function StrategicBar({ companies, activeCompanies, strategicCompanies, openOpportunities, needs, pendingReviews, onNav }) {
   return (
     <div className="kpi-grid">
-      <Kpi label="Total organizations" value={companies.length} trend="All ecosystem records" accent="oklch(0.7 0.18 250 / 0.18)" onClick={() => onNav("companies")} />
-      <Kpi label="Active companies" value={activeCompanies.length} trend="Readiness: Active / Strategic" accent="oklch(0.7 0.15 145 / 0.18)" onClick={() => onNav("companies")} />
-      <Kpi label="Strategic companies" value={strategicCompanies.length} trend="Flagged for admin attention" accent="oklch(0.78 0.15 80 / 0.18)" onClick={() => onNav("companies")} />
-      <Kpi label="Open opportunities" value={openOpportunities.length} trend="Active, review, or closing soon" accent="oklch(0.7 0.18 295 / 0.18)" />
-      <Kpi label="Open needs" value={needs.length} trend={`${unique(needs.map((n) => n.companyId)).length} companies reporting needs`} accent="oklch(0.65 0.20 200 / 0.18)" />
-      <Kpi label="Pending reviews" value={pendingReviews.length} trend="Human approval required" accent="oklch(0.72 0.20 30 / 0.18)" />
+      <Kpi label="סך ארגונים" value={companies.length} trend="כל הרשומות במאגר המקומי" accent="oklch(0.7 0.18 250 / 0.18)" onClick={() => onNav("companies")} />
+      <Kpi label="חברות פעילות" value={activeCompanies.length} trend="חברות שסומנו כפעילות או אסטרטגיות" accent="oklch(0.7 0.15 145 / 0.18)" onClick={() => onNav("companies")} />
+      <Kpi label="חברות אסטרטגיות" value={strategicCompanies.length} trend="דורשות בדיקה או החלטה" accent="oklch(0.78 0.15 80 / 0.18)" onClick={() => onNav("companies")} />
+      <Kpi label="הזדמנויות פתוחות" value={openOpportunities.length} trend="פעילות, בבדיקה או בסגירה" accent="oklch(0.7 0.18 295 / 0.18)" />
+      <Kpi label="צרכים פתוחים" value={needs.length} trend={`${unique(needs.map((n) => n.companyId)).length} חברות עם צרכים שהוזנו`} accent="oklch(0.65 0.20 200 / 0.18)" />
+      <Kpi label="ממתין לאישור" value={pendingReviews.length} trend="הגשות שממתינות לאישור ידני" accent="oklch(0.72 0.20 30 / 0.18)" />
     </div>
   );
 }
@@ -317,7 +317,7 @@ function EcosystemHealth({ companies, companiesWithReadiness, companiesWithNeeds
   return (
     <div className="card">
       <div className="card-hd">
-        <div className="card-title"><span className="dot green" /> Ecosystem Health</div>
+        <div className="card-title"><span className="dot green" /> מצב האקו־סיסטם</div>
         <span className="pill mono">{completeness}% COMPLETE</span>
       </div>
       <div style={grid("repeat(5, 1fr)", 10)}>
@@ -346,7 +346,7 @@ function ActionQueue({ items }) {
   return (
     <div className="card">
       <div className="card-hd">
-        <div className="card-title"><span className="dot amber" /> Action Queue</div>
+        <div className="card-title"><span className="dot amber" /> פעולות נדרשות</div>
         <span className="pill amber">{items.length} pending</span>
       </div>
       <div className="col gap-8">
@@ -479,10 +479,10 @@ function CopilotSuggestions({ suggestions }) {
   return (
     <div className="card">
       <div className="card-hd">
-        <div className="card-title"><span className="dot violet" /> AI Insights / Copilot Suggestions</div>
-        <span className="pill violet"><window.I.Sparkles size={10} /> Draft suggestions</span>
+        <div className="card-title"><span className="dot violet" /> תובנות מהמאגר המקומי</div>
+        <span className="pill violet"><window.I.Sparkles size={10} /> הצעות טיוטה</span>
       </div>
-      <div className="muted tiny" style={{ marginBottom: 10 }}>Human approval required · no auto-publish behavior</div>
+      <div className="muted tiny" style={{ marginBottom: 10 }}>מחושב מהנתונים המקומיים · דורש אישור אנושי · אין פרסום אוטומטי</div>
       <div className="col gap-8">
         {suggestions.map((s) => (
           <AiInsight key={s.title} title={s.title} text={s.text} tags={s.tags || []} />

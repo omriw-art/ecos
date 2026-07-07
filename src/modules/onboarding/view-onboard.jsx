@@ -1,5 +1,5 @@
 // ecos — Company self-onboarding
-// 6-step flow with LinkedIn smart import, AI auto-fill, and live progress bar.
+// 6-step flow with a local demo sample-fill (not a real LinkedIn/website import) and a progress bar.
 
 const STEPS = [
   { id: "import",   label: "ייבוא מהיר",  short: "Import" },
@@ -184,18 +184,18 @@ function OnboardView({ onCompaniesChanged, onOpenCompany }) {
           </div>
         </div>
 
-        {/* AI side panel */}
+        {/* Local guidance panel */}
         <div className="col gap-14">
           <div className="card" style={{ background: "linear-gradient(180deg, oklch(0.16 0.06 290), oklch(0.13 0.025 285))", borderColor: "oklch(0.30 0.10 295)" }}>
             <div className="flex center gap-8" style={{ marginBottom: 10 }}>
               <window.I.Sparkles size={14} style={{ color: "var(--violet)" }} />
-              <div style={{ fontSize: 13, fontWeight: 600 }}>עוזר חכם</div>
-              <span className="pill violet mono" style={{ marginInlineStart: "auto" }}>Claude</span>
+              <div style={{ fontSize: 13, fontWeight: 600 }}>טיפים למילוי</div>
+              <span className="pill mono" style={{ marginInlineStart: "auto" }}>Demo</span>
             </div>
             <div style={{ fontSize: 12.5, color: "var(--text-2)", lineHeight: 1.6 }}>
-              {step === 0 && "אני יכול למלא 80% מהטופס באמצעות פרופיל LinkedIn או אתר החברה. שמרו זמן."}
-              {step === 1 && "נסו לדייק את שם החברה ותחום הפעילות — אלה מזינים את אלגוריתם ההתאמה."}
-              {step === 2 && "ככל שתפרטו טכנולוגיות ליבה, ה-AI ימצא חברות משלימות מדויקות יותר."}
+              {step === 0 && "לחצו על ייבוא מדגם כדי למלא חלק גדול מהטופס לדוגמה, ואז ערכו לפי הנתונים האמיתיים שלכם."}
+              {step === 1 && "נסו לדייק את שם החברה ותחום הפעילות — אלה מזינים את אלגוריתם ההתאמה המקומי."}
+              {step === 2 && "ככל שתפרטו טכנולוגיות ליבה בצורה ספציפית, כך יהיה קל יותר למצוא חברות משלימות באקוסיסטם."}
               {step === 3 && "תגדירו מה אתם מציעים ואיזה שותפויות אתם מחפשים — זה הצומת המרכזי להתאמות."}
               {step === 4 && "Readiness עוזר לנו לקשר אתכם לפרויקטים מתאימים בלבד (אזרחי / ביטחוני)."}
               {step === 5 && "כל הפרטים מסוכמים. ניתן לחזור ולערוך כל פרק לפני השיגור."}
@@ -203,7 +203,7 @@ function OnboardView({ onCompaniesChanged, onOpenCompany }) {
           </div>
 
           <div className="card">
-            <div className="card-hd"><div className="card-title"><span className="dot" /> Live Preview</div></div>
+            <div className="card-hd"><div className="card-title"><span className="dot" /> תצוגה מקדימה</div></div>
             {data.name ? <PreviewCard data={data} /> : (
               <div className="muted tiny">המראה של פרופיל החברה יופיע כאן ברגע שתזינו פרטים בסיסיים.</div>
             )}
@@ -221,7 +221,7 @@ function PendingSubmissionsPanel({ submissions, notice, onApprove, onReject }) {
   return (
     <div className="card">
       <div className="card-hd">
-        <div className="card-title"><span className="dot amber" /> Pending Join Submissions</div>
+        <div className="card-title"><span className="dot amber" /> הגשות ממתינות לאישור</div>
         <div className="flex center gap-6 wrap">
           <span className={"pill " + (pending.length ? "amber" : "green")}>{pending.length} pending</span>
           <span className="pill green">{approved.length} approved</span>
@@ -328,7 +328,7 @@ function StepImport({ onImport, importing, imported, skip }) {
           בואו נחסוך לכם זמן.
         </h3>
         <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>
-          חברו את ה-LinkedIn או הזינו URL לאתר. אנחנו נשלוף את רוב הפרטים אוטומטית.
+          מלאו טופס לדוגמה (Demo) על בסיס LinkedIn או אתר החברה, ואז החליפו את הפרטים בנתונים האמיתיים שלכם.
         </div>
       </div>
 
@@ -441,7 +441,7 @@ function StepTech({ data, setField, setData }) {
     <div className="col gap-14">
       <div className="hint-ai">
         <window.I.Sparkles size={12} />
-        <span>פרטו את 3 הטכנולוגיות שמייחדות אתכם. AI יזהה אוטומטית טכנולוגיות סמוכות וייצר Tags.</span>
+        <span>פרטו את 3 הטכנולוגיות שמייחדות אתכם — ככל שיהיו ספציפיות יותר, כך יהיה קל יותר למצוא חברות משלימות באקוסיסטם.</span>
       </div>
       {data.tech.map((t, i) => (
         <div key={i} className="field">
@@ -553,7 +553,7 @@ function StepReview({ data }) {
     <div className="col gap-14">
       <div className="hint-ai" style={{ background: "oklch(0.18 0.07 150 / 0.4)", borderColor: "oklch(0.35 0.10 150)", color: "var(--green)" }}>
         <window.I.Check size={12} />
-        <span>הפרופיל מוכן לשיגור. לאחר השליחה: ביקורת קצרה (~24 ש׳) ואז פרסום באקוסיסטם.</span>
+        <span>הפרופיל מוכן לשיגור. לאחר השליחה: ההגשה תישמר מקומית ותמתין לבדיקה ואישור ידני לפני פרסום באקוסיסטם.</span>
       </div>
       <PreviewCard data={data} large />
 
