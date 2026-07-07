@@ -152,7 +152,7 @@ function CompanyEditor({ company, title, submitLabel, onSave, onCancel }) {
         {onCancel && <button type="button" className="btn btn-ghost" onClick={onCancel}>ביטול</button>}
       </div>
 
-      <EditorSection heading="פרטי חברה">
+      <EditorSection heading="פרטי ארגון">
         <EditorField label="שם חברה" required>
           <input className="input" value={form.name} onChange={(e) => setField("name", e.target.value)} />
         </EditorField>
@@ -465,9 +465,6 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany }) {
                 {c.readiness}
               </span>
             </div>
-            <div style={{ fontSize: 14, color: "var(--text-2)", marginBottom: 8 }}>
-              {c.flag} {c.hq.toUpperCase()} · FOUNDED {c.founded} · {c.size} EMPLOYEES{c.fundingM > 0 ? ` · $${c.fundingM}M RAISED` : ""}
-            </div>
             <div className="flex gap-8 wrap" style={{ marginBottom: 12 }}>
               <span className="pill">סוג ארגון: {orgTypeLabel(c.organizationType)}</span>
               <span className="pill">סגמנט פעילות: {spaceSegmentLabel(c.spaceSegment)}</span>
@@ -494,6 +491,7 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany }) {
           <button className="btn" onClick={toggleStrategic}><window.I.Pin size={13} /> {c.strategic ? "הסר סימון אסטרטגי" : "סמן כאסטרטגי"}</button>
           <button className="btn btn-ghost" onClick={linkedInUrl ? openExternalLink : undefined} disabled={!linkedInUrl} title={linkedInUrl ? undefined : "אין קישור מוגדר לחברה זו"}><window.I.Linkedin size={13} /> {c.linkedin ? "LinkedIn" : "אתר"}</button>
           <button className="btn" onClick={() => setEditing((v) => !v)}><window.I.Settings size={13} /> ערוך פרטים</button>
+          {onNav && <button className="btn" onClick={() => onNav("needs")}><window.I.Compass size={13} /> פתח בלוח צרכים</button>}
           <div className="grow" />
           <div className="mono tiny" style={{ color: "var(--text-4)" }}>ID · {c.id.toUpperCase()}</div>
         </div>
@@ -526,11 +524,12 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany }) {
       <div className="card flush" style={{ padding: "0 20px" }}>
         <div className="stepper" style={{ borderBottom: "1px solid var(--line-1)" }}>
           {[
-            ["overview", "סקירה"],
+            ["overview", "ניהול"],
             ["tech", "יכולות"],
             ["needs", "צרכים והצעות"],
             ["matches", "התאמות"],
-            ["connections", "קשרים והמשך טיפול"],
+            ["details", "פרטי ארגון"],
+            ["connections", "המשך טיפול"],
           ].map(([id, lbl]) => (
             <div key={id} className={"step" + (tab === id ? " active" : "")} onClick={() => setTab(id)} style={{ cursor: "default" }}>
               {lbl}
@@ -539,10 +538,11 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany }) {
         </div>
       </div>
 
-      {tab === "overview" && <OverviewTab c={c} />}
+      {tab === "overview" && <OverviewTab c={c} onNav={onNav} onEdit={() => setEditing(true)} linkedInUrl={linkedInUrl} openExternalLink={openExternalLink} />}
       {tab === "tech" && <TechTab c={c} />}
       {tab === "needs" && <NeedsOffersTab c={c} onNav={onNav} />}
       {tab === "matches" && <MatchesTab c={c} onOpenCompany={onOpenCompany} />}
+      {tab === "details" && <OrgDetailsTab c={c} />}
       {tab === "connections" && <ConnectionsTab c={c} overlapCo={overlapCo} onOpenCompany={onOpenCompany} linkedInUrl={linkedInUrl} openExternalLink={openExternalLink} onEdit={() => setEditing(true)} />}
     </div>
   );
@@ -557,38 +557,115 @@ function SummaryTile({ label, value }) {
   );
 }
 
-function OverviewTab({ c }) {
+function OverviewTab({ c, onNav, onEdit, linkedInUrl, openExternalLink }) {
+  const capabilities = (c.capabilities && c.capabilities.length) ? c.capabilities : (c.tech || []);
+  const needs = c.needs || [];
+  const offers = c.offers || [];
+  const matchCount = React.useMemo(() => {
+    if (!window.MatchEngine || typeof window.MatchEngine.generateMatchesForCompany !== "function") return null;
+    return window.MatchEngine.generateMatchesForCompany(c, window.COMPANIES || [], { limit: 5, minScore: 20 }).length;
+  }, [c]);
+
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 14 }}>
       <div className="col gap-14">
         <div className="card">
-          <div className="card-hd"><div className="card-title"><span className="dot amber" /> תיאור קצר</div></div>
-          <div style={{ fontSize: 16, color: "var(--text-1)", lineHeight: 1.65 }}>
-            {c.blurb || <span className="muted">לא הוזן תיאור לארגון זה</span>}
+          <div className="card-hd"><div className="card-title"><span className="dot" /> סיווג ומיקום באקוסיסטם</div></div>
+          <div className="col gap-10">
+            <KV k="סוג ארגון" v={orgTypeLabel(c.organizationType)} />
+            <KV k="סגמנט פעילות" v={spaceSegmentLabel(c.spaceSegment)} />
+            <KV k="סטטוס במאגר" v={c.readiness} />
           </div>
         </div>
 
         <div className="card">
-          <div className="card-hd"><div className="card-title"><span className="dot" /> סיווג</div></div>
-          <div className="col gap-10">
-            <KV k="סוג ארגון" v={orgTypeLabel(c.organizationType)} />
-            <KV k="סגמנט פעילות" v={spaceSegmentLabel(c.spaceSegment)} />
+          <div className="card-hd"><div className="card-title"><span className="dot" /> יכולות מזוהות ({capabilities.length})</div></div>
+          {!capabilities.length && <div className="muted" style={{ padding: "8px 0" }}>לא הוזנו יכולות לארגון זה</div>}
+          <div className="flex wrap gap-6">
+            {capabilities.slice(0, 8).map((t, i) => <span key={i} className="pill">{t}</span>)}
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+          <div className="card">
+            <div className="card-hd"><div className="card-title"><span className="dot violet" /> צרכים ({needs.length})</div></div>
+            {!needs.length && <div className="muted" style={{ padding: "8px 0" }}>לא הוזנו צרכים לארגון זה</div>}
+            <div className="col gap-6">
+              {needs.slice(0, 3).map((n, i) => <div key={i} style={{ fontSize: 14, color: "var(--text-1)" }}>{n}</div>)}
+            </div>
+          </div>
+          <div className="card">
+            <div className="card-hd"><div className="card-title"><span className="dot green" /> הצעות ({offers.length})</div></div>
+            {!offers.length && <div className="muted" style={{ padding: "8px 0" }}>לא הוזנו הצעות לארגון זה</div>}
+            <div className="col gap-6">
+              {offers.slice(0, 3).map((o, i) => <div key={i} style={{ fontSize: 14, color: "var(--text-1)" }}>{o}</div>)}
+            </div>
           </div>
         </div>
       </div>
 
       <div className="col gap-14">
         <div className="card">
-          <div className="card-hd"><div className="card-title"><span className="dot" /> פרטי בסיס</div></div>
-          <div className="col gap-10">
-            <KV k="מיקום" v={c.hq} />
-            <KV k="אתר" v={c.website || "—"} />
-            <KV k="שלב" v={c.stage} />
-            <KV k="שנת הקמה" v={c.founded} />
-            <KV k="מועסקים" v={c.size} />
-            <KV k="סטטוס" v={c.readiness} />
-            {c.fundingM > 0 && <KV k="גיוס מצטבר" v={`$${c.fundingM}M`} />}
+          <div className="card-hd"><div className="card-title"><span className="dot" /> התאמות מקומיות</div></div>
+          <div className="muted tiny" style={{ marginBottom: 8 }}>מבוסס על יכולות, תגיות, צרכים והצעות · דטרמיניסטי, ללא AI</div>
+          {matchCount === null ? (
+            <div className="muted">מנוע ההתאמות אינו זמין כרגע</div>
+          ) : matchCount > 0 ? (
+            <div style={{ fontSize: 22, fontWeight: 700, color: "var(--text-1)" }} className="mono tabnum">{matchCount} התאמות</div>
+          ) : (
+            <div className="muted">לא נמצאו התאמות מספיק חזקות במאגר המקומי</div>
+          )}
+        </div>
+
+        <div className="card">
+          <div className="card-hd"><div className="card-title"><span className="dot" /> פעולות</div></div>
+          <div className="col gap-8">
+            <button className="btn" style={{ justifyContent: "flex-start" }} onClick={onEdit}><window.I.Settings size={13} /> ערוך פרטים</button>
+            {onNav && <button className="btn" style={{ justifyContent: "flex-start" }} onClick={() => onNav("needs")}><window.I.Compass size={13} /> פתח בלוח צרכים</button>}
+            {linkedInUrl && <button className="btn" style={{ justifyContent: "flex-start" }} onClick={openExternalLink}><window.I.Linkedin size={13} /> פתח אתר</button>}
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OrgDetailsTab({ c }) {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+      <div className="card">
+        <div className="card-hd"><div className="card-title"><span className="dot" /> פרטי ארגון</div></div>
+        <div className="col gap-10">
+          <KV k="שם" v={c.name} />
+          <KV k="מיקום" v={c.hq} />
+          <KV k="אתר" v={c.website || "—"} />
+          <KV k="שלב" v={c.stage} />
+          <KV k="שנת הקמה" v={c.founded} />
+          <KV k="מועסקים" v={c.size} />
+          <KV k="סטטוס" v={c.readiness} />
+          {c.fundingM > 0 && <KV k="גיוס מצטבר" v={`$${c.fundingM}M`} />}
+          <KV k="מזהה פנימי" v={c.id} />
+        </div>
+      </div>
+
+      <div className="col gap-14">
+        <div className="card">
+          <div className="card-hd"><div className="card-title"><span className="dot" /> תיאור בסיסי</div></div>
+          <div style={{ fontSize: 15, color: "var(--text-1)", lineHeight: 1.6 }}>
+            {c.blurb || <span className="muted">לא הוזן תיאור לארגון זה</span>}
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-hd"><div className="card-title"><span className="dot" /> סיווג וקטגוריה</div></div>
+          <div className="col gap-10">
+            <KV k="סוג ארגון" v={orgTypeLabel(c.organizationType)} />
+            <KV k="סגמנט פעילות" v={spaceSegmentLabel(c.spaceSegment)} />
+          </div>
+          {!!(c.sectors && c.sectors.length) && (
+            <div className="co-tags" style={{ marginTop: 10 }}>
+              {c.sectors.map((s) => window.SECTORS.find((x) => x.id === s) ? <SectorPill key={s} id={s} /> : <span key={s} className="pill">{s}</span>)}
+            </div>
+          )}
         </div>
       </div>
     </div>
