@@ -367,7 +367,6 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany }) {
   const [tab, setTab] = React.useState("overview");
   const [editing, setEditing] = React.useState(false);
 
-  const matchedPeople = window.PEOPLE.filter((p) => p.matches.includes(c.id));
   const overlapCo = (c.overlap || []).map((id) => window.COMPANIES.find((x) => x.id === id)).filter(Boolean);
   const saveEdit = (patch) => {
     const updated = onUpdateCompany(c.id, patch);
@@ -433,9 +432,6 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany }) {
               <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-2)" }}>Compatibility</span>
               <ScoreRing value={c.score} size={56} stroke={4} />
             </div>
-            <FitBar label="התאמה לעובדים" score={Math.min(99, c.score + 2)} color="var(--blue)" />
-            <FitBar label="פוטנציאל שיתוף פעולה" score={Math.max(45, c.score - 8)} color="var(--violet)" />
-            <FitBar label="חדשנות" score={Math.max(40, c.score - (c.strategic ? 0 : 12))} color="var(--cyan)" />
             <FitBar label="רלוונטיות אסטרטגית" score={c.strategic ? 95 : Math.max(50, c.score - 5)} color="var(--amber)" />
             <FitBar label="Readiness" score={c.readiness === "Defense Cleared" ? 98 : c.readiness === "Commercial" ? 80 : c.readiness === "Pilot Ready" ? 65 : 45} color="var(--green)" />
           </div>
@@ -468,7 +464,6 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany }) {
           {[
             ["overview", "סקירה"],
             ["tech", "טכנולוגיות ויכולות"],
-            ["match", "התאמה לארגון"],
             ["connections", "חיבורים"],
             ["contacts", "אנשי קשר"],
           ].map(([id, lbl]) => (
@@ -481,7 +476,6 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany }) {
 
       {tab === "overview" && <OverviewTab c={c} />}
       {tab === "tech" && <TechTab c={c} />}
-      {tab === "match" && <MatchTab c={c} matchedPeople={matchedPeople} onNav={onNav} />}
       {tab === "connections" && <ConnectionsTab c={c} overlapCo={overlapCo} onOpenCompany={onOpenCompany} />}
       {tab === "contacts" && <ContactsTab c={c} />}
     </div>
@@ -600,49 +594,6 @@ function TechTab({ c }) {
             ))}
         </div>
       </div>
-    </div>
-  );
-}
-
-function MatchTab({ c, matchedPeople, onNav }) {
-  if (!matchedPeople.length) {
-    return (
-      <div className="card">
-        <div className="muted">אין כרגע עובדים שמסומנים כהתאמה ישירה לחברה זו.</div>
-      </div>
-    );
-  }
-  return (
-    <div className="card">
-      <div className="card-hd">
-        <div className="card-title"><span className="dot" /> {matchedPeople.length} עובדים מתאימים</div>
-        <button className="btn" onClick={() => onNav("matches")}>פתח במנוע ההתאמות</button>
-      </div>
-      <div className="col gap-12">
-        {matchedPeople.map((p) => <MatchPersonRow key={p.id} p={p} c={c} />)}
-      </div>
-    </div>
-  );
-}
-
-function MatchPersonRow({ p, c }) {
-  const sharedSectors = p.interests.filter((i) => c.sectors.includes(i)).length;
-  const fit = Math.min(99, 55 + sharedSectors * 15);
-  return (
-    <div className="flex center gap-12" style={{ padding: 12, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 10 }}>
-      <div className="sidebar-avatar" style={{ background: `linear-gradient(135deg, ${p.color}, oklch(from ${p.color} 0.4 c h))` }}>{p.avatar}</div>
-      <div className="col" style={{ minWidth: 180 }}>
-        <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text-1)" }}>{p.name}</div>
-        <div style={{ fontSize: 13, color: "var(--text-3)" }}>{p.role.toUpperCase()}</div>
-      </div>
-      <div className="col grow gap-4">
-        <div className="flex between" style={{ fontSize: 13 }}>
-          <span style={{ color: "var(--text-2)" }}>סיבת ההתאמה: חופף ב-{p.interests.filter((i) => c.sectors.includes(i)).length} תחומים</span>
-          <span className="mono tabnum" style={{ color: "var(--blue)", fontWeight: 700 }}>{fit}%</span>
-        </div>
-        <MiniBar value={fit} color="var(--blue)" />
-      </div>
-      <button className="btn" disabled title="תהליך intro אינו מוגדר עדיין"><window.I.Send size={12} /> intro</button>
     </div>
   );
 }
