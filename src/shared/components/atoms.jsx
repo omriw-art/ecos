@@ -1,5 +1,39 @@
 // ecos — small reusable atoms: ScoreRing, Sparkline, Logo, etc.
 
+// Global readability pass (P13F): the dark/cyber visual identity stays, but
+// real content (cards, forms, tabs, dashboard values, lists) was using the
+// same tiny/mono/letter-spaced treatment meant for decorative system chrome
+// (nav, breadcrumbs, status pills), making it hard to read. This overrides
+// those shared classes app-wide, once, without touching styles.css or any
+// per-component markup. Decorative chrome (.brand-sub, .nav-count, .co-meta,
+// .kpi .label mono ticks, breadcrumbs) is left as-is on purpose.
+(function () {
+  if (document.getElementById("ecos-readability-v1")) return;
+  const style = document.createElement("style");
+  style.id = "ecos-readability-v1";
+  style.textContent = `
+    .card-title {
+      font-family: inherit; font-size: 14.5px; font-weight: 700;
+      letter-spacing: normal; text-transform: none; color: var(--text-1);
+    }
+    .field label {
+      font-family: inherit; font-size: 14px; font-weight: 700;
+      letter-spacing: normal; text-transform: none; color: var(--text-1);
+    }
+    .input, .select, .textarea {
+      font-size: 16px; padding: 12px 14px; color: var(--text-1);
+    }
+    .textarea { min-height: 110px; }
+    .btn { font-size: 15px; padding: 9px 14px; }
+    .view-head .sub { font-size: 14.5px; color: var(--text-2); }
+    .help { font-size: 12.5px; color: var(--text-3); }
+    .co-name { font-size: 15px; }
+    .kpi .label { font-size: 12px; letter-spacing: 0.06em; color: var(--text-2); }
+    .kpi .value { font-weight: 700; }
+  `;
+  document.head.appendChild(style);
+})();
+
 function ScoreRing({ value = 80, size = 44, stroke = 3.5, color }) {
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
