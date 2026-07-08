@@ -9,47 +9,37 @@
 // Matches are computed live via MatchEngine.rankOrganizationsForNeed —
 // deterministic keyword overlap, no AI, no network.
 
+// Source type stays fixed — it drives real save-path branching (organization
+// needs still write to organization.needs), not just a display label.
 const SOURCE_TYPE_OPTIONS = [
   { id: "internal", label: "צורך פנימי" },
   { id: "organization", label: "צורך של ארגון" },
   { id: "opportunity", label: "הזדמנות שזוהתה" },
 ];
-const SPACE_SEGMENT_OPTIONS = [
-  { id: "upstream", label: "Upstream / תשתיות וחלל" },
-  { id: "space-in", label: "Space-In / פעילות בחלל" },
-  { id: "downstream", label: "Downstream / שירותים ודאטה" },
-  { id: "development-research", label: "Development & Research / פיתוח ומחקר" },
-  { id: "services-ecosystem", label: "Services Ecosystem / שירותי אקו־סיסטם" },
-  { id: "other", label: "אחר" },
-];
-const NEED_TYPE_OPTIONS = [
-  { id: "pilot", label: "פיילוט" },
-  { id: "customer", label: "לקוח" },
-  { id: "funding", label: "מימון" },
-  { id: "technology", label: "טכנולוגיה" },
-  { id: "data", label: "דאטה" },
-  { id: "regulation", label: "רגולציה" },
-  { id: "partner", label: "שותף" },
-  { id: "research", label: "מחקר" },
-  { id: "challenge", label: "אתגר" },
-  { id: "other", label: "אחר" },
-];
-const PRIORITY_OPTIONS = [
-  { id: "high", label: "גבוהה" },
-  { id: "medium", label: "בינונית" },
-  { id: "low", label: "נמוכה" },
-];
-const NEED_STATUS_OPTIONS = [
-  { id: "new", label: "חדש" },
-  { id: "reviewing", label: "בבדיקה" },
-  { id: "matching", label: "בהתאמה" },
-  { id: "in-progress", label: "בטיפול" },
-  { id: "done", label: "הושלם" },
+
+// spaceSegment / needType / priority / status are admin-editable via
+// TaxonomyStore (localStorage). These small helpers read it fresh each call
+// so renames/additions/deactivations show up immediately everywhere.
+const TAXONOMY_GROUPS = [
+  { key: "spaceSegment", title: "סגמנט פעילות" },
+  { key: "needType", title: "סוג צורך" },
+  { key: "priority", title: "עדיפות" },
+  { key: "status", title: "סטטוס" },
 ];
 
 function optLabel(options, id, fallback) {
   const found = options.find((o) => o.id === id);
   return found ? found.label : (fallback || id || "אחר");
+}
+
+function taxGroup(groupKey) {
+  return window.TaxonomyStore ? window.TaxonomyStore.getGroup(groupKey) : [];
+}
+function taxActive(groupKey, currentValue) {
+  return window.TaxonomyStore ? window.TaxonomyStore.getActiveGroup(groupKey, currentValue) : [];
+}
+function taxLabel(groupKey, value) {
+  return window.TaxonomyStore ? window.TaxonomyStore.labelFor(groupKey, value) : (value || "אחר");
 }
 
 function needText(rawNeed) {
@@ -166,7 +156,10 @@ function NeedMatches({ item, companies, onOpenCompany }) {
 }
 
 // Shared classification field-set used by both the create form and the
-// inline edit form, so options/labels never drift apart.
+// inline edit form, so options/labels never drift apart. Option lists come
+// from TaxonomyStore (admin-editable) — each includes the form's current
+// value even if it was since deactivated, so an existing selection is never
+// silently lost.
 function NeedClassificationFields({ form, setField, sortedCompanies }) {
   return (
     <>
@@ -188,25 +181,25 @@ function NeedClassificationFields({ form, setField, sortedCompanies }) {
       <div className="field">
         <label style={{ fontSize: 14, fontWeight: 700 }}>סגמנט פעילות</label>
         <select className="select" value={form.spaceSegment} onChange={(e) => setField("spaceSegment", e.target.value)}>
-          {SPACE_SEGMENT_OPTIONS.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+          {taxActive("spaceSegment", form.spaceSegment).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
       </div>
       <div className="field">
         <label style={{ fontSize: 14, fontWeight: 700 }}>סוג צורך</label>
         <select className="select" value={form.needType} onChange={(e) => setField("needType", e.target.value)}>
-          {NEED_TYPE_OPTIONS.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+          {taxActive("needType", form.needType).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
       </div>
       <div className="field">
         <label style={{ fontSize: 14, fontWeight: 700 }}>עדיפות</label>
         <select className="select" value={form.priority} onChange={(e) => setField("priority", e.target.value)}>
-          {PRIORITY_OPTIONS.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+          {taxActive("priority", form.priority).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
       </div>
       <div className="field">
         <label style={{ fontSize: 14, fontWeight: 700 }}>סטטוס</label>
         <select className="select" value={form.status} onChange={(e) => setField("status", e.target.value)}>
-          {NEED_STATUS_OPTIONS.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+          {taxActive("status", form.status).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
       </div>
     </>
@@ -253,6 +246,85 @@ function EditNeedForm({ item, sortedCompanies, onSave, onCancel }) {
   );
 }
 
+// Local admin-editable option row: rename commits on blur (not every
+// keystroke) to avoid writing to localStorage on every character.
+function OptionRow({ option, onRename, onToggle }) {
+  const [draftLabel, setDraftLabel] = React.useState(option.label);
+  React.useEffect(() => setDraftLabel(option.label), [option.label]);
+
+  return (
+    <div className="flex center gap-8" style={{ opacity: option.isActive ? 1 : 0.5 }}>
+      <input
+        className="input"
+        style={{ fontSize: 13, padding: "6px 10px" }}
+        value={draftLabel}
+        onChange={(e) => setDraftLabel(e.target.value)}
+        onBlur={() => { if (draftLabel.trim() && draftLabel !== option.label) onRename(option.value, draftLabel.trim()); }}
+      />
+      <button type="button" className={"chip" + (option.isActive ? " active" : "")} style={{ fontSize: 11, flex: "none" }}
+              onClick={() => onToggle(option.value, !option.isActive)}>
+        {option.isActive ? "פעיל" : "לא פעיל"}
+      </button>
+      {option.isDefault && <span className="mono tiny" style={{ color: "var(--text-4)", flex: "none" }}>ברירת מחדל</span>}
+    </div>
+  );
+}
+
+function OptionsGroupEditor({ groupKey, title, options, onAdd, onRename, onToggle, onReset }) {
+  const [draft, setDraft] = React.useState("");
+  const submitDraft = () => {
+    const label = draft.trim();
+    if (!label) return;
+    onAdd(groupKey, label);
+    setDraft("");
+  };
+  return (
+    <div className="card" style={{ padding: 14 }}>
+      <div className="flex center between" style={{ marginBottom: 10 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-1)" }}>{title}</div>
+        <button type="button" className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => onReset(groupKey)}>איפוס לברירת מחדל</button>
+      </div>
+      <div className="col gap-6" style={{ marginBottom: 10 }}>
+        {options.map((o) => (
+          <OptionRow key={o.value} option={o}
+                     onRename={(value, label) => onRename(groupKey, value, label)}
+                     onToggle={(value, isActive) => onToggle(groupKey, value, isActive)} />
+        ))}
+      </div>
+      <div className="flex gap-8">
+        <input className="input" style={{ fontSize: 13 }} value={draft} onChange={(e) => setDraft(e.target.value)}
+               placeholder="הוספת אפשרות חדשה…"
+               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); submitDraft(); } }} />
+        <button type="button" className="btn" onClick={submitDraft} disabled={!draft.trim()}>הוסף</button>
+      </div>
+    </div>
+  );
+}
+
+function OptionsManagerPanel({ open, onToggleOpen, groups, onAdd, onRename, onToggleOption, onReset }) {
+  return (
+    <div className="card">
+      <div className="card-hd">
+        <div className="card-title"><span className="dot" /> ניהול אפשרויות</div>
+        <button type="button" className="btn btn-ghost" onClick={onToggleOpen}>{open ? "הסתר" : "הצג"}</button>
+      </div>
+      {open && (
+        <>
+          <div className="muted tiny" style={{ marginBottom: 10 }}>
+            עריכת רשימות האפשרויות של סגמנט פעילות, סוג צורך, עדיפות וסטטוס עבור לוח הצרכים. סוג מקור קבוע ואינו ניתן לעריכה.
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12 }}>
+            {TAXONOMY_GROUPS.map((g) => (
+              <OptionsGroupEditor key={g.key} groupKey={g.key} title={g.title} options={groups[g.key] || []}
+                                   onAdd={onAdd} onRename={onRename} onToggle={onToggleOption} onReset={onReset} />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function NeedsView({ onOpenCompany }) {
   const [companies, setCompanies] = React.useState(() => getLocalCompanies());
   const [adminNeeds, setAdminNeeds] = React.useState(() => getAdminNeeds());
@@ -260,10 +332,37 @@ function NeedsView({ onOpenCompany }) {
   const [sourceFilter, setSourceFilter] = React.useState("all");
   const [editingId, setEditingId] = React.useState(null);
   const [form, setForm] = React.useState(() => Object.assign({}, EMPTY_FORM));
+  const [showOptionsManager, setShowOptionsManager] = React.useState(false);
+  const [taxonomyTick, setTaxonomyTick] = React.useState(0);
 
   const refresh = () => {
     setCompanies(getLocalCompanies());
     setAdminNeeds(getAdminNeeds());
+  };
+
+  const taxonomyGroups = React.useMemo(() => ({
+    spaceSegment: taxGroup("spaceSegment"),
+    needType: taxGroup("needType"),
+    priority: taxGroup("priority"),
+    status: taxGroup("status"),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [taxonomyTick]);
+
+  const handleAddOption = (groupKey, label) => {
+    if (window.TaxonomyStore) window.TaxonomyStore.addOption(groupKey, label);
+    setTaxonomyTick((t) => t + 1);
+  };
+  const handleRenameOption = (groupKey, value, label) => {
+    if (window.TaxonomyStore) window.TaxonomyStore.updateOption(groupKey, value, { label });
+    setTaxonomyTick((t) => t + 1);
+  };
+  const handleToggleOption = (groupKey, value, isActive) => {
+    if (window.TaxonomyStore) window.TaxonomyStore.toggleOption(groupKey, value, isActive);
+    setTaxonomyTick((t) => t + 1);
+  };
+  const handleResetGroup = (groupKey) => {
+    if (window.TaxonomyStore) window.TaxonomyStore.resetGroup(groupKey);
+    setTaxonomyTick((t) => t + 1);
   };
 
   const sortedCompanies = React.useMemo(
@@ -354,6 +453,16 @@ function NeedsView({ onOpenCompany }) {
         </div>
       </div>
 
+      <OptionsManagerPanel
+        open={showOptionsManager}
+        onToggleOpen={() => setShowOptionsManager((v) => !v)}
+        groups={taxonomyGroups}
+        onAdd={handleAddOption}
+        onRename={handleRenameOption}
+        onToggleOption={handleToggleOption}
+        onReset={handleResetGroup}
+      />
+
       {/* Create need/opportunity/challenge */}
       <form className="card" onSubmit={submitNeed}>
         <div className="card-hd"><div className="card-title"><span className="dot" /> יצירת צורך / הזדמנות / אתגר</div></div>
@@ -384,13 +493,13 @@ function NeedsView({ onOpenCompany }) {
               <div className="field">
                 <label style={{ fontSize: 14, fontWeight: 700 }}>סגמנט פעילות</label>
                 <select className="select" value={form.spaceSegment} onChange={(e) => setField("spaceSegment", e.target.value)}>
-                  {SPACE_SEGMENT_OPTIONS.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+                  {taxActive("spaceSegment", form.spaceSegment).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </div>
               <div className="field">
                 <label style={{ fontSize: 14, fontWeight: 700 }}>סוג צורך</label>
                 <select className="select" value={form.needType} onChange={(e) => setField("needType", e.target.value)}>
-                  {NEED_TYPE_OPTIONS.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+                  {taxActive("needType", form.needType).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </div>
             </div>
@@ -400,13 +509,13 @@ function NeedsView({ onOpenCompany }) {
               <div className="field">
                 <label style={{ fontSize: 14, fontWeight: 700 }}>עדיפות</label>
                 <select className="select" value={form.priority} onChange={(e) => setField("priority", e.target.value)}>
-                  {PRIORITY_OPTIONS.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+                  {taxActive("priority", form.priority).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </div>
               <div className="field">
                 <label style={{ fontSize: 14, fontWeight: 700 }}>סטטוס</label>
                 <select className="select" value={form.status} onChange={(e) => setField("status", e.target.value)}>
-                  {NEED_STATUS_OPTIONS.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+                  {taxActive("status", form.status).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </div>
             </div>
@@ -494,10 +603,10 @@ function NeedsView({ onOpenCompany }) {
                           {co.name}
                         </span>
                       )}
-                      {item.spaceSegment && <span className="pill" style={{ fontSize: 11 }}>{optLabel(SPACE_SEGMENT_OPTIONS, item.spaceSegment)}</span>}
-                      {item.needType && <span className="pill" style={{ fontSize: 11 }}>{optLabel(NEED_TYPE_OPTIONS, item.needType)}</span>}
-                      {item.priority && <span className="pill" style={{ fontSize: 11 }}>עדיפות {optLabel(PRIORITY_OPTIONS, item.priority)}</span>}
-                      {item.status && <span className="pill" style={{ fontSize: 11 }}>{optLabel(NEED_STATUS_OPTIONS, item.status)}</span>}
+                      {item.spaceSegment && <span className="pill" style={{ fontSize: 11 }}>{taxLabel("spaceSegment", item.spaceSegment)}</span>}
+                      {item.needType && <span className="pill" style={{ fontSize: 11 }}>{taxLabel("needType", item.needType)}</span>}
+                      {item.priority && <span className="pill" style={{ fontSize: 11 }}>עדיפות {taxLabel("priority", item.priority)}</span>}
+                      {item.status && <span className="pill" style={{ fontSize: 11 }}>{taxLabel("status", item.status)}</span>}
                       {item.kind === "organization" && (
                         <span className="mono tiny" style={{ color: "var(--text-4)" }}>עריכה דרך פרופיל הארגון</span>
                       )}
