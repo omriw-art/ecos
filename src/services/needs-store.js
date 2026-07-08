@@ -11,9 +11,9 @@
   const text = (value) => typeof value === "string" ? value.trim() : "";
 
   const SOURCE_TYPES = ["internal", "organization", "opportunity"];
-  const NEED_TYPES = ["pilot", "customer", "funding", "technology", "data", "regulation", "partner", "research", "other"];
+  const NEED_TYPES = ["pilot", "customer", "funding", "technology", "data", "regulation", "partner", "research", "challenge", "other"];
   const PRIORITIES = ["high", "medium", "low"];
-  const STATUSES = ["new", "reviewing", "matching", "in-progress"];
+  const STATUSES = ["new", "reviewing", "matching", "in-progress", "done"];
 
   function slugify(value) {
     const base = text(value)
@@ -47,6 +47,7 @@
       priority: PRIORITIES.includes(source.priority) ? source.priority : "medium",
       status: STATUSES.includes(source.status) ? source.status : "new",
       createdAt: text(source.createdAt) || new Date().toISOString(),
+      updatedAt: text(source.updatedAt) || null,
     });
   }
 
@@ -90,8 +91,9 @@
     const needs = getNeeds();
     const index = needs.findIndex((n) => n.id === id);
     if (index < 0) return null;
-    const updated = normalizeNeed(patch, needs[index]);
+    const updated = normalizeNeed(Object.assign({}, patch, { updatedAt: new Date().toISOString() }), needs[index]);
     updated.id = needs[index].id;
+    updated.createdAt = needs[index].createdAt;
     const next = needs.slice();
     next[index] = updated;
     saveNeeds(next);
@@ -117,7 +119,8 @@
   // Used by the dashboard so it never has to duplicate the flattening logic.
   function listNeeds() {
     const items = [];
-    asArray(getLocalCompanies()).forEach((c) => {
+    const companies = asArray(getLocalCompanies());
+    companies.forEach((c) => {
       asArray(c.needs).forEach((rawNeed, idx) => {
         const title = (typeof rawNeed === "string" ? rawNeed : text(rawNeed && rawNeed.text)).trim();
         if (!title) return;
@@ -137,18 +140,22 @@
       });
     });
     getNeeds().forEach((n) => {
+      const linkedOrg = n.sourceOrganizationId ? companies.find((c) => c.id === n.sourceOrganizationId) : null;
       items.push({
         id: n.id,
         kind: "admin",
         title: n.title,
-        sourceLabel: n.sourceType === "opportunity" ? "הזדמנות שזוהתה" : "צורך פנימי",
+        description: n.description,
+        sourceType: n.sourceType,
+        sourceLabel: n.sourceType === "opportunity" ? "הזדמנות שזוהתה" : n.sourceType === "organization" ? "צורך של ארגון" : "צורך פנימי",
         sourceOrgId: n.sourceOrganizationId,
-        sourceOrgName: null,
+        sourceOrgName: linkedOrg ? linkedOrg.name : null,
         spaceSegment: n.spaceSegment,
         needType: n.needType,
         priority: n.priority,
         status: n.status,
         createdAt: n.createdAt,
+        updatedAt: n.updatedAt,
       });
     });
     return items;

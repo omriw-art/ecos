@@ -1,22 +1,56 @@
-// ecos — Needs & Opportunities Board (P16A, matching P16D, admin needs P16E)
+// ecos — Admin Demand Board: needs, opportunities, and challenges (P16A/D/E/G)
 // Two independent local sources feed one board:
 //  1. organization.needs (string array on company records) — unchanged,
 //     still the single source of truth for org-submitted needs, still
-//     written through CompanyStore.updateCompany exactly as before.
-//  2. NeedsStore (localStorage) — admin-created needs/opportunities that are
-//     NOT tied to a specific organization ("internal" / "opportunity").
-// The two never overlap: needs entered as "צורך של ארגון" are still saved
-// straight into organization.needs (existing, less-risky path), never
-// duplicated into NeedsStore. Matches are computed live via
-// MatchEngine.rankOrganizationsForNeed — deterministic keyword overlap,
-// no AI, no network.
+//     written through CompanyStore.updateCompany exactly as before. Not
+//     editable/deletable from here (see "עריכה דרך פרופיל הארגון" note).
+//  2. NeedsStore (localStorage) — admin-created needs/opportunities/
+//     challenges, fully editable/deletable here.
+// Matches are computed live via MatchEngine.rankOrganizationsForNeed —
+// deterministic keyword overlap, no AI, no network.
 
-const NEED_TYPE_LABELS = {
-  pilot: "פיילוט", customer: "לקוח", funding: "מימון", technology: "טכנולוגיה",
-  data: "דאטה", regulation: "רגולציה", partner: "שותף", research: "מחקר", other: "אחר",
-};
-const PRIORITY_LABELS = { high: "גבוהה", medium: "בינונית", low: "נמוכה" };
-const STATUS_LABELS = { new: "חדש", reviewing: "בבדיקה", matching: "בהתאמה", "in-progress": "בטיפול" };
+const SOURCE_TYPE_OPTIONS = [
+  { id: "internal", label: "צורך פנימי" },
+  { id: "organization", label: "צורך של ארגון" },
+  { id: "opportunity", label: "הזדמנות שזוהתה" },
+];
+const SPACE_SEGMENT_OPTIONS = [
+  { id: "upstream", label: "Upstream / תשתיות וחלל" },
+  { id: "space-in", label: "Space-In / פעילות בחלל" },
+  { id: "downstream", label: "Downstream / שירותים ודאטה" },
+  { id: "development-research", label: "Development & Research / פיתוח ומחקר" },
+  { id: "services-ecosystem", label: "Services Ecosystem / שירותי אקו־סיסטם" },
+  { id: "other", label: "אחר" },
+];
+const NEED_TYPE_OPTIONS = [
+  { id: "pilot", label: "פיילוט" },
+  { id: "customer", label: "לקוח" },
+  { id: "funding", label: "מימון" },
+  { id: "technology", label: "טכנולוגיה" },
+  { id: "data", label: "דאטה" },
+  { id: "regulation", label: "רגולציה" },
+  { id: "partner", label: "שותף" },
+  { id: "research", label: "מחקר" },
+  { id: "challenge", label: "אתגר" },
+  { id: "other", label: "אחר" },
+];
+const PRIORITY_OPTIONS = [
+  { id: "high", label: "גבוהה" },
+  { id: "medium", label: "בינונית" },
+  { id: "low", label: "נמוכה" },
+];
+const NEED_STATUS_OPTIONS = [
+  { id: "new", label: "חדש" },
+  { id: "reviewing", label: "בבדיקה" },
+  { id: "matching", label: "בהתאמה" },
+  { id: "in-progress", label: "בטיפול" },
+  { id: "done", label: "הושלם" },
+];
+
+function optLabel(options, id, fallback) {
+  const found = options.find((o) => o.id === id);
+  return found ? found.label : (fallback || id || "אחר");
+}
 
 function needText(rawNeed) {
   if (typeof rawNeed === "string") return rawNeed;
@@ -52,10 +86,10 @@ function buildBoardItems(companies, adminNeeds) {
         kind: "organization",
         title: t,
         description: "",
-        sourceLabel: "צורך מארגון",
+        sourceType: "organization",
+        sourceLabel: optLabel(SOURCE_TYPE_OPTIONS, "organization"),
         sourceOrgId: c.id,
         sourceOrgName: c.name,
-        organizationType: c.organizationType,
         spaceSegment: c.spaceSegment,
         needType: null,
         priority: null,
@@ -71,10 +105,10 @@ function buildBoardItems(companies, adminNeeds) {
       kind: "admin",
       title: n.title,
       description: n.description,
-      sourceLabel: n.sourceType === "opportunity" ? "הזדמנות שזוהתה" : "צורך פנימי",
+      sourceType: n.sourceType,
+      sourceLabel: optLabel(SOURCE_TYPE_OPTIONS, n.sourceType),
       sourceOrgId: n.sourceOrganizationId,
       sourceOrgName: null,
-      organizationType: null,
       spaceSegment: n.spaceSegment,
       needType: n.needType,
       priority: n.priority,
@@ -99,7 +133,7 @@ function NeedMatches({ item, companies, onOpenCompany }) {
   return (
     <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid var(--line-1)" }}>
       <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-2)", marginBottom: 4 }}>ארגונים מתאימים</div>
-      <div className="muted tiny" style={{ marginBottom: 8 }}>התאמות מחושבות מהמאגר המקומי · מבוסס על יכולות, תגיות והצעות · ללא AI וללא מקור חיצוני</div>
+      <div className="muted tiny" style={{ marginBottom: 8 }}>התאמות מחושבות מהמאגר המקומי · ללא AI וללא מקור חיצוני</div>
       {!matches.length ? (
         <div className="muted" style={{ fontSize: 13 }}>לא נמצאו התאמות במאגר המקומי</div>
       ) : (
@@ -113,7 +147,6 @@ function NeedMatches({ item, companies, onOpenCompany }) {
                   <div className="flex center gap-6 wrap">
                     <span style={{ fontSize: 14, color: "var(--text-1)" }}>{m.organization.name}</span>
                     <span className="pill" style={{ fontSize: 10.5 }}>{window.orgTypeLabel ? window.orgTypeLabel(m.organization.organizationType) : ""}</span>
-                    <span className="pill" style={{ fontSize: 10.5 }}>{window.spaceSegmentShortLabel ? window.spaceSegmentShortLabel(m.organization.spaceSegment) : ""}</span>
                   </div>
                   {!!m.reasons.length && <div style={{ fontSize: 12, color: "var(--text-3)" }}>{m.reasons.join(" · ")}</div>}
                 </div>
@@ -132,19 +165,101 @@ function NeedMatches({ item, companies, onOpenCompany }) {
   );
 }
 
+// Shared classification field-set used by both the create form and the
+// inline edit form, so options/labels never drift apart.
+function NeedClassificationFields({ form, setField, sortedCompanies }) {
+  return (
+    <>
+      <div className="field">
+        <label style={{ fontSize: 14, fontWeight: 700 }}>סוג מקור</label>
+        <select className="select" value={form.sourceType} onChange={(e) => setField("sourceType", e.target.value)}>
+          {SOURCE_TYPE_OPTIONS.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+        </select>
+      </div>
+      {form.sourceType === "organization" && (
+        <div className="field">
+          <label style={{ fontSize: 14, fontWeight: 700 }}>ארגון</label>
+          <select className="select" value={form.sourceOrganizationId || ""} onChange={(e) => setField("sourceOrganizationId", e.target.value)}>
+            <option value="">בחרו ארגון…</option>
+            {sortedCompanies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </div>
+      )}
+      <div className="field">
+        <label style={{ fontSize: 14, fontWeight: 700 }}>סגמנט פעילות</label>
+        <select className="select" value={form.spaceSegment} onChange={(e) => setField("spaceSegment", e.target.value)}>
+          {SPACE_SEGMENT_OPTIONS.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+        </select>
+      </div>
+      <div className="field">
+        <label style={{ fontSize: 14, fontWeight: 700 }}>סוג צורך</label>
+        <select className="select" value={form.needType} onChange={(e) => setField("needType", e.target.value)}>
+          {NEED_TYPE_OPTIONS.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+        </select>
+      </div>
+      <div className="field">
+        <label style={{ fontSize: 14, fontWeight: 700 }}>עדיפות</label>
+        <select className="select" value={form.priority} onChange={(e) => setField("priority", e.target.value)}>
+          {PRIORITY_OPTIONS.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+        </select>
+      </div>
+      <div className="field">
+        <label style={{ fontSize: 14, fontWeight: 700 }}>סטטוס</label>
+        <select className="select" value={form.status} onChange={(e) => setField("status", e.target.value)}>
+          {NEED_STATUS_OPTIONS.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+        </select>
+      </div>
+    </>
+  );
+}
+
+const EMPTY_FORM = { sourceType: "internal", title: "", description: "", sourceOrganizationId: "", spaceSegment: "other", needType: "other", priority: "medium", status: "new" };
+
+function EditNeedForm({ item, sortedCompanies, onSave, onCancel }) {
+  const [form, setForm] = React.useState(() => ({
+    sourceType: item.sourceType,
+    title: item.title,
+    description: item.description || "",
+    sourceOrganizationId: item.sourceOrgId || "",
+    spaceSegment: item.spaceSegment || "other",
+    needType: item.needType || "other",
+    priority: item.priority || "medium",
+    status: item.status || "new",
+  }));
+  const setField = (k, v) => setForm((prev) => Object.assign({}, prev, { [k]: v }));
+
+  return (
+    <div style={{ marginTop: 10 }}>
+      <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-2)", marginBottom: 8 }}>מקור וסיווג</div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10, marginBottom: 10 }}>
+        <NeedClassificationFields form={form} setField={setField} sortedCompanies={sortedCompanies} />
+      </div>
+      <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-2)", marginBottom: 8 }}>תיאור</div>
+      <div className="field" style={{ marginBottom: 8 }}>
+        <label style={{ fontSize: 14, fontWeight: 700 }}>כותרת</label>
+        <input className="input" value={form.title} onChange={(e) => setField("title", e.target.value)} />
+      </div>
+      <div className="field">
+        <label style={{ fontSize: 14, fontWeight: 700 }}>תיאור (אופציונלי)</label>
+        <input className="input" value={form.description} onChange={(e) => setField("description", e.target.value)} />
+      </div>
+      <div className="flex center gap-8" style={{ marginTop: 12 }}>
+        <button type="button" className="btn btn-primary" disabled={!form.title.trim()} onClick={() => onSave(form)}>
+          <window.I.Check size={13} /> שמור שינויים
+        </button>
+        <button type="button" className="btn" onClick={onCancel}>ביטול</button>
+      </div>
+    </div>
+  );
+}
+
 function NeedsView({ onOpenCompany }) {
   const [companies, setCompanies] = React.useState(() => getLocalCompanies());
   const [adminNeeds, setAdminNeeds] = React.useState(() => getAdminNeeds());
   const [q, setQ] = React.useState("");
   const [sourceFilter, setSourceFilter] = React.useState("all");
-
-  const [sourceType, setSourceType] = React.useState("internal");
-  const [title, setTitle] = React.useState("");
-  const [description, setDescription] = React.useState("");
-  const [addOrgId, setAddOrgId] = React.useState("");
-  const [spaceSegment, setSpaceSegment] = React.useState("other");
-  const [needType, setNeedType] = React.useState("other");
-  const [priority, setPriority] = React.useState("medium");
+  const [editingId, setEditingId] = React.useState(null);
+  const [form, setForm] = React.useState(() => Object.assign({}, EMPTY_FORM));
 
   const refresh = () => {
     setCompanies(getLocalCompanies());
@@ -167,37 +282,38 @@ function NeedsView({ onOpenCompany }) {
     return true;
   });
 
-  const resetForm = () => {
-    setTitle(""); setDescription(""); setAddOrgId(""); setSpaceSegment("other"); setNeedType("other"); setPriority("medium");
-  };
+  const setField = (k, v) => setForm((prev) => Object.assign({}, prev, { [k]: v }));
+  const resetForm = () => setForm(Object.assign({}, EMPTY_FORM));
 
   const submitNeed = (e) => {
     e.preventDefault();
-    const titleText = title.trim();
+    const titleText = form.title.trim();
     if (!titleText) return;
 
-    if (sourceType === "organization") {
-      if (!addOrgId) return;
-      const target = companies.find((c) => c.id === addOrgId);
+    // Organization needs still go through the existing, less-risky path:
+    // appended straight to organization.needs, exactly as before.
+    if (form.sourceType === "organization") {
+      if (!form.sourceOrganizationId) return;
+      const target = companies.find((c) => c.id === form.sourceOrganizationId);
       if (!target) return;
       const nextNeeds = [...(target.needs || []), titleText];
       if (window.CompanyStore && typeof window.CompanyStore.updateCompany === "function") {
-        window.CompanyStore.updateCompany(addOrgId, { needs: nextNeeds });
+        window.CompanyStore.updateCompany(form.sourceOrganizationId, { needs: nextNeeds });
       }
       window.toast && window.toast(`הצורך נוסף ל-${target.name}`, "ok");
     } else {
       if (window.NeedsStore && typeof window.NeedsStore.createNeed === "function") {
         window.NeedsStore.createNeed({
           title: titleText,
-          description: description.trim(),
-          sourceType,
-          spaceSegment,
-          needType,
-          priority,
-          status: "new",
+          description: form.description.trim(),
+          sourceType: form.sourceType,
+          spaceSegment: form.spaceSegment,
+          needType: form.needType,
+          priority: form.priority,
+          status: form.status,
         });
       }
-      window.toast && window.toast(sourceType === "opportunity" ? "ההזדמנות נוספה ללוח" : "הצורך הפנימי נוסף ללוח", "ok");
+      window.toast && window.toast(form.sourceType === "opportunity" ? "ההזדמנות נוספה ללוח" : "הצורך הפנימי נוסף ללוח", "ok");
     }
 
     resetForm();
@@ -211,11 +327,22 @@ function NeedsView({ onOpenCompany }) {
     }
   };
 
-  const updateAdminNeedStatus = (id, status) => {
+  const saveEdit = (id, editForm) => {
     if (window.NeedsStore && typeof window.NeedsStore.updateNeed === "function") {
-      window.NeedsStore.updateNeed(id, { status });
-      refresh();
+      window.NeedsStore.updateNeed(id, {
+        title: editForm.title.trim(),
+        description: editForm.description.trim(),
+        sourceType: editForm.sourceType,
+        sourceOrganizationId: editForm.sourceType === "organization" ? editForm.sourceOrganizationId : null,
+        spaceSegment: editForm.spaceSegment,
+        needType: editForm.needType,
+        priority: editForm.priority,
+        status: editForm.status,
+      });
+      window.toast && window.toast("השינויים נשמרו", "ok");
     }
+    setEditingId(null);
+    refresh();
   };
 
   return (
@@ -223,71 +350,87 @@ function NeedsView({ onOpenCompany }) {
       <div className="view-head">
         <div>
           <h2>לוח צרכים והזדמנויות</h2>
-          <div className="sub">{boardItems.length} רשומות · מהמאגר המקומי</div>
+          <div className="sub">ניהול צרכים, אתגרים והזדמנויות מהמאגר המקומי · {boardItems.length} רשומות</div>
         </div>
       </div>
 
-      {/* Add need/opportunity */}
+      {/* Create need/opportunity/challenge */}
       <form className="card" onSubmit={submitNeed}>
-        <div className="card-hd"><div className="card-title"><span className="dot" /> הוספת צורך או הזדמנות</div></div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, marginBottom: 12 }}>
+        <div className="card-hd"><div className="card-title"><span className="dot" /> יצירת צורך / הזדמנות / אתגר</div></div>
+
+        <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-2)", marginBottom: 8 }}>מקור</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12, marginBottom: 14 }}>
           <div className="field">
             <label style={{ fontSize: 14, fontWeight: 700 }}>סוג מקור</label>
-            <select className="select" value={sourceType} onChange={(e) => setSourceType(e.target.value)}>
-              <option value="internal">צורך פנימי</option>
-              <option value="organization">צורך של ארגון</option>
-              <option value="opportunity">הזדמנות שזוהתה</option>
+            <select className="select" value={form.sourceType} onChange={(e) => setField("sourceType", e.target.value)}>
+              {SOURCE_TYPE_OPTIONS.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
             </select>
           </div>
-          {sourceType === "organization" && (
+          {form.sourceType === "organization" && (
             <div className="field">
               <label style={{ fontSize: 14, fontWeight: 700 }}>ארגון</label>
-              <select className="select" value={addOrgId} onChange={(e) => setAddOrgId(e.target.value)}>
+              <select className="select" value={form.sourceOrganizationId} onChange={(e) => setField("sourceOrganizationId", e.target.value)}>
                 <option value="">בחרו ארגון…</option>
                 {sortedCompanies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
           )}
-          {sourceType !== "organization" && (
-            <>
+        </div>
+
+        {form.sourceType !== "organization" && (
+          <>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-2)", marginBottom: 8 }}>סיווג</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12, marginBottom: 14 }}>
               <div className="field">
                 <label style={{ fontSize: 14, fontWeight: 700 }}>סגמנט פעילות</label>
-                <select className="select" value={spaceSegment} onChange={(e) => setSpaceSegment(e.target.value)}>
-                  {(window.SPACE_SEGMENTS || []).map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+                <select className="select" value={form.spaceSegment} onChange={(e) => setField("spaceSegment", e.target.value)}>
+                  {SPACE_SEGMENT_OPTIONS.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
                 </select>
               </div>
               <div className="field">
                 <label style={{ fontSize: 14, fontWeight: 700 }}>סוג צורך</label>
-                <select className="select" value={needType} onChange={(e) => setNeedType(e.target.value)}>
-                  {(window.NeedsStore ? window.NeedsStore.NEED_TYPES : []).map((t) => <option key={t} value={t}>{NEED_TYPE_LABELS[t] || t}</option>)}
+                <select className="select" value={form.needType} onChange={(e) => setField("needType", e.target.value)}>
+                  {NEED_TYPE_OPTIONS.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-2)", marginBottom: 8 }}>ניהול</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12, marginBottom: 14 }}>
+              <div className="field">
+                <label style={{ fontSize: 14, fontWeight: 700 }}>עדיפות</label>
+                <select className="select" value={form.priority} onChange={(e) => setField("priority", e.target.value)}>
+                  {PRIORITY_OPTIONS.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
                 </select>
               </div>
               <div className="field">
-                <label style={{ fontSize: 14, fontWeight: 700 }}>עדיפות</label>
-                <select className="select" value={priority} onChange={(e) => setPriority(e.target.value)}>
-                  {(window.NeedsStore ? window.NeedsStore.PRIORITIES : []).map((p) => <option key={p} value={p}>{PRIORITY_LABELS[p] || p}</option>)}
+                <label style={{ fontSize: 14, fontWeight: 700 }}>סטטוס</label>
+                <select className="select" value={form.status} onChange={(e) => setField("status", e.target.value)}>
+                  {NEED_STATUS_OPTIONS.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
                 </select>
               </div>
-            </>
-          )}
-        </div>
+            </div>
+          </>
+        )}
+
+        <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-2)", marginBottom: 8 }}>תיאור</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
           <div className="field">
-            <label style={{ fontSize: 14, fontWeight: 700 }}>{sourceType === "organization" ? "תיאור הצורך" : "כותרת"}</label>
-            <input className="input" value={title} onChange={(e) => setTitle(e.target.value)}
-                   placeholder={sourceType === "organization" ? "לדוגמה: שותף הפצה באירופה" : "לדוגמה: חיבור ללקוחות בתחום Earth Observation"} />
+            <label style={{ fontSize: 14, fontWeight: 700 }}>{form.sourceType === "organization" ? "תיאור הצורך" : "כותרת"}</label>
+            <input className="input" value={form.title} onChange={(e) => setField("title", e.target.value)}
+                   placeholder={form.sourceType === "organization" ? "לדוגמה: שותף הפצה באירופה" : "לדוגמה: חיבור ללקוחות בתחום Earth Observation"} />
           </div>
-          {sourceType !== "organization" && (
+          {form.sourceType !== "organization" && (
             <div className="field">
               <label style={{ fontSize: 14, fontWeight: 700 }}>תיאור (אופציונלי)</label>
-              <input className="input" value={description} onChange={(e) => setDescription(e.target.value)}
-                     placeholder="פרטים נוספים על הצורך או ההזדמנות" />
+              <input className="input" value={form.description} onChange={(e) => setField("description", e.target.value)}
+                     placeholder="פרטים נוספים על הצורך, האתגר או ההזדמנות" />
             </div>
           )}
         </div>
         <div className="flex center gap-8" style={{ marginTop: 14 }}>
-          <button type="submit" className="btn btn-primary" disabled={!title.trim() || (sourceType === "organization" && !addOrgId)}>
-            <window.I.Plus size={13} /> {sourceType === "organization" ? "הוסף צורך" : sourceType === "opportunity" ? "הוסף הזדמנות" : "הוסף צורך פנימי"}
+          <button type="submit" className="btn btn-primary" disabled={!form.title.trim() || (form.sourceType === "organization" && !form.sourceOrganizationId)}>
+            <window.I.Plus size={13} /> {form.sourceType === "organization" ? "הוסף צורך" : form.sourceType === "opportunity" ? "הוסף הזדמנות" : "הוסף צורך פנימי"}
           </button>
         </div>
       </form>
@@ -313,8 +456,8 @@ function NeedsView({ onOpenCompany }) {
           <window.I.Compass size={32} style={{ color: "var(--text-4)", marginBottom: 12 }} />
           {boardItems.length === 0 ? (
             <>
-              <div style={{ fontSize: 15, color: "var(--text-2)", marginBottom: 6 }}>אין עדיין צרכים במאגר המקומי</div>
-              <div style={{ fontSize: 13, color: "var(--text-3)" }}>אפשר להוסיף צורך פנימי, הזדמנות שזוהתה, או צורך של ארגון קיים.</div>
+              <div style={{ fontSize: 15, color: "var(--text-2)", marginBottom: 6 }}>אין עדיין צרכים או הזדמנויות במאגר המקומי</div>
+              <div style={{ fontSize: 13, color: "var(--text-3)" }}>אפשר ליצור צורך פנימי, אתגר, הזדמנות שזוהתה או צורך של ארגון קיים.</div>
             </>
           ) : (
             <div style={{ fontSize: 14, color: "var(--text-3)" }}>לא נמצאו רשומות תואמות לסינון הנוכחי.</div>
@@ -324,6 +467,7 @@ function NeedsView({ onOpenCompany }) {
         <div className="col gap-8">
           {filtered.map((item) => {
             const co = item.sourceOrgId ? companies.find((c) => c.id === item.sourceOrgId) : null;
+            const isEditing = editingId === item.id;
             return (
               <div key={item.id} className="card" style={{ padding: 14 }}>
                 <div className="flex gap-12" style={{ alignItems: "flex-start" }}>
@@ -331,10 +475,15 @@ function NeedsView({ onOpenCompany }) {
                   <div className="col grow" style={{ minWidth: 0, gap: 4 }}>
                     <div className="flex center between" style={{ gap: 8 }}>
                       <div style={{ fontSize: 15, color: "var(--text-1)", lineHeight: 1.5, fontWeight: 600 }}>{item.title}</div>
-                      {item.kind === "admin" && (
-                        <button className="icon-btn" title="מחק רשומה" onClick={() => deleteAdminNeed(item.id)}>
-                          <window.I.X size={13} />
-                        </button>
+                      {item.kind === "admin" && !isEditing && (
+                        <div className="flex gap-4">
+                          <button type="button" className="icon-btn" title="ערוך" onClick={() => setEditingId(item.id)}>
+                            <window.I.Settings size={13} />
+                          </button>
+                          <button type="button" className="icon-btn" title="מחק רשומה" onClick={() => deleteAdminNeed(item.id)}>
+                            <window.I.X size={13} />
+                          </button>
+                        </div>
                       )}
                     </div>
                     {!!item.description && <div style={{ fontSize: 13.5, color: "var(--text-3)" }}>{item.description}</div>}
@@ -345,20 +494,28 @@ function NeedsView({ onOpenCompany }) {
                           {co.name}
                         </span>
                       )}
-                      {item.spaceSegment && <span className="pill" style={{ fontSize: 11 }}>{window.spaceSegmentShortLabel ? window.spaceSegmentShortLabel(item.spaceSegment) : item.spaceSegment}</span>}
-                      {item.needType && <span className="pill" style={{ fontSize: 11 }}>{NEED_TYPE_LABELS[item.needType] || item.needType}</span>}
-                      {item.priority && <span className="pill" style={{ fontSize: 11 }}>עדיפות {PRIORITY_LABELS[item.priority] || item.priority}</span>}
-                      {item.kind === "admin" ? (
-                        <select className="select" style={{ fontSize: 11, padding: "2px 6px", minHeight: "auto" }}
-                                value={item.status || "new"} onChange={(e) => updateAdminNeedStatus(item.id, e.target.value)}>
-                          {(window.NeedsStore ? window.NeedsStore.STATUSES : []).map((s) => <option key={s} value={s}>{STATUS_LABELS[s] || s}</option>)}
-                        </select>
-                      ) : null}
+                      {item.spaceSegment && <span className="pill" style={{ fontSize: 11 }}>{optLabel(SPACE_SEGMENT_OPTIONS, item.spaceSegment)}</span>}
+                      {item.needType && <span className="pill" style={{ fontSize: 11 }}>{optLabel(NEED_TYPE_OPTIONS, item.needType)}</span>}
+                      {item.priority && <span className="pill" style={{ fontSize: 11 }}>עדיפות {optLabel(PRIORITY_OPTIONS, item.priority)}</span>}
+                      {item.status && <span className="pill" style={{ fontSize: 11 }}>{optLabel(NEED_STATUS_OPTIONS, item.status)}</span>}
+                      {item.kind === "organization" && (
+                        <span className="mono tiny" style={{ color: "var(--text-4)" }}>עריכה דרך פרופיל הארגון</span>
+                      )}
                       <span className="mono tiny" style={{ color: "var(--text-4)" }}>מהמאגר המקומי</span>
                     </div>
                   </div>
                 </div>
-                <NeedMatches item={item} companies={companies} onOpenCompany={onOpenCompany} />
+
+                {isEditing ? (
+                  <EditNeedForm
+                    item={item}
+                    sortedCompanies={sortedCompanies}
+                    onSave={(editForm) => saveEdit(item.id, editForm)}
+                    onCancel={() => setEditingId(null)}
+                  />
+                ) : (
+                  <NeedMatches item={item} companies={companies} onOpenCompany={onOpenCompany} />
+                )}
               </div>
             );
           })}
