@@ -57,7 +57,7 @@ function Dashboard({ onOpenCompany, onNav }) {
   const needsList = window.NeedsStore ? window.NeedsStore.listNeeds() : [];
   const needStats = window.NeedsStore ? window.NeedsStore.getNeedStats() : { openTotal: 0, highPriority: 0, opportunities: 0, inProgress: 0 };
   const needQueueItems = needsList
-    .filter((n) => n.kind === "admin" && (n.priority === "high" || n.status === "reviewing" || n.status === "matching"))
+    .filter((n) => n.kind === "admin" && n.status !== "done" && (n.priority === "high" || n.status === "reviewing" || n.status === "matching"))
     .map((n) => ({
       id: n.id,
       type: n.sourceLabel,
@@ -65,7 +65,7 @@ function Dashboard({ onOpenCompany, onNav }) {
       objectType: "need",
       objectName: n.sourceOrgName || "לוח צרכים",
       priority: n.priority === "high" ? "High" : n.priority === "medium" ? "Medium" : "Low",
-      status: n.status === "reviewing" ? "בבדיקה" : n.status === "matching" ? "בהתאמה" : "בטיפול",
+      status: NEED_STATUS_LABEL_HE[n.status] || "בטיפול",
       recommendedAction: "בדוק בלוח הצרכים ועדכן סטטוס",
     }));
   const combinedQueue = [...pendingReviews, ...needQueueItems];
@@ -221,17 +221,21 @@ function Dashboard({ onOpenCompany, onNav }) {
   const resetLocalData = () => {
     if (!window.confirm(
       "איפוס לנתוני ברירת מחדל?\n\n" +
-      "פעולה זו תמחק את כל השינויים המקומיים ותשחזר את חברות ה-seed המקוריות. כל הייבואים וההגשות יימחקו.\n\n" +
+      "פעולה זו תמחק את כל השינויים המקומיים ותשחזר את חברות ה-seed המקוריות. כל הייבואים, ההגשות, הצרכים/ההזדמנויות ואפשרויות הסיווג המותאמות יימחקו.\n\n" +
       "מומלץ לבצע הורדה מקומית לפני האיפוס. המצב הנוכחי יישמר אוטומטית כגיבוי מקומי אחד שניתן לשחזר מהכפתור \"שחזר גיבוי אחרון\"."
     )) return;
     try {
       window.localStorage.setItem(RESET_BACKUP_KEY, JSON.stringify({
         companies: window.CompanyStore.getCompanies(),
         submissions: window.SubmissionStore.getSubmissions(),
+        needs: window.NeedsStore ? window.NeedsStore.getNeeds() : [],
+        taxonomy: window.TaxonomyStore ? window.TaxonomyStore.getOptions() : null,
         backedUpAt: new Date().toISOString(),
       }));
       window.CompanyStore.resetCompaniesToSeed();
       window.SubmissionStore.saveSubmissions([]);
+      if (window.NeedsStore) window.NeedsStore.saveNeeds([]);
+      if (window.TaxonomyStore) window.TaxonomyStore.GROUP_KEYS.forEach((k) => window.TaxonomyStore.resetGroup(k));
       setHasResetBackup(true);
       window.toast && window.toast("איפוס הושלם — גיבוי מקומי נשמר, ניתן לשחזר מהכפתור \"שחזר גיבוי אחרון\" · טוען מחדש…", "ok");
       setTimeout(() => window.location.reload(), 1200);
@@ -253,6 +257,8 @@ function Dashboard({ onOpenCompany, onNav }) {
     try {
       window.CompanyStore.saveCompanies(backup.companies || []);
       window.SubmissionStore.saveSubmissions(backup.submissions || []);
+      if (window.NeedsStore) window.NeedsStore.saveNeeds(backup.needs || []);
+      if (window.TaxonomyStore && backup.taxonomy) window.TaxonomyStore.setOptions(backup.taxonomy);
       window.toast && window.toast("הגיבוי האחרון שוחזר · טוען מחדש…", "ok");
       setTimeout(() => window.location.reload(), 1200);
     } catch (err) {
@@ -285,12 +291,12 @@ function Dashboard({ onOpenCompany, onNav }) {
             <window.I.Bolt size={13} /> איפוס לדאטה התחלתי
           </button>
           {hasResetBackup && (
-            <button className="btn" onClick={restoreLastBackup} title="משחזר את החברות וההגשות מהגיבוי המקומי האחרון שנשמר לפני האיפוס">
+            <button className="btn" onClick={restoreLastBackup} title="משחזר ארגונים, הגשות, צרכים/הזדמנויות ואפשרויות סיווג מהגיבוי המקומי האחרון שנשמר לפני האיפוס">
               <window.I.Download size={13} /> שחזר גיבוי אחרון
             </button>
           )}
           <button className="btn btn-primary" onClick={() => onNav("onboard")}>
-            <window.I.Plus size={13} /> הוסף חברה
+            <window.I.Plus size={13} /> הוסף ארגון
           </button>
         </div>
       </div>
@@ -445,7 +451,7 @@ function ActionQueue({ items }) {
   );
 }
 
-const NEED_STATUS_LABEL_HE = { new: "חדש", reviewing: "בבדיקה", matching: "בהתאמה", "in-progress": "בטיפול" };
+const NEED_STATUS_LABEL_HE = { new: "חדש", reviewing: "בבדיקה", matching: "בהתאמה", "in-progress": "בטיפול", done: "הושלם" };
 const NEED_PRIORITY_LABEL_HE = { high: "גבוהה", medium: "בינונית", low: "נמוכה" };
 
 function NeedsOpportunitiesPanel({ needsList, needStats, onNav, onOpenCompany }) {

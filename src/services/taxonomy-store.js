@@ -144,9 +144,20 @@
     return found ? found.label : (value || "אחר");
   }
 
+  // Full-state restore (used by the dashboard's "שחזר גיבוי אחרון" flow so a
+  // reset-to-seed can be undone for taxonomy too, not just companies/needs).
+  function setOptions(allGroups) {
+    const next = {};
+    GROUP_KEYS.forEach((key) => {
+      next[key] = Array.isArray(allGroups && allGroups[key]) ? allGroups[key] : defaultsFor(key);
+    });
+    return writeAll(next);
+  }
+
   window.TaxonomyStore = {
     key: STORAGE_KEY,
     GROUP_KEYS,
+    setOptions,
     getOptions,
     getGroup,
     getActiveGroup,

@@ -258,8 +258,10 @@ function OptionRow({ option, onRename, onToggle }) {
         className="input"
         style={{ fontSize: 13, padding: "6px 10px" }}
         value={draftLabel}
+        title="שינוי שם נשמר בעת יציאה מהשדה או Enter"
         onChange={(e) => setDraftLabel(e.target.value)}
         onBlur={() => { if (draftLabel.trim() && draftLabel !== option.label) onRename(option.value, draftLabel.trim()); }}
+        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); e.target.blur(); } }}
       />
       <button type="button" className={"chip" + (option.isActive ? " active" : "")} style={{ fontSize: 11, flex: "none" }}
               onClick={() => onToggle(option.value, !option.isActive)}>
@@ -311,7 +313,7 @@ function OptionsManagerPanel({ open, onToggleOpen, groups, onAdd, onRename, onTo
       {open && (
         <>
           <div className="muted tiny" style={{ marginBottom: 10 }}>
-            עריכת רשימות האפשרויות של סגמנט פעילות, סוג צורך, עדיפות וסטטוס עבור לוח הצרכים. סוג מקור קבוע ואינו ניתן לעריכה.
+            עריכת רשימות האפשרויות של סגמנט פעילות, סוג צורך, עדיפות וסטטוס עבור לוח הצרכים. סוג מקור קבוע ואינו ניתן לעריכה. לשינוי שם — ערכו את השדה ולחצו Enter או עברו הלאה.
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12 }}>
             {TAXONOMY_GROUPS.map((g) => (

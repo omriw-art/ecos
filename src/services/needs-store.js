@@ -168,7 +168,7 @@
       openTotal: all.length,
       highPriority: all.filter((n) => n.priority === "high").length,
       opportunities: all.filter((n) => n.sourceLabel === "הזדמנות שזוהתה").length,
-      inProgress: all.filter((n) => n.kind === "admin" && n.status && n.status !== "new").length,
+      inProgress: all.filter((n) => n.kind === "admin" && ["reviewing", "matching", "in-progress"].includes(n.status)).length,
     };
   }
 
