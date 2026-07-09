@@ -255,4 +255,19 @@ function FitBar({ label, score, color = "var(--blue)" }) {
   };
 })();
 
-Object.assign(window, { ScoreRing, Sparkline, CoLogo, SectorPill, Donut, MiniBar, Funnel, FitBar });
+function EnvBadge({ title }) {
+  const flags = window.EcosFlags;
+  if (flags && !flags.envBadge) return null;   // missing config → degrade to visible
+  const name = (window.EcosEnv && window.EcosEnv.name) || "local";
+  const LABELS = {
+    local: "LOCAL · DEMO",
+    demo: "DEMO",
+    staging: "STAGING",
+    production: "",
+  };
+  const label = LABELS[name] || "LOCAL · DEMO";
+  if (!label) return null;
+  return <span className="pill mono" title={title || "נתונים מקומיים"}>{label}</span>;
+}
+
+Object.assign(window, { ScoreRing, Sparkline, CoLogo, SectorPill, Donut, MiniBar, Funnel, FitBar, EnvBadge });

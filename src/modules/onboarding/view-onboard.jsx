@@ -119,7 +119,7 @@ function OnboardView({ onCompaniesChanged, onOpenCompany }) {
           <div className="sub">פרסמו את החברה שלכם באקוסיסטם החלל. ייבוא חכם או מילוי ידני, פחות מ-4 דקות.</div>
         </div>
         <div className="ops">
-          <span className="pill mono" title="נתונים נשמרים מקומית בלבד">LOCAL · DEMO</span>
+          <window.EnvBadge title="נתונים נשמרים מקומית בלבד" />
           <span className="pill mono">STEP {step+1}/{STEPS.length}</span>
         </div>
       </div>

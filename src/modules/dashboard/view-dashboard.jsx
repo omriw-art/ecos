@@ -276,7 +276,7 @@ function Dashboard({ onOpenCompany, onNav }) {
           </div>
         </div>
         <div className="ops">
-          <span className="pill mono" title="נתונים מקומיים · לא מחובר לשרת">LOCAL · DEMO</span>
+          <window.EnvBadge title="נתונים מקומיים · לא מחובר לשרת" />
           <input type="file" accept=".json,.csv,.xlsx,.xls,application/json,text/csv" ref={importInputRef} style={{ display: "none" }} onChange={handleImportFile} />
           <button className="btn" onClick={exportLocalData} title="הורדה מקומית — JSON עם כל הנתונים המקומיים">
             <window.I.Upload size={13} /> הורדה מקומית
@@ -287,13 +287,17 @@ function Dashboard({ onOpenCompany, onNav }) {
           <button className="btn" onClick={() => importInputRef.current && importInputRef.current.click()} title="ייבוא מקומי — שחזור מקובץ JSON">
             <window.I.Download size={13} /> ייבוא מקומי
           </button>
-          <button className="btn" onClick={resetLocalData} title="מוחק שינויים מקומיים ומשחזר את נתוני ה-seed המקוריים">
-            <window.I.Bolt size={13} /> איפוס לדאטה התחלתי
-          </button>
-          {hasResetBackup && (
-            <button className="btn" onClick={restoreLastBackup} title="משחזר ארגונים, הגשות, צרכים/הזדמנויות ואפשרויות סיווג מהגיבוי המקומי האחרון שנשמר לפני האיפוס">
-              <window.I.Download size={13} /> שחזר גיבוי אחרון
-            </button>
+          {(!window.EcosFlags || window.EcosFlags.demoReset) && (
+            <>
+              <button className="btn" onClick={resetLocalData} title="מוחק שינויים מקומיים ומשחזר את נתוני ה-seed המקוריים">
+                <window.I.Bolt size={13} /> איפוס לדאטה התחלתי
+              </button>
+              {hasResetBackup && (
+                <button className="btn" onClick={restoreLastBackup} title="משחזר ארגונים, הגשות, צרכים/הזדמנויות ואפשרויות סיווג מהגיבוי המקומי האחרון שנשמר לפני האיפוס">
+                  <window.I.Download size={13} /> שחזר גיבוי אחרון
+                </button>
+              )}
+            </>
           )}
           <button className="btn btn-primary" onClick={() => onNav("onboard")}>
             <window.I.Plus size={13} /> הוסף ארגון

@@ -96,26 +96,28 @@ function App() {
 
       <Copilot open={copilotOpen} onClose={() => setCopilotOpen(false)} />
 
-      <window.TweaksPanel>
-        <window.TweakSection label="טיפוגרפיה" />
-        <window.TweakRadio label="Display font" value={t.typo}
-          options={["sans","serif","mono"]}
-          onChange={(v) => setTweak("typo", v)} />
-        <window.TweakSection label="צפיפות" />
-        <window.TweakRadio label="Density" value={t.density}
-          options={["compact","regular","spacious"]}
-          onChange={(v) => setTweak("density", v)} />
-        <window.TweakSection label="פלטה" />
-        <window.TweakColor label="Accent" value={t.accent}
-          options={[
-            ["#8B5CF6", "#3B82F6"],
-            ["#06B6D4", "#3B82F6"],
-            ["#F59E0B", "#EF4444"],
-            ["#10B981", "#06B6D4"],
-            ["#EC4899", "#8B5CF6"],
-          ]}
-          onChange={(v) => setTweak("accent", v)} />
-      </window.TweaksPanel>
+      {(!window.EcosFlags || window.EcosFlags.debugPanel) && (
+        <window.TweaksPanel>
+          <window.TweakSection label="טיפוגרפיה" />
+          <window.TweakRadio label="Display font" value={t.typo}
+            options={["sans","serif","mono"]}
+            onChange={(v) => setTweak("typo", v)} />
+          <window.TweakSection label="צפיפות" />
+          <window.TweakRadio label="Density" value={t.density}
+            options={["compact","regular","spacious"]}
+            onChange={(v) => setTweak("density", v)} />
+          <window.TweakSection label="פלטה" />
+          <window.TweakColor label="Accent" value={t.accent}
+            options={[
+              ["#8B5CF6", "#3B82F6"],
+              ["#06B6D4", "#3B82F6"],
+              ["#F59E0B", "#EF4444"],
+              ["#10B981", "#06B6D4"],
+              ["#EC4899", "#8B5CF6"],
+            ]}
+            onChange={(v) => setTweak("accent", v)} />
+        </window.TweaksPanel>
+      )}
     </div>
   );
 }
