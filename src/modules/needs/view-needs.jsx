@@ -141,6 +141,10 @@ function NeedMatches({ item, companies, onOpenCompany }) {
                   {!!m.reasons.length && <div style={{ fontSize: 12, color: "var(--text-3)" }}>{m.reasons.join(" · ")}</div>}
                 </div>
                 <span className="pill" style={{ fontSize: 11 }}>{confidenceLabel(m.confidence)}</span>
+                <button type="button" className="btn btn-ghost" style={{ fontSize: 12, padding: "5px 9px", flex: "none" }}
+                        onClick={(e) => { e.stopPropagation(); onOpenCompany && onOpenCompany(m.organization.id); }}>
+                  <window.I.ArrowLeft size={11} /> פתח
+                </button>
               </div>
             ))}
           </div>

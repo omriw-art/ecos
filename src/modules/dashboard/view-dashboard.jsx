@@ -226,6 +226,9 @@ function Dashboard({ onOpenCompany, onNav }) {
               )}
             </>
           )}
+          <button className="btn" onClick={() => onNav("needs")} title="פתיחת לוח הצרכים להוספת צורך חדש">
+            <window.I.Plus size={13} /> הוסף צורך
+          </button>
           <button className="btn btn-primary" onClick={() => onNav("onboard")}>
             <window.I.Plus size={13} /> הוסף ארגון
           </button>
