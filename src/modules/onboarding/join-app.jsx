@@ -172,7 +172,7 @@ function Welcome({ onGo }) {
         <div className="welcome-option" onClick={() => onGo("import")}>
           <div className="ic-bg linkedin"><window.I.Linkedin size={22} style={{ color: "white" }} /></div>
           <h3>ייבוא מדגם (Demo)</h3>
-          <div className="meta">ימלא טופס לדוגמה על בסיס פרופיל LinkedIn — תוכלו להחליף לפרטים האמיתיים שלכם בהמשך.</div>
+          <div className="meta">ימלא את הטופס בדוגמת חברה מוכנה מראש — תוכלו להחליף לפרטים האמיתיים שלכם בהמשך.</div>
           <div className="time"><span className="dot" /> כמינוט אחד</div>
         </div>
         <div className="welcome-option" onClick={() => onGo("who")}>
@@ -200,12 +200,12 @@ function Welcome({ onGo }) {
 function ImportScreen({ onDone }) {
   const [log, setLog] = React.useState([]);
   const steps = [
-    "מתחבר ל-LinkedIn…",
-    "טוען פרופיל החברה",
-    "מנתח 'About' ועדכונים אחרונים",
-    "סורק את אתר החברה",
-    "מסווג תחום פעילות וטכנולוגיות",
-    "יוצר Tags חכמים",
+    "מכינים תצוגה מקדימה של החברה",
+    "טוענים דוגמת פרופיל",
+    "מארגנים את פרטי החברה בטופס",
+    "בודקים התאמה למבנה המאגר",
+    "ממיינים תחומי פעילות וטכנולוגיות לדוגמה",
+    "משלימים את פרטי הטופס",
     "מוכן — נעבור איתכם על הפרטים",
   ];
   React.useEffect(() => {
