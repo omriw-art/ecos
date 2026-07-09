@@ -81,11 +81,15 @@ function Dashboard({ onOpenCompany, onNav }) {
       window.toast && window.toast("ייבוא Excel: ייצא את הקובץ כ-CSV UTF-8 ואז ייבא את קובץ ה-CSV.", "err");
       return;
     }
+    if (file.size > window.ImportExportService.MAX_IMPORT_FILE_SIZE_BYTES) {
+      window.toast && window.toast("הקובץ גדול מדי לייבוא", "err");
+      return;
+    }
     const reader = new FileReader();
     reader.onload = (ev) => {
       if (ext === "csv") {
         try {
-          const companies = parseCSVCompanies(ev.target.result);
+          const companies = window.ImportExportService.parseCSVCompanies(ev.target.result);
           if (!companies.length) {
             window.toast && window.toast("לא נמצאו חברות תקינות בקובץ ה-CSV", "err");
             return;
@@ -95,85 +99,41 @@ function Dashboard({ onOpenCompany, onNav }) {
           window.toast && window.toast("שגיאת קריאת CSV — " + (err.message || err), "err");
         }
       } else {
-        try {
-          const parsed = JSON.parse(ev.target.result);
-          if (parsed.app && parsed.app !== "Ecosystem OS") {
-            window.toast && window.toast("הקובץ אינו מיצוא של Ecosystem OS", "err");
-            return;
-          }
-          let companies, submissions, importType, exportedAt;
-          if (parsed.app === "Ecosystem OS") {
-            if (!Array.isArray(parsed.companies)) {
-              window.toast && window.toast("קובץ לא תקין — חסר מערך companies", "err");
-              return;
-            }
-            companies = parsed.companies;
-            submissions = Array.isArray(parsed.submissions) ? parsed.submissions : [];
-            importType = "ecosystem-os";
-            exportedAt = parsed.exportedAt || null;
-          } else if (Array.isArray(parsed)) {
-            companies = parsed;
-            submissions = [];
-            importType = "external-json";
-            exportedAt = null;
-          } else if (Array.isArray(parsed.companies)) {
-            companies = parsed.companies;
-            submissions = [];
-            importType = "external-json";
-            exportedAt = null;
-          } else {
-            window.toast && window.toast("קובץ לא תקין — לא נמצאו חברות", "err");
-            return;
-          }
-          const valid = companies
-            .filter(c => c && typeof c === "object" && !Array.isArray(c))
-            .map(c => importType === "external-json"
-              ? Object.assign({}, c, { name: text(c.name || c.companyName || c.company || "") })
-              : c)
-            .filter(c => text(c.name || ""));
-          if (!valid.length) {
-            window.toast && window.toast("לא נמצאו חברות תקינות בקובץ", "err");
-            return;
-          }
-          setImportPreview({ importType, exportedAt, companies: valid, submissions, fileName: file.name });
-        } catch (err) {
-          window.toast && window.toast("שגיאת קריאת JSON — " + (err.message || err), "err");
+        const result = window.ImportExportService.parseJSONImport(ev.target.result);
+        if (!result.ok) {
+          window.toast && window.toast(result.error, "err");
+          return;
         }
+        setImportPreview({
+          importType: result.importType,
+          exportedAt: result.exportedAt,
+          companies: result.companies,
+          submissions: result.submissions,
+          fileName: file.name,
+        });
       }
     };
     reader.readAsText(file);
   };
 
   const confirmImport = () => {
-    const prevCompanies = window.CompanyStore ? window.CompanyStore.getCompanies() : [];
-    const prevSubmissions = window.SubmissionStore ? window.SubmissionStore.getSubmissions() : [];
-    try {
-      window.CompanyStore.saveCompanies(importPreview.companies);
-      window.SubmissionStore.saveSubmissions(importPreview.submissions);
+    const result = window.ImportExportService.applyImport(importPreview.companies, importPreview.submissions);
+    if (result.ok) {
       window.toast && window.toast(
         `ייבוא הושלם — ${importPreview.companies.length} חברות, ${importPreview.submissions.length} הגשות · טוען מחדש…`,
         "ok"
       );
       setTimeout(() => window.location.reload(), 1200);
-    } catch (err) {
-      try {
-        window.CompanyStore && window.CompanyStore.saveCompanies(prevCompanies);
-        window.SubmissionStore && window.SubmissionStore.saveSubmissions(prevSubmissions);
-      } catch (_) {}
+    } else {
       setImportPreview(null);
-      window.toast && window.toast("ייבוא נכשל — הנתונים שוחזרו. " + (err.message || err), "err");
+      window.toast && window.toast("ייבוא נכשל — הנתונים שוחזרו. " + result.error, "err");
     }
   };
 
   const exportLocalData = () => {
     try {
       const today = new Date().toISOString().slice(0, 10);
-      const payload = {
-        exportedAt: new Date().toISOString(),
-        app: "Ecosystem OS",
-        companies: window.CompanyStore ? window.CompanyStore.getCompanies() : COMPANIES,
-        submissions: window.SubmissionStore ? window.SubmissionStore.getSubmissions() : [],
-      };
+      const payload = window.ImportExportService.buildExportPayload();
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -190,18 +150,7 @@ function Dashboard({ onOpenCompany, onNav }) {
   };
 
   const downloadCSVTemplate = () => {
-    const headers = "name,description,website,sector,location,capabilities,needs,offers";
-    const example = [
-      "Example Company",
-      "Short description of what the company does",
-      "https://example.com",
-      "earth-obs",
-      "Tel Aviv",
-      "SAR imaging;AI analysis",
-      "Pilot customers;Funding",
-      "Remote sensing data",
-    ].map((v) => `"${v}"`).join(",");
-    const csv = "﻿" + headers + "\n" + example + "\n";
+    const csv = window.ImportExportService.buildCSVTemplate();
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -1013,121 +962,6 @@ function categoryLabel(company) {
   const sectorId = asArray(company.sectors)[0];
   const sector = asArray(window.SECTORS).find((s) => s.id === sectorId);
   return (sector && sector.label) || sectorId || company.stage || "Uncategorized";
-}
-
-// ── CSV import utilities ──
-
-function parseCSVLine(line) {
-  const cells = [];
-  let i = 0;
-  while (i < line.length) {
-    if (line[i] === '"') {
-      i++;
-      let field = "";
-      while (i < line.length) {
-        if (line[i] === '"' && line[i + 1] === '"') { field += '"'; i += 2; }
-        else if (line[i] === '"') { i++; break; }
-        else { field += line[i++]; }
-      }
-      cells.push(field.trim());
-      if (line[i] === ",") i++;
-    } else {
-      const end = line.indexOf(",", i);
-      if (end === -1) { cells.push(line.slice(i).trim()); break; }
-      cells.push(line.slice(i, end).trim());
-      i = end + 1;
-    }
-  }
-  if (line.endsWith(",")) cells.push("");
-  return cells;
-}
-
-const CSV_COL_MAP = {
-  name: "name", company: "name", companyname: "name", "שם": "name", "שםחברה": "name",
-  description: "blurb", blurb: "blurb", about: "blurb", summary: "blurb", "תיאור": "blurb",
-  website: "website", url: "website", link: "website", "אתר": "website",
-  city: "hq", companyscity: "hq", companycity: "hq", "עיר": "hq",
-  location: "location", "מיקום": "location",
-  country: "country", "מדינה": "country",
-  stage: "stage", fundingstage: "stage",
-  yearestablished: "founded", founded: "founded",
-  sector: "sector", sectors: "sector", industry: "sector", category: "sector", "תחום": "sector", "סקטור": "sector",
-  subcategory: "subCategory",
-  capabilities: "tech", capability: "tech", tags: "tech", tag: "tech", tech: "tech", technology: "tech", technologies: "tech",
-  "טכנולוגיות": "tech", "יכולות": "tech", "תגיות": "tech",
-  needs: "needs", need: "needs", "צרכים": "needs", "צורך": "needs",
-  offers: "offers", offer: "offers", solutions: "offers", "הצעה": "offers", "פתרונות": "offers",
-};
-
-const SECTOR_COL_MAP = {
-  // Space/tech → canonical sector IDs
-  eo: "earth-obs", earthobs: "earth-obs",
-  communication: "comms", comms: "comms",
-  defense: "defense",
-  launchpropulsion: "propulsion", launchers: "launchers", propulsion: "propulsion",
-  spacesystemmanufacturing: "manufacturing", manufacturing: "manufacturing",
-  groundsystems: "manufacturing", inspacerdmanufacturing: "manufacturing",
-  inspaceservicesinfrastructure: "manufacturing", explorationresourceutilization: "manufacturing",
-  aidata: "ai-data", computingsoftwareanddatasolutions: "ai-data", pnt: "ai-data",
-  healthtech: "life-sci",
-  energy: "energy", sar: "sar",
-  // Non-canonical → honest descriptive labels (not real sector IDs)
-  education: "education", educationoutreach: "education",
-  research: "research", researchanddevelopment: "research",
-  academic: "academic", academicandresearchinstitutions: "academic",
-  accelerator: "accelerator", acceleratorsinnovationhubs: "accelerator",
-  investment: "investment", investmentventuresupport: "investment",
-  consulting: "consulting", consultingengineeringservices: "consulting",
-  government: "government",
-  legal: "legal", legalinsurancepolicy: "legal",
-};
-
-function normCol(s) {
-  return String(s || "").toLowerCase().replace(/[^a-z0-9֐-׿]/g, "");
-}
-
-function parseCSVCompanies(csvText) {
-  const clean = csvText.charCodeAt(0) === 0xFEFF ? csvText.slice(1) : csvText;
-  const rows = clean.split(/\r?\n|\r/).filter(l => l.trim()).map(parseCSVLine);
-  const nameKeys = new Set(["name", "company", "companyname", "שם", "שםחברה"]);
-  let headerIdx = 0;
-  for (let i = 0; i < Math.min(rows.length, 5); i++) {
-    if (rows[i].slice(0, 6).some(c => nameKeys.has(normCol(c)))) { headerIdx = i; break; }
-  }
-  const headers = rows[headerIdx].map(normCol);
-  const usedIds = new Set();
-  return rows.slice(headerIdx + 1).map(function(row) {
-    const raw = {};
-    headers.forEach(function(h, i) {
-      const field = CSV_COL_MAP[h];
-      const val = row[i] ? row[i].trim() : "";
-      if (field && val) raw[field] = val;
-    });
-    if (!raw.name) return null;
-    const sectorKey = normCol(raw.subCategory || raw.sector || "");
-    const rawSectorText = (raw.subCategory || raw.sector || "").trim();
-    const sector = SECTOR_COL_MAP[sectorKey] || rawSectorText || "other";
-    const splitMV = function(v) { return v ? String(v).split(/[,;|]/).map(function(s) { return s.trim(); }).filter(Boolean) : []; };
-    const base = raw.name.toLowerCase().replace(/[^a-z0-9֐-׿]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") || "co";
-    let id = base + "-csv";
-    let n = 2;
-    while (usedIds.has(id)) id = base + "-csv-" + n++;
-    usedIds.add(id);
-    return {
-      id: id,
-      name: raw.name,
-      blurb: raw.blurb || "",
-      website: raw.website || "",
-      hq: raw.hq || raw.location || raw.country || "Israel",
-      country: raw.country || "Israel",
-      stage: raw.stage || "Seed",
-      founded: Number(raw.founded) || 0,
-      sectors: [sector],
-      tech: splitMV(raw.tech),
-      needs: splitMV(raw.needs),
-      offers: splitMV(raw.offers),
-    };
-  }).filter(function(c) { return c && c.name; });
 }
 
 window.Dashboard = Dashboard;
