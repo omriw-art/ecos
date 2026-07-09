@@ -93,10 +93,37 @@ function SearchBox({ onOpenCompany }) {
     results.forEach((c) => {
       const row = document.createElement("div");
       row.style.cssText = "display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.06)";
-      const logo = c.logo
-        ? `<img src="${c.logo}" style="width:26px;height:26px;border-radius:6px;object-fit:contain;background:#fff;padding:2px;flex-shrink:0">`
-        : `<div style="width:26px;height:26px;border-radius:6px;background:rgba(255,255,255,.12);display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0">${(c.name || "?")[0]}</div>`;
-      row.innerHTML = `${logo}<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px;color:#eaf0ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name}</div><div style="font-size:11px;color:#6c7898;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.blurb || ""}</div></div><div style="font-size:10px;color:#6c7898;white-space:nowrap;flex-shrink:0">${c.stage || ""}</div>`;
+
+      let logoEl;
+      if (c.logo) {
+        logoEl = document.createElement("img");
+        logoEl.src = c.logo;
+        logoEl.style.cssText = "width:26px;height:26px;border-radius:6px;object-fit:contain;background:#fff;padding:2px;flex-shrink:0";
+      } else {
+        logoEl = document.createElement("div");
+        logoEl.style.cssText = "width:26px;height:26px;border-radius:6px;background:rgba(255,255,255,.12);display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0";
+        logoEl.textContent = [...(c.name || "?")][0];
+      }
+
+      const infoWrap = document.createElement("div");
+      infoWrap.style.cssText = "flex:1;min-width:0";
+      const nameEl = document.createElement("div");
+      nameEl.style.cssText = "font-weight:600;font-size:13px;color:#eaf0ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis";
+      nameEl.textContent = c.name;
+      const blurbEl = document.createElement("div");
+      blurbEl.style.cssText = "font-size:11px;color:#6c7898;white-space:nowrap;overflow:hidden;text-overflow:ellipsis";
+      blurbEl.textContent = c.blurb || "";
+      infoWrap.appendChild(nameEl);
+      infoWrap.appendChild(blurbEl);
+
+      const stageEl = document.createElement("div");
+      stageEl.style.cssText = "font-size:10px;color:#6c7898;white-space:nowrap;flex-shrink:0";
+      stageEl.textContent = c.stage || "";
+
+      row.appendChild(logoEl);
+      row.appendChild(infoWrap);
+      row.appendChild(stageEl);
+
       row.onmouseenter = () => row.style.background = "rgba(255,255,255,.07)";
       row.onmouseleave = () => row.style.background = "transparent";
       row.onmousedown  = () => { el.style.display = "none"; setQ(""); onOpenCompany && onOpenCompany(c.id); };
