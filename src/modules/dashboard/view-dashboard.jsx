@@ -4,7 +4,6 @@
 function Dashboard({ onOpenCompany, onNav }) {
   const COMPANIES = asArray(window.COMPANIES);
   const OPPORTUNITIES = asArray(window.OPPORTUNITIES);
-  const REVIEW_QUEUE = asArray(window.REVIEW_QUEUE);
   const rawSubmissions = window.SubmissionStore ? window.SubmissionStore.getSubmissions() : [];
   const recentActivity = rawSubmissions
     .slice()
@@ -31,9 +30,8 @@ function Dashboard({ onOpenCompany, onNav }) {
   const allNeeds = collectCompanyItems(COMPANIES, "needs");
   const openOpportunities = OPPORTUNITIES.filter((o) => !["expired", "closed", "archived"].includes(norm(o.status)));
   // Action Queue / "ממתין לאישור" reflect only real local join submissions —
-  // the static REVIEW_QUEUE seed data is no longer surfaced here so it can't
-  // be mistaken for live admin activity (it's still used by CopilotSuggestions
-  // below, which is already labeled as computed-from-local-data).
+  // the static REVIEW_QUEUE seed data is not surfaced here or in
+  // CopilotSuggestions so it can't be mistaken for live admin activity.
   const pendingReviews = rawSubmissions
     .filter((s) => s.status === "pending")
     .map((s) => ({
@@ -49,7 +47,7 @@ function Dashboard({ onOpenCompany, onNav }) {
   const opportunityCounts = getOpportunityCounts(OPPORTUNITIES);
   const needThemes = getNeedThemes(allNeeds);
   const capabilityThemes = getCapabilityCoverage(COMPANIES);
-  const copilotSuggestions = getCopilotSuggestions({ REVIEW_QUEUE, OPPORTUNITIES, COMPANIES, allNeeds });
+  const copilotSuggestions = getCopilotSuggestions({ OPPORTUNITIES, COMPANIES, allNeeds });
 
   // Real local needs/opportunities — organization.needs + NeedsStore admin
   // needs, combined. No invented data: both sources already exist and are
@@ -957,7 +955,9 @@ function getCapabilityCoverage(companies) {
   }
 }
 
-function getCopilotSuggestions({ REVIEW_QUEUE, OPPORTUNITIES, COMPANIES, allNeeds }) {
+const MATCH_CONFIDENCE_HE = { high: "גבוהה", medium: "בינונית", low: "נמוכה" };
+
+function getCopilotSuggestions({ OPPORTUNITIES, COMPANIES, allNeeds }) {
   let topMatch = null;
   try {
     if (window.MatchEngine && typeof window.MatchEngine.generateCompanyMatches === "function") {
@@ -973,55 +973,37 @@ function getCopilotSuggestions({ REVIEW_QUEUE, OPPORTUNITIES, COMPANIES, allNeed
     }
   } catch (e) {}
 
-  const strategicReview = REVIEW_QUEUE.find((q) => norm(q.type).includes("ai suggestion") || norm(q.title).includes("strategic"));
-  const publishable = REVIEW_QUEUE.find((q) => norm(q.status).includes("ready to publish"));
-  const staleStrategic = REVIEW_QUEUE.find((q) => norm(q.title).includes("strategic") && norm(q.title).includes("profile"));
   const closing = OPPORTUNITIES.find((o) => norm(o.status).includes("closing"));
   const companiesWithNeeds = unique(allNeeds.map((n) => n.companyName));
   const suggestions = [
     topMatch && {
-      title: "High-confidence ecosystem match",
-      text: `${topMatch.source.name} and ${topMatch.target.name} scored ${topMatch.score}% compatibility. ${topMatch.sharedCapabilities && topMatch.sharedCapabilities.length ? "Shared: " + topMatch.sharedCapabilities.slice(0, 2).join(", ") + "." : (topMatch.reasons && topMatch.reasons[0]) || "Complementary signals."} Consider facilitating an introduction.`,
-      tags: ["match", topMatch.confidence || "signal"],
+      title: "התאמה ברמת ביטחון גבוהה",
+      text: `${topMatch.source.name} ו-${topMatch.target.name} קיבלו ציון התאמה של ${topMatch.score}% על בסיס יכולות וצרכים משותפים. כדאי לשקול חיבור בין החברות.`,
+      tags: ["התאמה", MATCH_CONFIDENCE_HE[topMatch.confidence] || "איתות"],
     },
     biggestGap && {
-      title: "Ecosystem capability gap",
-      text: `No companies are currently mapped to "${biggestGap.label || biggestGap.name}". This is a coverage blind spot in the ecosystem knowledge graph.`,
-      tags: ["capability", "gap"],
-    },
-    strategicReview && {
-      title: "Strategic profile needs review",
-      text: `${strategicReview.objectName || strategicReview.title} is waiting for human review before it becomes official ecosystem knowledge.`,
-      tags: ["review", "strategic"],
-    },
-    publishable && {
-      title: "Opportunity ready to publish",
-      text: `${publishable.objectName || publishable.title} appears ready for admin review and publication to relevant companies.`,
-      tags: ["opportunity", "publish"],
+      title: "פער יכולות באקוסיסטם",
+      text: `אין כרגע חברות הממופות ל-"${biggestGap.label || biggestGap.name}". זהו פער כיסוי בגרף הידע של האקוסיסטם.`,
+      tags: ["יכולת", "פער"],
     },
     closing && {
-      title: "Closing opportunity requires attention",
-      text: `${closing.title} is marked closing soon. Confirm eligibility and notify matching companies before the deadline.`,
-      tags: ["deadline", "opportunity"],
+      title: "הזדמנות נסגרת דורשת התייחסות",
+      text: `ההזדמנות "${closing.title}" מסומנת כנסגרת בקרוב. יש לוודא זכאות וליידע חברות מתאימות לפני המועד האחרון.`,
+      tags: ["מועד אחרון", "הזדמנות"],
     },
     companiesWithNeeds.length > 1 && {
-      title: "Companies with matching needs / offers",
-      text: `${companiesWithNeeds.slice(0, 4).join(", ")} report active needs. Compare them with company offers before opening introductions.`,
-      tags: ["needs", "matching"],
-    },
-    staleStrategic && {
-      title: "Stale strategic company profile",
-      text: `${staleStrategic.objectName || staleStrategic.title} should be reviewed because strategic records need stronger governance cadence.`,
-      tags: ["profile", "governance"],
+      title: "חברות עם צרכים והצעות תואמים",
+      text: `${companiesWithNeeds.slice(0, 4).join(", ")} דיווחו על צרכים פעילים. כדאי להשוות מול ההצעות של חברות אחרות לפני פתיחת חיבורים.`,
+      tags: ["צרכים", "התאמה"],
     },
   ].filter(Boolean);
 
   const unclassifiedCount = COMPANIES.filter((c) => !text(c.readiness)).length;
   if (unclassifiedCount > 0) {
     suggestions.push({
-      title: "Knowledge graph enrichment candidate",
-      text: `${unclassifiedCount} companies still need readiness classification before the health model is reliable.`,
-      tags: ["data quality", "readiness"],
+      title: "מועמד להעשרת מאגר הידע",
+      text: `ל-${unclassifiedCount} חברות עדיין אין סיווג מוכנות (readiness). השלמת הסיווג תשפר את מהימנות מדדי הבריאות של האקוסיסטם.`,
+      tags: ["איכות נתונים", "מוכנות"],
     });
   }
   return suggestions.slice(0, 5);
