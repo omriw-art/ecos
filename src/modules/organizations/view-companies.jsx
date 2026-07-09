@@ -40,6 +40,28 @@ const STAGE_LABEL_HE = {
   "Unknown": "לא ידוע",
 };
 
+// Mirrors the Needs Board's own matching direction (need -> companies) but
+// scoped to a single company, reusing the exact same deterministic matcher —
+// no new algorithm, no AI. Needs already marked "done" are excluded since a
+// resolved need isn't an actionable next step for this company.
+function getRelevantNeedsForCompany(company) {
+  if (!window.NeedsStore || !window.MatchEngine || typeof window.MatchEngine.rankOrganizationsForNeed !== "function") return [];
+  const allNeeds = window.NeedsStore.listNeeds();
+  const results = [];
+  allNeeds.forEach((n) => {
+    if (n.sourceOrgId === company.id) return;
+    if (n.status === "done") return;
+    const matchText = [n.title, n.description].filter(Boolean).join(" ");
+    if (!matchText.trim()) return;
+    const ranked = window.MatchEngine.rankOrganizationsForNeed(matchText, [company], { minScore: 15 });
+    if (ranked.length) {
+      results.push({ need: n, score: ranked[0].score, confidence: ranked[0].confidence, reasons: ranked[0].reasons });
+    }
+  });
+  results.sort((a, b) => b.score - a.score);
+  return results;
+}
+
 function companyEditorInitial(company) {
   return {
     name: company?.name || "",
@@ -580,6 +602,54 @@ function SummaryTile({ label, value }) {
   );
 }
 
+function RelevantNeedsCard({ c, onNav }) {
+  const relevant = React.useMemo(() => getRelevantNeedsForCompany(c), [c]);
+  const visible = relevant.slice(0, 5);
+  const confidenceLabel = (conf) => conf === "high" ? "התאמה גבוהה" : conf === "medium" ? "התאמה בינונית" : "התאמה נמוכה";
+
+  return (
+    <div className="card">
+      <div className="card-hd">
+        <div className="card-title"><span className="dot violet" /> צרכים רלוונטיים</div>
+        {!!relevant.length && <span className="pill">{relevant.length}</span>}
+      </div>
+      <div className="muted tiny" style={{ marginBottom: 10 }}>מבוסס על יכולות, תגיות, צרכים והצעות · דטרמיניסטי, ללא AI</div>
+      {!visible.length ? (
+        <div className="muted" style={{ padding: "8px 0" }}>לא נמצאו צרכים רלוונטיים לארגון זה במאגר המקומי כרגע.</div>
+      ) : (
+        <div className="col gap-8">
+          {visible.map((r) => (
+            <div key={r.need.id} style={{ padding: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8 }}>
+              <div className="flex center between" style={{ gap: 8 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)" }}>{r.need.title}</div>
+                <span className="mono tabnum" style={{ fontSize: 13, fontWeight: 700, color: "var(--blue)", flex: "none" }}>{r.score}%</span>
+              </div>
+              <div className="flex center gap-6 wrap" style={{ marginTop: 4 }}>
+                <span className="pill" style={{ fontSize: 10.5 }}>{confidenceLabel(r.confidence)}</span>
+                {r.need.priority && <span className="pill" style={{ fontSize: 10.5 }}>עדיפות {window.TaxonomyStore ? window.TaxonomyStore.labelFor("priority", r.need.priority) : r.need.priority}</span>}
+                {r.need.status && <span className="pill" style={{ fontSize: 10.5 }}>{window.TaxonomyStore ? window.TaxonomyStore.labelFor("status", r.need.status) : r.need.status}</span>}
+                {r.need.sourceOrgName && <span className="mono tiny" style={{ color: "var(--text-4)" }}>{r.need.sourceOrgName}</span>}
+              </div>
+              {!!r.reasons.length && <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 4 }}>{r.reasons.join(" · ")}</div>}
+            </div>
+          ))}
+          {relevant.length > visible.length && (
+            <div className="muted tiny">ועוד {relevant.length - visible.length} בלוח הצרכים</div>
+          )}
+        </div>
+      )}
+      {onNav && (
+        <>
+          <div className="divider" />
+          <button className="btn" style={{ width: "100%", justifyContent: "center" }} onClick={() => onNav("needs")}>
+            <window.I.Compass size={13} /> פתח בלוח צרכים
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
 function OverviewTab({ c, onNav, onEdit, linkedInUrl, openExternalLink }) {
   const capabilities = (c.capabilities && c.capabilities.length) ? c.capabilities : (c.tech || []);
   const needs = c.needs || [];
@@ -628,6 +698,8 @@ function OverviewTab({ c, onNav, onEdit, linkedInUrl, openExternalLink }) {
       </div>
 
       <div className="col gap-14">
+        <RelevantNeedsCard c={c} onNav={onNav} />
+
         <div className="card">
           <div className="card-hd"><div className="card-title"><span className="dot" /> התאמות מקומיות</div></div>
           <div className="muted tiny" style={{ marginBottom: 8 }}>מבוסס על יכולות, תגיות, צרכים והצעות · דטרמיניסטי, ללא AI</div>
