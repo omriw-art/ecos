@@ -42,6 +42,22 @@ function taxLabel(groupKey, value) {
   return window.TaxonomyStore ? window.TaxonomyStore.labelFor(groupKey, value) : (value || "אחר");
 }
 
+// Display-only Hebrew labels for company.readiness's raw English values
+// (the stored value stays untouched — matching logic compares raw values).
+const READINESS_LABEL_HE = {
+  "Initial contact": "קשר ראשוני",
+  "Mapped": "ממופה",
+  "Verified": "מאומת",
+  "Active": "פעיל",
+  "Strategic": "אסטרטגי",
+  "Needs update": "דורש עדכון",
+};
+const PRIORITY_DOT = { high: "var(--rose)", medium: "var(--amber)", low: "var(--green)" };
+
+function unique(items) {
+  return Array.from(new Set(items));
+}
+
 function needText(rawNeed) {
   if (typeof rawNeed === "string") return rawNeed;
   if (rawNeed && typeof rawNeed === "object") {
@@ -110,37 +126,60 @@ function buildBoardItems(companies, adminNeeds) {
   return items;
 }
 
-function NeedMatches({ item, companies, onOpenCompany }) {
-  const [showAll, setShowAll] = React.useState(false);
-  const matches = React.useMemo(() => {
-    if (!window.MatchEngine || typeof window.MatchEngine.rankOrganizationsForNeed !== "function") return [];
-    return window.MatchEngine.rankOrganizationsForNeed(item.matchText, companies, { limit: 8, minScore: 15, excludeId: item.excludeId });
-  }, [item, companies]);
+const STRONG_MATCH_MIN_SCORE = 70;
 
-  const visible = showAll ? matches : matches.slice(0, 3);
+function NeedMatches({ matches, onOpenCompany }) {
+  const [showAll, setShowAll] = React.useState(false);
+  const [strongOnly, setStrongOnly] = React.useState(false);
   const confidenceLabel = (c) => c === "high" ? "התאמה גבוהה" : c === "medium" ? "התאמה בינונית" : "התאמה נמוכה";
+
+  const strongCount = matches.filter((m) => m.score >= STRONG_MATCH_MIN_SCORE).length;
+  const scoped = strongOnly ? matches.filter((m) => m.score >= STRONG_MATCH_MIN_SCORE) : matches;
+  const visible = showAll ? scoped : scoped.slice(0, 3);
+  const topKeywords = unique(matches.slice(0, 3).flatMap((m) => m.keywordOverlap || [])).slice(0, 6);
 
   return (
     <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid var(--line-1)" }}>
-      <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-2)", marginBottom: 4 }}>ארגונים מתאימים</div>
+      <div className="flex center between wrap" style={{ marginBottom: 4, gap: 8 }}>
+        <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-2)" }}>ארגונים מתאימים</div>
+        {!!strongCount && (
+          <button type="button" className={"chip" + (strongOnly ? " active" : "")} style={{ fontSize: 11 }}
+                  onClick={() => setStrongOnly((v) => !v)}>
+            התאמות חזקות (ציון {STRONG_MATCH_MIN_SCORE}+) · {strongCount}
+          </button>
+        )}
+      </div>
       <div className="muted tiny" style={{ marginBottom: 8 }}>התאמות מחושבות מהמאגר המקומי · ללא AI וללא מקור חיצוני</div>
-      {!matches.length ? (
-        <div className="muted" style={{ fontSize: 13 }}>לא נמצאו התאמות במאגר המקומי</div>
+      {!!topKeywords.length && (
+        <div className="flex gap-6 wrap" style={{ marginBottom: 8 }}>
+          <span className="mono tiny" style={{ color: "var(--text-4)" }}>מילות מפתח בהתאמות:</span>
+          {topKeywords.map((k) => <span key={k} className="pill" style={{ fontSize: 10.5 }}>{k}</span>)}
+        </div>
+      )}
+      {!scoped.length ? (
+        <div className="muted" style={{ fontSize: 13 }}>
+          {matches.length ? "אין התאמות בעלות ציון חזק כזה — נסו לבטל את הסינון" : "לא נמצאו התאמות במאגר המקומי"}
+        </div>
       ) : (
         <>
           <div className="col gap-6">
-            {visible.map((m) => (
+            {visible.map((m, i) => (
               <div key={m.id} className="flex center gap-10" onClick={() => onOpenCompany && onOpenCompany(m.organization.id)}
                    style={{ padding: 8, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8, cursor: "default" }}>
                 <window.CoLogo company={m.organization} size={28} />
                 <div className="col grow" style={{ minWidth: 0 }}>
                   <div className="flex center gap-6 wrap">
                     <span style={{ fontSize: 14, color: "var(--text-1)" }}>{m.organization.name}</span>
+                    {i === 0 && !showAll && !strongOnly && <span className="pill blue" style={{ fontSize: 10 }}>התאמה מובילה</span>}
                     <span className="pill" style={{ fontSize: 10.5 }}>{window.orgTypeLabel ? window.orgTypeLabel(m.organization.organizationType) : ""}</span>
+                    {m.organization.readiness && (
+                      <span className="pill" style={{ fontSize: 10.5 }}>מוכנות: {READINESS_LABEL_HE[m.organization.readiness] || m.organization.readiness}</span>
+                    )}
                   </div>
                   {!!m.reasons.length && <div style={{ fontSize: 12, color: "var(--text-3)" }}>{m.reasons.join(" · ")}</div>}
                 </div>
-                <span className="pill" style={{ fontSize: 11 }}>{confidenceLabel(m.confidence)}</span>
+                <span className="mono tabnum" style={{ fontSize: 13, fontWeight: 700, color: "var(--blue)", flex: "none" }}>{m.score}%</span>
+                <span className="pill" style={{ fontSize: 11, flex: "none" }}>{confidenceLabel(m.confidence)}</span>
                 <button type="button" className="btn btn-ghost" style={{ fontSize: 12, padding: "5px 9px", flex: "none" }}
                         onClick={(e) => { e.stopPropagation(); onOpenCompany && onOpenCompany(m.organization.id); }}>
                   <window.I.ArrowLeft size={11} /> פתח
@@ -148,9 +187,9 @@ function NeedMatches({ item, companies, onOpenCompany }) {
               </div>
             ))}
           </div>
-          {matches.length > 3 && (
+          {scoped.length > 3 && (
             <button type="button" className="btn btn-ghost" style={{ marginTop: 8, fontSize: 12.5 }} onClick={() => setShowAll((v) => !v)}>
-              {showAll ? "הצג פחות" : `הצג עוד (${matches.length - 3})`}
+              {showAll ? "הצג פחות" : `הצג עוד (${scoped.length - 3})`}
             </button>
           )}
         </>
@@ -583,13 +622,19 @@ function NeedsView({ onOpenCompany }) {
           {filtered.map((item) => {
             const co = item.sourceOrgId ? companies.find((c) => c.id === item.sourceOrgId) : null;
             const isEditing = editingId === item.id;
+            const matches = window.MatchEngine && typeof window.MatchEngine.rankOrganizationsForNeed === "function"
+              ? window.MatchEngine.rankOrganizationsForNeed(item.matchText, companies, { limit: 8, minScore: 15, excludeId: item.excludeId })
+              : [];
             return (
               <div key={item.id} className="card" style={{ padding: 14 }}>
                 <div className="flex gap-12" style={{ alignItems: "flex-start" }}>
                   {co && <window.CoLogo company={co} size={36} />}
                   <div className="col grow" style={{ minWidth: 0, gap: 4 }}>
                     <div className="flex center between" style={{ gap: 8 }}>
-                      <div style={{ fontSize: 15, color: "var(--text-1)", lineHeight: 1.5, fontWeight: 600 }}>{item.title}</div>
+                      <div className="flex center gap-8">
+                        {item.priority && <span style={{ width: 8, height: 8, borderRadius: "50%", background: PRIORITY_DOT[item.priority] || "var(--text-4)", flex: "none" }} title={`עדיפות ${taxLabel("priority", item.priority)}`} />}
+                        <div style={{ fontSize: 16, color: "var(--text-1)", lineHeight: 1.4, fontWeight: 700 }}>{item.title}</div>
+                      </div>
                       {item.kind === "admin" && !isEditing && (
                         <div className="flex gap-4">
                           <button type="button" className="icon-btn" title="ערוך" onClick={() => setEditingId(item.id)}>
@@ -613,6 +658,9 @@ function NeedsView({ onOpenCompany }) {
                       {item.needType && <span className="pill" style={{ fontSize: 11 }}>{taxLabel("needType", item.needType)}</span>}
                       {item.priority && <span className="pill" style={{ fontSize: 11 }}>עדיפות {taxLabel("priority", item.priority)}</span>}
                       {item.status && <span className="pill" style={{ fontSize: 11 }}>{taxLabel("status", item.status)}</span>}
+                      <span className={"pill" + (matches.length ? " blue" : "")} style={{ fontSize: 11 }}>
+                        {matches.length ? `${matches.length} התאמות` : "אין התאמות עדיין"}
+                      </span>
                       {item.kind === "organization" && (
                         <span className="mono tiny" style={{ color: "var(--text-4)" }}>עריכה דרך פרופיל הארגון</span>
                       )}
@@ -629,7 +677,7 @@ function NeedsView({ onOpenCompany }) {
                     onCancel={() => setEditingId(null)}
                   />
                 ) : (
-                  <NeedMatches item={item} companies={companies} onOpenCompany={onOpenCompany} />
+                  <NeedMatches matches={matches} onOpenCompany={onOpenCompany} />
                 )}
               </div>
             );
