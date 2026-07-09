@@ -102,12 +102,12 @@
     rawScore += stageBonus(source, target);
 
     const reasons = [];
-    if (sharedCapabilityIds.length) reasons.push(`Shared capabilities: ${capabilityLabels(sharedCapabilityIds).slice(0, 3).join(", ")}`);
-    if (complementary.length) reasons.push(`${getCompanyName(target)} offers signals matching ${getCompanyName(source)} needs`);
-    if (reverseComplementary.length) reasons.push(`${getCompanyName(source)} may answer needs from ${getCompanyName(target)}`);
-    if (keywordOverlap.length) reasons.push(`Keyword overlap: ${keywordOverlap.slice(0, 5).join(", ")}`);
-    if (readinessBonus(source, target)) reasons.push("At least one side has readiness suitable for active collaboration");
-    if (stageBonus(source, target)) reasons.push("Maturity/stage signal supports a practical partnership");
+    if (sharedCapabilityIds.length) reasons.push(`יכולות משותפות: ${capabilityLabels(sharedCapabilityIds).slice(0, 3).join(", ")}`);
+    if (complementary.length) reasons.push(`איתותים מ-${getCompanyName(target)} תואמים לצרכים של ${getCompanyName(source)}`);
+    if (reverseComplementary.length) reasons.push(`${getCompanyName(source)} עשויה לענות על צרכים של ${getCompanyName(target)}`);
+    if (keywordOverlap.length) reasons.push(`חפיפת מילות מפתח: ${keywordOverlap.slice(0, 5).join(", ")}`);
+    if (readinessBonus(source, target)) reasons.push("לפחות אחד הצדדים במצב מוכנות המתאים לשיתוף פעולה פעיל");
+    if (stageBonus(source, target)) reasons.push("איתות בגרות/שלב תומך בשותפות מעשית");
 
     const score = Math.max(0, Math.min(100, Math.round(rawScore)));
     return {

@@ -2,9 +2,9 @@
 // Two columns: source company picker + deterministic suggested company matches.
 
 const CONFIDENCE_META = {
-  high:   { label: "High",   tone: "green" },
-  medium: { label: "Medium", tone: "amber" },
-  low:    { label: "Low",    tone: "" },
+  high:   { label: "גבוהה",  tone: "green" },
+  medium: { label: "בינונית", tone: "amber" },
+  low:    { label: "נמוכה",  tone: "" },
 };
 
 function MatchesView({ onOpenCompany }) {
@@ -112,7 +112,7 @@ function MatchesView({ onOpenCompany }) {
             <div className="flex center between" style={{ padding: "14px 18px", borderBottom: "1px solid var(--line-1)" }}>
               <div className="card-title"><span className="dot violet" /> התאמות מוצעות עבור {source.name}</div>
               <div className="flex center gap-8">
-                <span className="pill violet">Deterministic · Explainable</span>
+                <span className="pill violet">דטרמיניסטי · ניתן להסבר</span>
                 <button className="btn btn-ghost" disabled title="Filtering is not wired in this batch"><window.I.Filter size={12} /></button>
               </div>
             </div>
@@ -138,12 +138,12 @@ function MatchesView({ onOpenCompany }) {
                 </div>
               ))}
               {[
-                { l: "Score", v: (match) => <span className="mono tabnum" style={{ color: "var(--blue)" }}>{match.score}%</span> },
-                { l: "Confidence", v: (match) => match.confidence },
-                { l: "Shared caps", v: (match) => match.sharedCapabilities.length },
-                { l: "Complementary", v: (match) => match.complementaryNeedsOffers.length },
-                { l: "Readiness", v: (match) => match.target.readiness || "Mapped" },
-                { l: "Stage", v: (match) => match.target.stage || "Seed" },
+                { l: "ציון", v: (match) => <span className="mono tabnum" style={{ color: "var(--blue)" }}>{match.score}%</span> },
+                { l: "רמת ביטחון", v: (match) => (CONFIDENCE_META[match.confidence] || CONFIDENCE_META.low).label },
+                { l: "יכולות משותפות", v: (match) => match.sharedCapabilities.length },
+                { l: "משלימות", v: (match) => match.complementaryNeedsOffers.length },
+                { l: "מוכנות", v: (match) => match.target.readiness || "Mapped" },
+                { l: "שלב", v: (match) => match.target.stage || "Seed" },
               ].map((row, i) => (
                 <React.Fragment key={i}>
                   <div style={{ padding: "8px 0", color: "var(--text-3)" }}>{row.l}</div>
@@ -191,10 +191,10 @@ function MatchRow({ match, idx, onOpenCompany }) {
       <div className="col" style={{ flex: 1, gap: 6 }}>
         <div className="flex wrap gap-4">
           {match.sharedCapabilities.slice(0, 3).map((capability) => <span key={capability} className="pill">{capability}</span>)}
-          {!match.sharedCapabilities.length && <span className="pill">Complementary signals</span>}
+          {!match.sharedCapabilities.length && <span className="pill">איתותים משלימים</span>}
         </div>
         <div className="tiny" style={{ color: "var(--text-3)" }}>
-          {match.reasons[0] || "Matching signals from current company data"}
+          {match.reasons[0] || "איתותים תואמים מנתוני החברות המקומיים"}
         </div>
         {!!match.reasons.length && (
           <div className="flex wrap gap-4">
