@@ -86,23 +86,12 @@
   }
 
   function readStoredCompanies() {
-    try {
-      const raw = window.localStorage && window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : null;
-    } catch (err) {
-      console.warn("CompanyStore: failed to read local companies", err);
-      return null;
-    }
+    const parsed = window.EcosStorage.read(STORAGE_KEY, null);
+    return Array.isArray(parsed) ? parsed : null;
   }
 
   function writeStoredCompanies(companies) {
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(companies));
-    } catch (err) {
-      console.warn("CompanyStore: failed to save local companies", err);
-    }
+    window.EcosStorage.write(STORAGE_KEY, companies);
   }
 
   function seedCompanies() {
@@ -143,11 +132,7 @@
   }
 
   function resetCompaniesToSeed() {
-    try {
-      window.localStorage.removeItem(STORAGE_KEY);
-    } catch (err) {
-      console.warn("CompanyStore: failed to reset local companies", err);
-    }
+    window.EcosStorage.remove(STORAGE_KEY);
     const seeded = seedCompanies();
     window.COMPANIES = seeded;
     return seeded;

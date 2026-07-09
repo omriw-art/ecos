@@ -64,24 +64,13 @@
   }
 
   function readSubmissions() {
-    try {
-      const raw = window.localStorage && window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) return [];
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (err) {
-      console.warn("SubmissionStore: failed to read submissions", err);
-      return [];
-    }
+    const parsed = window.EcosStorage.read(STORAGE_KEY, []);
+    return Array.isArray(parsed) ? parsed : [];
   }
 
   function saveSubmissions(submissions) {
     const normalized = asArray(submissions).map((s) => normalizeSubmission(s));
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
-    } catch (err) {
-      console.warn("SubmissionStore: failed to save submissions", err);
-    }
+    window.EcosStorage.write(STORAGE_KEY, normalized);
     return normalized;
   }
 

@@ -59,23 +59,12 @@
   }
 
   function readAll() {
-    try {
-      const raw = window.localStorage && window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      return parsed && typeof parsed === "object" ? parsed : null;
-    } catch (err) {
-      console.warn("TaxonomyStore: failed to read options", err);
-      return null;
-    }
+    const parsed = window.EcosStorage.read(STORAGE_KEY, null);
+    return parsed && typeof parsed === "object" ? parsed : null;
   }
 
   function writeAll(all) {
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
-    } catch (err) {
-      console.warn("TaxonomyStore: failed to save options", err);
-    }
+    window.EcosStorage.write(STORAGE_KEY, all);
     return all;
   }
 

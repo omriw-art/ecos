@@ -52,24 +52,13 @@
   }
 
   function readNeeds() {
-    try {
-      const raw = window.localStorage && window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) return [];
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (err) {
-      console.warn("NeedsStore: failed to read admin needs", err);
-      return [];
-    }
+    const parsed = window.EcosStorage.read(STORAGE_KEY, []);
+    return Array.isArray(parsed) ? parsed : [];
   }
 
   function saveNeeds(needs) {
     const normalized = asArray(needs).map((n) => normalizeNeed(n));
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
-    } catch (err) {
-      console.warn("NeedsStore: failed to save admin needs", err);
-    }
+    window.EcosStorage.write(STORAGE_KEY, normalized);
     return normalized;
   }
 
