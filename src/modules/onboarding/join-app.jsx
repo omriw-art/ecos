@@ -161,10 +161,10 @@ function Welcome({ onGo }) {
       </div>
       <h1 className="join-title">
         החברה שלכם, מחוברת.<br />
-        <span className="accent">לאלפי הזדמנויות.</span>
+        <span className="accent">לאקוסיסטם החלל הישראלי.</span>
       </h1>
       <p className="join-sub" style={{ margin: "0 auto" }}>
-        ecos הוא מאגר חכם של מאות חברות חלל, סוכנויות ומובילי תעשייה.
+        ecos הוא מאגר מקומי של חברות חלל, סוכנויות ומובילי תעשייה.
         הגישו פרופיל פעם אחת — ותופיעו במפת האקוסיסטם ובניתוחי ההתאמה.
       </p>
 
@@ -187,8 +187,8 @@ function Welcome({ onGo }) {
         <span className="label">לדוגמה מהמאגר המקומי</span>
         <span className="item">IAI</span>
         <span className="item">רפאל</span>
-        <span className="item">ICEYE</span>
-        <span className="item">Planet</span>
+        <span className="item">SpaceIL</span>
+        <span className="item">SpacePharma</span>
         <span className="item">Ramon.Space</span>
       </div>
     </div>

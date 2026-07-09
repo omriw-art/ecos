@@ -96,7 +96,7 @@ function App() {
 
       <Copilot open={copilotOpen} onClose={() => setCopilotOpen(false)} />
 
-      {(!window.EcosFlags || window.EcosFlags.debugPanel) && (
+      {(window.EcosFlags && window.EcosFlags.debugPanel) && (
         <window.TweaksPanel>
           <window.TweakSection label="טיפוגרפיה" />
           <window.TweakRadio label="Display font" value={t.typo}

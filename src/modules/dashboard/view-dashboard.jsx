@@ -72,10 +72,7 @@ function Dashboard({ onOpenCompany, onNav }) {
 
   const [importPreview, setImportPreview] = React.useState(null);
   const importInputRef = React.useRef(null);
-  const RESET_BACKUP_KEY = "ecosystemOS.lastResetBackup.v1";
-  const [hasResetBackup, setHasResetBackup] = React.useState(() => {
-    try { return !!window.localStorage.getItem(RESET_BACKUP_KEY); } catch (e) { return false; }
-  });
+  const [hasResetBackup, setHasResetBackup] = React.useState(() => window.DemoDataService.hasBackup());
 
   const handleImportFile = (e) => {
     const file = e.target.files[0];
@@ -225,17 +222,7 @@ function Dashboard({ onOpenCompany, onNav }) {
       "מומלץ לבצע הורדה מקומית לפני האיפוס. המצב הנוכחי יישמר אוטומטית כגיבוי מקומי אחד שניתן לשחזר מהכפתור \"שחזר גיבוי אחרון\"."
     )) return;
     try {
-      window.localStorage.setItem(RESET_BACKUP_KEY, JSON.stringify({
-        companies: window.CompanyStore.getCompanies(),
-        submissions: window.SubmissionStore.getSubmissions(),
-        needs: window.NeedsStore ? window.NeedsStore.getNeeds() : [],
-        taxonomy: window.TaxonomyStore ? window.TaxonomyStore.getOptions() : null,
-        backedUpAt: new Date().toISOString(),
-      }));
-      window.CompanyStore.resetCompaniesToSeed();
-      window.SubmissionStore.saveSubmissions([]);
-      if (window.NeedsStore) window.NeedsStore.saveNeeds([]);
-      if (window.TaxonomyStore) window.TaxonomyStore.GROUP_KEYS.forEach((k) => window.TaxonomyStore.resetGroup(k));
+      window.DemoDataService.resetToSeed();
       setHasResetBackup(true);
       window.toast && window.toast("איפוס הושלם — גיבוי מקומי נשמר, ניתן לשחזר מהכפתור \"שחזר גיבוי אחרון\" · טוען מחדש…", "ok");
       setTimeout(() => window.location.reload(), 1200);
@@ -245,20 +232,13 @@ function Dashboard({ onOpenCompany, onNav }) {
   };
 
   const restoreLastBackup = () => {
-    let backup;
-    try {
-      backup = JSON.parse(window.localStorage.getItem(RESET_BACKUP_KEY) || "null");
-    } catch (e) { backup = null; }
-    if (!backup) {
+    if (!window.DemoDataService.hasBackup()) {
       window.toast && window.toast("לא נמצא גיבוי מקומי לשחזור", "err");
       return;
     }
     if (!window.confirm("שחזור הגיבוי האחרון ידרוס את הנתונים המקומיים הנוכחיים. להמשיך?")) return;
     try {
-      window.CompanyStore.saveCompanies(backup.companies || []);
-      window.SubmissionStore.saveSubmissions(backup.submissions || []);
-      if (window.NeedsStore) window.NeedsStore.saveNeeds(backup.needs || []);
-      if (window.TaxonomyStore && backup.taxonomy) window.TaxonomyStore.setOptions(backup.taxonomy);
+      window.DemoDataService.restoreBackup();
       window.toast && window.toast("הגיבוי האחרון שוחזר · טוען מחדש…", "ok");
       setTimeout(() => window.location.reload(), 1200);
     } catch (err) {
@@ -287,7 +267,7 @@ function Dashboard({ onOpenCompany, onNav }) {
           <button className="btn" onClick={() => importInputRef.current && importInputRef.current.click()} title="ייבוא מקומי — שחזור מקובץ JSON">
             <window.I.Download size={13} /> ייבוא מקומי
           </button>
-          {(!window.EcosFlags || window.EcosFlags.demoReset) && (
+          {(window.EcosFlags && window.EcosFlags.demoReset) && (
             <>
               <button className="btn" onClick={resetLocalData} title="מוחק שינויים מקומיים ומשחזר את נתוני ה-seed המקוריים">
                 <window.I.Bolt size={13} /> איפוס לדאטה התחלתי
