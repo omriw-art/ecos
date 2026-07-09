@@ -410,7 +410,7 @@ function EcosystemHealth({ companies, companiesWithReadiness, companiesWithNeeds
       </div>
       {!!funnel.length && (
         <div className="muted tiny" style={{ marginTop: 10 }}>
-          Funnel baseline preserved: {funnel.map((f) => `${f.stage || "Stage"} ${f.n || 0}`).join(" · ")}
+          נתוני משפך בסיסיים נשמרו: {funnel.map((f) => `${f.stage || "שלב"} ${f.n || 0}`).join(" · ")}
         </div>
       )}
     </div>
@@ -493,19 +493,19 @@ function OpportunitiesRadar({ opportunities, counts }) {
   return (
     <div className="card">
       <div className="card-hd">
-        <div className="card-title"><span className="dot violet" /> Opportunities Radar</div>
-        <span className="pill mono">{opportunities.length} TRACKED</span>
+        <div className="card-title"><span className="dot violet" /> מכ״ם הזדמנויות</div>
+        <span className="pill mono">{opportunities.length} במעקב</span>
       </div>
       <div style={grid("repeat(4, 1fr)", 10)}>
-        <Metric label="Active" value={counts.active} />
-        <Metric label="Closing soon" value={counts.closingSoon} tone="amber" />
-        <Metric label="Review / draft" value={counts.review} tone="violet" />
-        <Metric label="Global" value={counts.global} />
+        <Metric label="פעילות" value={counts.active} />
+        <Metric label="נסגרות בקרוב" value={counts.closingSoon} tone="amber" />
+        <Metric label="בבדיקה / טיוטה" value={counts.review} tone="violet" />
+        <Metric label="גלובלי" value={counts.global} />
       </div>
       <div className="divider" />
       <div className="col gap-8">
         {top.map((opp) => <OpportunityRow key={opp.id || opp.title} opportunity={opp} />)}
-        {!top.length && <EmptyState text="No opportunities loaded. The dashboard will render when OPPORTUNITIES is added." />}
+        {!top.length && <EmptyState text="אין הזדמנויות טעונות עדיין." />}
       </div>
     </div>
   );
@@ -515,17 +515,17 @@ function NeedsRadar({ needs, themes, companiesWithNeeds }) {
   return (
     <div className="card">
       <div className="card-hd">
-        <div className="card-title"><span className="dot cyan" /> Needs Radar</div>
-        <span className="pill">{companiesWithNeeds.length} companies</span>
+        <div className="card-title"><span className="dot cyan" /> מכ״ם צרכים</div>
+        <span className="pill">{companiesWithNeeds.length} חברות</span>
       </div>
       <div style={grid("repeat(2, 1fr)", 10)}>
-        <Metric label="Total needs" value={needs.length} />
-        <Metric label="Repeated themes" value={themes.filter((t) => t.count > 1).length} tone="amber" />
+        <Metric label="סה״כ צרכים" value={needs.length} />
+        <Metric label="נושאים חוזרים" value={themes.filter((t) => t.count > 1).length} tone="amber" />
       </div>
       <div className="divider" />
       <div className="col gap-8">
         {themes.map((theme) => <BarRow key={theme.label} label={theme.label} value={theme.count} max={theme.max} color={theme.color} />)}
-        {!themes.length && <EmptyState text="No company needs are populated yet." />}
+        {!themes.length && <EmptyState text="אין עדיין צרכים שדווחו על ידי חברות." />}
       </div>
       <div className="divider" />
       <div className="flex gap-4 wrap">
@@ -539,7 +539,7 @@ function StrategicCompanies({ companies, onOpenCompany }) {
   return (
     <div className="card">
       <div className="card-hd">
-        <div className="card-title"><span className="dot amber" /> Strategic Companies</div>
+        <div className="card-title"><span className="dot amber" /> חברות אסטרטגיות</div>
         <span className="pill amber"><window.I.Star size={10} fill={true} /> {companies.length}</span>
       </div>
       <div className="col gap-8">
@@ -549,15 +549,15 @@ function StrategicCompanies({ companies, onOpenCompany }) {
             <div className="col grow" style={{ minWidth: 0 }}>
               <div className="flex between center gap-8">
                 <span style={truncateStyle()}>{c.name}</span>
-                <span className="pill mono">{text(c.readiness) || "Unclassified"}</span>
+                <span className="pill mono">{text(c.readiness) || "לא מסווג"}</span>
               </div>
               <div className="mono tiny" style={{ color: "var(--text-4)" }}>
-                {categoryLabel(c)} · {asArray(c.tech).length} tech · {asArray(c.needs).length} needs
+                {categoryLabel(c)} · {asArray(c.tech).length} יכולות · {asArray(c.needs).length} צרכים
               </div>
             </div>
           </button>
         ))}
-        {!companies.length && <EmptyState text="No strategic companies have been flagged yet." />}
+        {!companies.length && <EmptyState text="אין עדיין חברות שסומנו כאסטרטגיות." />}
       </div>
     </div>
   );
@@ -569,20 +569,20 @@ function CapabilityGaps({ themes, sectorDist }) {
   return (
     <div className="card">
       <div className="card-hd">
-        <div className="card-title"><span className="dot" /> Capability Gaps</div>
-        <span className="pill rose">{weak.length} weak</span>
+        <div className="card-title"><span className="dot" /> פערי יכולות</div>
+        <span className="pill rose">{weak.length} פערים</span>
       </div>
       <div className="col gap-8">
         {themes.map((theme) => <BarRow key={theme.label} label={theme.label} value={theme.count} max={theme.max} color={theme.color} />)}
       </div>
       <div className="divider" />
       <div style={grid("1fr 1fr", 12)}>
-        <CapabilityList title="Strong coverage" items={strong} tone="green" />
-        <CapabilityList title="Weak coverage" items={weak} tone="rose" />
+        <CapabilityList title="כיסוי חזק" items={strong} tone="green" />
+        <CapabilityList title="כיסוי חלש" items={weak} tone="rose" />
       </div>
       {!!sectorDist.length && (
         <div className="muted tiny" style={{ marginTop: 10 }}>
-          Sector baseline preserved from {sectorDist.length} ecosystem sectors.
+          נתוני סקטורים בסיסיים מ-{sectorDist.length} סקטורים באקוסיסטם.
         </div>
       )}
     </div>
@@ -593,12 +593,12 @@ function RecentActivity({ activity }) {
   return (
     <div className="card">
       <div className="card-hd">
-        <div className="card-title"><span className="dot green" /> Recent Activity</div>
+        <div className="card-title"><span className="dot green" /> פעילות אחרונה</div>
         <button className="btn-ghost btn" disabled title="היסטוריה מלאה — בקרוב">לכל ההיסטוריה</button>
       </div>
       <div className="col gap-10">
         {activity.slice(0, 8).map((a, i) => <ActivityRow key={a.id || i} item={a} />)}
-        {!activity.length && <EmptyState text="No activity feed is available yet." />}
+        {!activity.length && <EmptyState text="אין עדיין פעילות מתועדת." />}
       </div>
     </div>
   );
@@ -616,6 +616,7 @@ function CopilotSuggestions({ suggestions }) {
         {suggestions.map((s) => (
           <AiInsight key={s.title} title={s.title} text={s.text} tags={s.tags || []} />
         ))}
+        {!suggestions.length && <EmptyState text="אין עדיין תובנות זמינות ממאגר הנתונים המקומי." />}
       </div>
     </div>
   );
@@ -674,11 +675,11 @@ function OpportunityRow({ opportunity }) {
       <window.I.Briefcase size={14} style={{ color: opportunity.global ? "var(--violet)" : "var(--blue)", flex: "none" }} />
       <div className="col grow" style={{ minWidth: 0 }}>
         <div className="flex between center gap-8">
-          <span style={opportunityTitleStyle()}>{opportunity.title || "Untitled opportunity"}</span>
-          <span className="pill mono">{opportunity.status || "Active"}</span>
+          <span style={opportunityTitleStyle()}>{opportunity.title || "הזדמנות ללא כותרת"}</span>
+          <span className="pill mono">{opportunity.status || "פעילה"}</span>
         </div>
         <div className="mono tiny" style={{ color: "var(--text-4)" }}>
-          {opportunity.type || "Opportunity"} · deadline {opportunity.deadline || "TBD"} {opportunity.global === true ? "· GLOBAL" : ""}
+          {opportunity.type || "הזדמנות"} · תאריך יעד {opportunity.deadline || "לא נקבע"} {opportunity.global === true ? "· גלובלי" : ""}
         </div>
       </div>
     </div>
@@ -696,7 +697,7 @@ function CapabilityList({ title, items, tone }) {
             <span className="mono tabnum">{item.count}</span>
           </div>
         ))}
-        {!items.length && <div className="muted tiny">None detected.</div>}
+        {!items.length && <div className="muted tiny">לא זוהה.</div>}
       </div>
     </div>
   );
@@ -1015,10 +1016,11 @@ function getCopilotSuggestions({ REVIEW_QUEUE, OPPORTUNITIES, COMPANIES, allNeed
     },
   ].filter(Boolean);
 
-  while (suggestions.length < 3) {
+  const unclassifiedCount = COMPANIES.filter((c) => !text(c.readiness)).length;
+  if (unclassifiedCount > 0) {
     suggestions.push({
       title: "Knowledge graph enrichment candidate",
-      text: `${COMPANIES.filter((c) => !text(c.readiness)).length} companies still need readiness classification before the health model is reliable.`,
+      text: `${unclassifiedCount} companies still need readiness classification before the health model is reliable.`,
       tags: ["data quality", "readiness"],
     });
   }

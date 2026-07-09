@@ -133,6 +133,10 @@
     });
   }
 
+  function clearSubmissions() {
+    return saveSubmissions([]);
+  }
+
   function toCompanyInput(submission) {
     const s = normalizeSubmission(submission);
     return {
@@ -166,6 +170,7 @@
     updateSubmission,
     approveSubmission,
     rejectSubmission,
+    clearSubmissions,
     normalizeSubmission,
     toCompanyInput,
   };

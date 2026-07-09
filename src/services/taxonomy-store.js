@@ -128,6 +128,11 @@
     return fresh;
   }
 
+  function resetAll() {
+    GROUP_KEYS.forEach((key) => resetGroup(key));
+    return getOptions();
+  }
+
   function labelFor(groupKey, value) {
     const found = getGroup(groupKey).find((o) => o.value === value);
     return found ? found.label : (value || "אחר");
@@ -154,6 +159,7 @@
     updateOption,
     toggleOption,
     resetGroup,
+    resetAll,
     labelFor,
   };
 })();

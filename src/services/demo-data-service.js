@@ -26,9 +26,9 @@
   function resetToSeed() {
     const backup = createBackup();
     window.CompanyStore.resetCompaniesToSeed();
-    window.SubmissionStore.saveSubmissions([]);
-    if (window.NeedsStore) window.NeedsStore.saveNeeds([]);
-    if (window.TaxonomyStore) window.TaxonomyStore.GROUP_KEYS.forEach((k) => window.TaxonomyStore.resetGroup(k));
+    window.SubmissionStore.clearSubmissions();
+    if (window.NeedsStore) window.NeedsStore.clearNeeds();
+    if (window.TaxonomyStore) window.TaxonomyStore.resetAll();
     return backup;
   }
 

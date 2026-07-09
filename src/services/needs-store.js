@@ -96,6 +96,10 @@
     return next;
   }
 
+  function clearNeeds() {
+    return saveNeeds([]);
+  }
+
   function getLocalCompanies() {
     if (window.CompanyStore && typeof window.CompanyStore.getCompanies === "function") {
       return window.CompanyStore.getCompanies();
@@ -172,6 +176,7 @@
     createNeed,
     updateNeed,
     deleteNeed,
+    clearNeeds,
     normalizeNeed,
     listNeeds,
     getNeedStats,
