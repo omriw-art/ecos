@@ -167,7 +167,7 @@ function SettingsView() {
               ["פוטנציאל שיתוף פעולה", 25, "var(--violet)"],
               ["חדשנות", 15, "var(--cyan)"],
               ["רלוונטיות אסטרטגית", 15, "var(--amber)"],
-              ["Readiness", 10, "var(--green)"],
+              ["מוכנות", 10, "var(--green)"],
             ].map(([l, v, col]) => (
               <FitBar key={l} label={l} score={v} color={col} />
             ))}

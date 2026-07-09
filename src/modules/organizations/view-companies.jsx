@@ -17,6 +17,29 @@ function spaceSegmentShortLabel(id) {
   return parts.length > 1 ? parts[1] : full;
 }
 
+// Display-only Hebrew labels for the readiness/stage fields' raw English
+// values (c.readiness / c.stage in data.js stay untouched — filtering and
+// comparisons throughout the app compare against the raw values).
+const READINESS_LABEL_HE = {
+  "Initial contact": "קשר ראשוני",
+  "Mapped": "ממופה",
+  "Verified": "מאומת",
+  "Active": "פעיל",
+  "Strategic": "אסטרטגי",
+  "Needs update": "דורש עדכון",
+};
+const STAGE_LABEL_HE = {
+  "Concept": "שלב רעיוני",
+  "Seed": "Seed",
+  "Series A": "Series A",
+  "Series B": "Series B",
+  "Series C": "Series C",
+  "Growth": "צמיחה",
+  "Mature": "בוגרת",
+  "Public": "ציבורית",
+  "Unknown": "לא ידוע",
+};
+
 function companyEditorInitial(company) {
   return {
     name: company?.name || "",
@@ -172,15 +195,15 @@ function CompanyEditor({ company, title, submitLabel, onSave, onCancel }) {
           <select className="select" value={form.sector} onChange={(e) => setField("sector", e.target.value)}>
             {window.SECTORS.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
             {!window.SECTORS.find((s) => s.id === form.sector) && form.sector && (
-              <option value={form.sector}>{form.sector} · imported</option>
+              <option value={form.sector}>{form.sector} · מיובא</option>
             )}
           </select>
         </EditorField>
         <EditorField label="שלב">
           <select className="select" value={form.stage} onChange={(e) => setField("stage", e.target.value)}>
-            {window.STAGES.map((s) => <option key={s} value={s}>{s}</option>)}
+            {window.STAGES.map((s) => <option key={s} value={s}>{STAGE_LABEL_HE[s] || s}</option>)}
             {!window.STAGES.includes(form.stage) && form.stage && (
-              <option value={form.stage}>{form.stage} · imported</option>
+              <option value={form.stage}>{STAGE_LABEL_HE[form.stage] || form.stage} · מיובא</option>
             )}
           </select>
         </EditorField>
@@ -257,10 +280,10 @@ function CompaniesView({ onOpenCompany, onCreateCompany }) {
         <div className="ops">
           <div className="seg">
             <button className={view === "grid" ? "active" : ""} onClick={() => setView("grid")}>
-              <window.I.Grid size={13} style={{ verticalAlign: -2 }} />&nbsp;Grid
+              <window.I.Grid size={13} style={{ verticalAlign: -2 }} />&nbsp;רשת
             </button>
             <button className={view === "table" ? "active" : ""} onClick={() => setView("table")}>
-              <window.I.Layers size={13} style={{ verticalAlign: -2 }} />&nbsp;Table
+              <window.I.Layers size={13} style={{ verticalAlign: -2 }} />&nbsp;טבלה
             </button>
           </div>
           <button className="btn" disabled title="סינון מתקדם — בקרוב"><window.I.Filter size={13} /> סינון מתקדם</button>
@@ -293,7 +316,7 @@ function CompaniesView({ onOpenCompany, onCreateCompany }) {
           <span className="mono tiny" style={{ color: "var(--text-3)", letterSpacing: "0.12em", textTransform: "uppercase", marginInlineEnd: 6 }}>שלב</span>
           {["all", ...window.STAGES].map((s) => (
             <span key={s} className={"chip" + (stage === s ? " active" : "")} onClick={() => setStage(s)}>
-              {s === "all" ? "הכל" : s}
+              {s === "all" ? "הכל" : (STAGE_LABEL_HE[s] || s)}
             </span>
           ))}
           <div className="grow" />
@@ -330,8 +353,8 @@ function CompaniesView({ onOpenCompany, onCreateCompany }) {
                 <th>מדינה</th>
                 <th>שלב</th>
                 <th>גודל</th>
-                <th>Readiness</th>
-                <th style={{ width: 80 }}>Score</th>
+                <th>מוכנות</th>
+                <th style={{ width: 80 }}>ציון</th>
                 <th></th>
               </tr>
             </thead>
@@ -345,11 +368,11 @@ function CompaniesView({ onOpenCompany, onCreateCompany }) {
                   </td>
                   <td><div className="flex gap-4 wrap">{(c.sectors || []).slice(0,2).map((s) => window.SECTORS.find((x) => x.id === s) ? <SectorPill key={s} id={s} /> : <span key={s} className="pill">{s}</span>)}</div></td>
                   <td>{c.flag} {c.country}</td>
-                  <td><span className="pill">{c.stage}</span></td>
+                  <td><span className="pill">{STAGE_LABEL_HE[c.stage] || c.stage}</span></td>
                   <td className="mono tabnum" style={{ color: "var(--text-2)" }}>{c.size}</td>
                   <td>
                     <span className={"pill " + (c.readiness === "Defense Cleared" ? "rose" : c.readiness === "Commercial" ? "green" : c.readiness === "Pilot Ready" ? "amber" : "")}>
-                      {c.readiness}
+                      {READINESS_LABEL_HE[c.readiness] || c.readiness}
                     </span>
                   </td>
                   <td><ScoreRing value={c.score} size={32} stroke={2.5} /></td>
@@ -376,7 +399,7 @@ function CoCard({ c, onClick }) {
             {c.name}
             {c.strategic && <window.I.Star size={11} style={{ color: "var(--amber)", verticalAlign: 1, marginInlineStart: 6 }} fill={true} />}
           </div>
-          <div className="co-meta">{c.flag} {String(c.hq || "").toUpperCase()} · {c.stage}</div>
+          <div className="co-meta">{c.flag} {String(c.hq || "").toUpperCase()} · {STAGE_LABEL_HE[c.stage] || c.stage}</div>
           <div className="flex gap-6 wrap" style={{ marginTop: 5 }}>
             <span className="pill" style={{ fontSize: 11 }}>{orgTypeLabel(c.organizationType)}</span>
             <span className="pill" style={{ fontSize: 11 }}>{spaceSegmentShortLabel(c.spaceSegment)}</span>
@@ -391,12 +414,12 @@ function CoCard({ c, onClick }) {
       </div>
       <div className="flex between center" style={{ marginTop: 4, paddingTop: 10, borderTop: "1px solid var(--line-1)" }}>
         <div className="flex gap-12 mono tiny" style={{ color: "var(--text-4)" }}>
-          <span><span style={{ color: "var(--text-2)" }}>{c.size}</span> EMP</span>
+          <span><span style={{ color: "var(--text-2)" }}>{c.size}</span> עובדים</span>
           <span><span style={{ color: "var(--text-2)" }}>{c.founded}</span></span>
-          {c.fundingM > 0 && <span><span style={{ color: "var(--text-2)" }}>${c.fundingM}M</span> RAISED</span>}
+          {c.fundingM > 0 && <span><span style={{ color: "var(--text-2)" }}>${c.fundingM}M</span> גויס</span>}
         </div>
         <span className={"pill " + (c.readiness === "Defense Cleared" ? "rose" : c.readiness === "Commercial" ? "green" : "amber")}>
-          {c.readiness}
+          {READINESS_LABEL_HE[c.readiness] || c.readiness}
         </span>
       </div>
     </div>
@@ -459,10 +482,10 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany }) {
               <h2 style={{ margin: 0, fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em" }}>
                 {c.name}
               </h2>
-              {c.strategic && <span className="pill amber"><window.I.Star size={10} fill={true} /> Strategic</span>}
+              {c.strategic && <span className="pill amber"><window.I.Star size={10} fill={true} /> אסטרטגית</span>}
               <span className="pill">
                 <span className="swatch" style={{ background: c.readiness === "Defense Cleared" ? "var(--rose)" : c.readiness === "Commercial" ? "var(--green)" : "var(--amber)" }} />
-                {c.readiness}
+                {READINESS_LABEL_HE[c.readiness] || c.readiness}
               </span>
             </div>
             <div className="flex gap-8 wrap" style={{ marginBottom: 12 }}>
@@ -478,11 +501,11 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany }) {
           {/* Score panel */}
           <div className="col gap-10" style={{ minWidth: 260, padding: 16, background: "var(--bg-2)", border: "1px solid var(--line-2)", borderRadius: 12 }}>
             <div className="flex center between">
-              <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-2)" }}>Compatibility</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-2)" }}>התאמה</span>
               <ScoreRing value={c.score} size={56} stroke={4} />
             </div>
             <FitBar label="רלוונטיות אסטרטגית" score={c.strategic ? 95 : Math.max(50, c.score - 5)} color="var(--amber)" />
-            <FitBar label="Readiness" score={c.readiness === "Defense Cleared" ? 98 : c.readiness === "Commercial" ? 80 : c.readiness === "Pilot Ready" ? 65 : 45} color="var(--green)" />
+            <FitBar label="מוכנות" score={c.readiness === "Defense Cleared" ? 98 : c.readiness === "Commercial" ? 80 : c.readiness === "Pilot Ready" ? 65 : 45} color="var(--green)" />
           </div>
         </div>
 
@@ -500,7 +523,7 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany }) {
       {/* Management summary strip — real local data only */}
       <div className="card" style={{ padding: 14 }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 10 }}>
-          <SummaryTile label="סטטוס במאגר" value={c.readiness || "—"} />
+          <SummaryTile label="סטטוס במאגר" value={READINESS_LABEL_HE[c.readiness] || c.readiness || "—"} />
           <SummaryTile label="סוג ארגון" value={orgTypeLabel(c.organizationType)} />
           <SummaryTile label="סגמנט פעילות" value={spaceSegmentShortLabel(c.spaceSegment)} />
           <SummaryTile label="יכולות מזוהות" value={capabilitiesCount} />
@@ -574,7 +597,7 @@ function OverviewTab({ c, onNav, onEdit, linkedInUrl, openExternalLink }) {
           <div className="col gap-10">
             <KV k="סוג ארגון" v={orgTypeLabel(c.organizationType)} />
             <KV k="סגמנט פעילות" v={spaceSegmentLabel(c.spaceSegment)} />
-            <KV k="סטטוס במאגר" v={c.readiness} />
+            <KV k="סטטוס במאגר" v={READINESS_LABEL_HE[c.readiness] || c.readiness} />
           </div>
         </div>
 
@@ -639,10 +662,10 @@ function OrgDetailsTab({ c }) {
           <KV k="שם" v={c.name} />
           <KV k="מיקום" v={c.hq} />
           <KV k="אתר" v={c.website || "—"} />
-          <KV k="שלב" v={c.stage} />
+          <KV k="שלב" v={STAGE_LABEL_HE[c.stage] || c.stage} />
           <KV k="שנת הקמה" v={c.founded} />
           <KV k="מועסקים" v={c.size} />
-          <KV k="סטטוס" v={c.readiness} />
+          <KV k="סטטוס" v={READINESS_LABEL_HE[c.readiness] || c.readiness} />
           {c.fundingM > 0 && <KV k="גיוס מצטבר" v={`$${c.fundingM}M`} />}
           <KV k="מזהה פנימי" v={c.id} />
         </div>

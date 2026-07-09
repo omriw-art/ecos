@@ -1,6 +1,28 @@
 // ecos — Company self-onboarding
 // 6-step flow with a local demo sample-fill (not a real LinkedIn/website import) and a progress bar.
 
+// Display-only Hebrew labels for the readiness/stage fields' raw English
+// values (the stored value stays untouched — setField keeps the raw value).
+const READINESS_LABEL_HE = {
+  "Initial contact": "קשר ראשוני",
+  "Mapped": "ממופה",
+  "Verified": "מאומת",
+  "Active": "פעיל",
+  "Strategic": "אסטרטגי",
+  "Needs update": "דורש עדכון",
+};
+const STAGE_LABEL_HE = {
+  "Concept": "שלב רעיוני",
+  "Seed": "Seed",
+  "Series A": "Series A",
+  "Series B": "Series B",
+  "Series C": "Series C",
+  "Growth": "צמיחה",
+  "Mature": "בוגרת",
+  "Public": "ציבורית",
+  "Unknown": "לא ידוע",
+};
+
 const STEPS = [
   { id: "import",   label: "ייבוא מהיר",  short: "Import" },
   { id: "basics",   label: "פרטי חברה",   short: "Basics" },
@@ -409,7 +431,7 @@ function StepBasics({ data, setField }) {
         <div className="field">
           <label>שלב החברה</label>
           <select className="select" value={data.stage} onChange={(e) => setField("stage", e.target.value)}>
-            {window.STAGES.map((s) => <option key={s}>{s}</option>)}
+            {window.STAGES.map((s) => <option key={s} value={s}>{STAGE_LABEL_HE[s] || s}</option>)}
           </select>
         </div>
         <div className="field">
@@ -504,7 +526,7 @@ function StepReadiness({ data, setField }) {
         <div className="flex wrap gap-6">
           {window.READINESS.map((r) => (
             <span key={r} className={"chip" + (data.readiness === r ? " active" : "")} onClick={() => setField("readiness", r)}>
-              {r}
+              {READINESS_LABEL_HE[r] || r}
             </span>
           ))}
         </div>

@@ -213,6 +213,17 @@ function CapBlock({ cap, active, maxCount, onClick }) {
 }
 
 /* ── Detail panel (slides in on click) ── */
+// Display-only Hebrew labels for company.stage's raw English values
+// (the underlying values stay untouched — used for filtering/grouping).
+const STAGE_LABEL_HE = {
+  "Seed": "Seed",
+  "Series A": "Series A",
+  "Series B": "Series B",
+  "Series C": "Series C",
+  "Growth": "צמיחה",
+  "Public": "ציבורית",
+};
+
 function CapDetail({ cap, onOpenCompany, onClose }) {
   const color      = cap.sector?.color || "var(--text-3)";
   const stageOrder = ["Seed", "Series A", "Series B", "Series C", "Growth", "Public"];
@@ -268,7 +279,7 @@ function CapDetail({ cap, onOpenCompany, onClose }) {
           {groups.map((g) => (
             <div key={g.stage}>
               <div className="flex center gap-6" style={{ marginBottom: 6 }}>
-                <span className="pill">{g.stage}</span>
+                <span className="pill">{STAGE_LABEL_HE[g.stage] || g.stage}</span>
                 <span className="mono tiny" style={{ color: "var(--text-4)" }}>{g.companies.length} חברות</span>
               </div>
               <div className="col gap-4">

@@ -7,6 +7,28 @@ const CONFIDENCE_META = {
   low:    { label: "נמוכה",  tone: "" },
 };
 
+// Display-only Hebrew labels for the readiness/stage fields' raw English
+// values (company.readiness / company.stage stay untouched).
+const READINESS_LABEL_HE = {
+  "Initial contact": "קשר ראשוני",
+  "Mapped": "ממופה",
+  "Verified": "מאומת",
+  "Active": "פעיל",
+  "Strategic": "אסטרטגי",
+  "Needs update": "דורש עדכון",
+};
+const STAGE_LABEL_HE = {
+  "Concept": "שלב רעיוני",
+  "Seed": "Seed",
+  "Series A": "Series A",
+  "Series B": "Series B",
+  "Series C": "Series C",
+  "Growth": "צמיחה",
+  "Mature": "בוגרת",
+  "Public": "ציבורית",
+  "Unknown": "לא ידוע",
+};
+
 function MatchesView({ onOpenCompany }) {
   const companies = window.COMPANIES || [];
   const [picked, setPicked] = React.useState(() => companies[0]?.id || null);
@@ -68,7 +90,7 @@ function MatchesView({ onOpenCompany }) {
                 <CoLogo company={company} size={34} />
                 <div className="col" style={{ minWidth: 0, flex: 1 }}>
                   <div style={{ fontSize: 13, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{company.name}</div>
-                  <div className="mono tiny" style={{ color: "var(--text-4)" }}>{String(company.stage || "Seed").toUpperCase()}</div>
+                  <div className="mono tiny" style={{ color: "var(--text-4)" }}>{String(STAGE_LABEL_HE[company.stage] || company.stage || "Seed").toUpperCase()}</div>
                 </div>
                 <span className="mono tiny" style={{ color: "var(--text-3)" }}>{window.CapabilityRegistry.getCompanyCapabilityIds(company).length}</span>
               </div>
@@ -86,7 +108,7 @@ function MatchesView({ onOpenCompany }) {
               <div className="col grow">
                 <div style={{ fontSize: 18, fontFamily: "var(--font-display)", fontWeight: 600 }}>{source.name}</div>
                 <div className="mono tiny" style={{ color: "var(--text-3)", letterSpacing: "0.05em" }}>
-                  {String(source.hq || "ישראל").toUpperCase()} · {String(source.stage || "Seed").toUpperCase()}
+                  {String(source.hq || "ישראל").toUpperCase()} · {String(STAGE_LABEL_HE[source.stage] || source.stage || "Seed").toUpperCase()}
                 </div>
               </div>
               <div className="col" style={{ gap: 4 }}>
@@ -142,8 +164,8 @@ function MatchesView({ onOpenCompany }) {
                 { l: "רמת ביטחון", v: (match) => (CONFIDENCE_META[match.confidence] || CONFIDENCE_META.low).label },
                 { l: "יכולות משותפות", v: (match) => match.sharedCapabilities.length },
                 { l: "משלימות", v: (match) => match.complementaryNeedsOffers.length },
-                { l: "מוכנות", v: (match) => match.target.readiness || "Mapped" },
-                { l: "שלב", v: (match) => match.target.stage || "Seed" },
+                { l: "מוכנות", v: (match) => READINESS_LABEL_HE[match.target.readiness] || match.target.readiness || "ממופה" },
+                { l: "שלב", v: (match) => STAGE_LABEL_HE[match.target.stage] || match.target.stage || "Seed" },
               ].map((row, i) => (
                 <React.Fragment key={i}>
                   <div style={{ padding: "8px 0", color: "var(--text-3)" }}>{row.l}</div>
