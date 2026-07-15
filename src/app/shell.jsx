@@ -16,8 +16,19 @@ const NAV = [
   { id: "settings",  label: "הגדרות",         icon: "Settings",  section: "פעולות" },
 ];
 
-function Sidebar({ active, onChange }) {
-  const sections = [...new Set(NAV.map((n) => n.section))];
+// Perspective-aware navigation (Batch 1: shallow filtering only).
+// Admin sees the full nav, byte-identical to before. Company/Partner drop the
+// admin-only actions; deeper per-perspective nav is deferred to later batches.
+// This is a presentational lens, never an access-control boundary.
+const PERSPECTIVE_ADMIN_ONLY = new Set(["onboard", "settings"]);
+function navForPerspective(perspective) {
+  if (perspective !== "company" && perspective !== "partner") return NAV;
+  return NAV.filter((n) => !PERSPECTIVE_ADMIN_ONLY.has(n.id));
+}
+
+function Sidebar({ active, onChange, perspective }) {
+  const items = navForPerspective(perspective);
+  const sections = [...new Set(items.map((n) => n.section))];
   return (
     <aside className="sidebar">
       <div className="brand">
@@ -31,7 +42,7 @@ function Sidebar({ active, onChange }) {
       {sections.map((sec) => (
         <React.Fragment key={sec}>
           <div className="nav-section">{sec}</div>
-          {NAV.filter((n) => n.section === sec).map((n) => {
+          {items.filter((n) => n.section === sec).map((n) => {
             const IconCmp = window.I[n.icon];
             return (
               <div
@@ -158,7 +169,40 @@ function SearchBox({ onOpenCompany }) {
   );
 }
 
-function Topbar({ title, crumb, onOpenCopilot, viewActions, onOpenCompany }) {
+// Demo "view-as" switcher. Presentational only — it changes what the UI shows,
+// not what the user is allowed to do. Deliberately no "logged in as", avatar,
+// logout, or lock iconography; the honest sub-label makes clear it is not a login.
+const PERSPECTIVE_OPTIONS = [
+  { id: "admin",   label: "גוף מנהל" },
+  { id: "company", label: "חברה" },
+  { id: "partner", label: "שותף" },
+];
+function PerspectiveSwitcher({ perspective, onChange }) {
+  return (
+    <div className="flex center gap-8" role="group" aria-label="החלפת תצוגת דמו"
+         title="החלפת תצוגת דמו · לא כניסת משתמש"
+         style={{ flex: "none" }}>
+      <span className="mono" style={{ fontSize: 10.5, letterSpacing: "0.1em", color: "var(--text-3)", whiteSpace: "nowrap" }}>תצוגה כ־</span>
+      <div className="flex" style={{ gap: 4 }}>
+        {PERSPECTIVE_OPTIONS.map((opt) => (
+          <button
+            key={opt.id}
+            type="button"
+            className={"chip" + (perspective === opt.id ? " active" : "")}
+            style={{ fontSize: 12, padding: "4px 10px" }}
+            aria-pressed={perspective === opt.id}
+            onClick={() => onChange && onChange(opt.id)}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+      <span className="mono" style={{ fontSize: 9.5, letterSpacing: "0.06em", color: "var(--text-4)", whiteSpace: "nowrap" }}>דמו · לא כניסת משתמש</span>
+    </div>
+  );
+}
+
+function Topbar({ title, crumb, onOpenCopilot, viewActions, onOpenCompany, perspective, onChangePerspective, showPerspectiveSwitcher }) {
   return (
     <header className="topbar">
       <div className="col" style={{ gap: 2 }}>
@@ -169,6 +213,10 @@ function Topbar({ title, crumb, onOpenCopilot, viewActions, onOpenCompany }) {
       <SearchBox onOpenCompany={onOpenCompany} />
 
       {viewActions}
+
+      {showPerspectiveSwitcher && (
+        <PerspectiveSwitcher perspective={perspective} onChange={onChangePerspective} />
+      )}
 
       <button className="icon-btn" disabled title="התראות — בקרוב">
         <window.I.Bell size={15} />
@@ -183,3 +231,4 @@ function Topbar({ title, crumb, onOpenCopilot, viewActions, onOpenCompany }) {
 window.Sidebar = Sidebar;
 window.Topbar = Topbar;
 window.NAV = NAV;
+window.navForPerspective = navForPerspective;

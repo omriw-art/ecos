@@ -27,6 +27,12 @@ function App() {
   const [view, setView] = React.useState("dashboard");
   const [companyId, setCompanyId] = React.useState(null);
   const [copilotOpen, setCopilotOpen] = React.useState(false);
+  // Product view "perspective" (view-as). Presentational only — never an
+  // authorization signal. Defaults to admin so Admin behaviour is unchanged.
+  const [perspective, setPerspectiveState] = React.useState(
+    () => (window.EcosPerspective ? window.EcosPerspective.get().perspective : "admin")
+  );
+  const showPerspectiveSwitcher = !!(window.EcosFlags && window.EcosFlags.perspectiveSwitcher);
 
   React.useEffect(() => {
     window.COMPANIES = companies;
@@ -61,6 +67,15 @@ function App() {
     if (id === "copilot") { setCopilotOpen(true); return; }
     setView(id);
   };
+  const changePerspective = (next) => {
+    const applied = window.EcosPerspective ? window.EcosPerspective.setPerspective(next).perspective : next;
+    setPerspectiveState(applied);
+    // If the current view isn't in the new perspective's nav, fall back to the
+    // dashboard (present in every perspective). The company *profile* detail
+    // view ("company") is reachable from every perspective, so it's exempt.
+    const allowed = window.navForPerspective ? window.navForPerspective(applied).map((n) => n.id) : null;
+    if (allowed && view !== "company" && allowed.indexOf(view) === -1) setView("dashboard");
+  };
   const createCompany = (input) => {
     const company = window.CompanyStore.createCompany(input);
     setCompanies(window.CompanyStore.getCompanies());
@@ -79,9 +94,10 @@ function App() {
 
   return (
     <div className="shell" data-screen-label={view}>
-      <Sidebar active={view === "company" ? "companies" : view} onChange={goNav} />
+      <Sidebar active={view === "company" ? "companies" : view} onChange={goNav} perspective={perspective} />
       <main className="main">
-        <Topbar title={head.title} crumb={head.crumb} onOpenCopilot={() => setCopilotOpen(true)} onOpenCompany={goCompany} />
+        <Topbar title={head.title} crumb={head.crumb} onOpenCopilot={() => setCopilotOpen(true)} onOpenCompany={goCompany}
+                perspective={perspective} onChangePerspective={changePerspective} showPerspectiveSwitcher={showPerspectiveSwitcher} />
         {view === "dashboard"    && <Dashboard onOpenCompany={goCompany} onNav={goNav} />}
         {view === "companies"    && <CompaniesView onOpenCompany={goCompany} onCreateCompany={createCompany} />}
         {view === "company"      && <CompanyProfile id={companyId} onBack={() => setView("companies")} onNav={goNav} onOpenCompany={goCompany} onUpdateCompany={updateCompany} />}

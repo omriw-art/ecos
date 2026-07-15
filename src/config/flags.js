@@ -13,10 +13,10 @@
   // Only flags that gate real, existing code. Add new flags in the same
   // commit that introduces the feature they gate.
   const DEFAULTS = {
-    local:      { demoReset: true,  debugPanel: true,  envBadge: true },
-    demo:       { demoReset: true,  debugPanel: false, envBadge: true },
-    staging:    { demoReset: true,  debugPanel: true,  envBadge: true },
-    production: { demoReset: false, debugPanel: false, envBadge: false },
+    local:      { demoReset: true,  debugPanel: true,  envBadge: true,  perspectiveSwitcher: true  },
+    demo:       { demoReset: true,  debugPanel: false, envBadge: true,  perspectiveSwitcher: true  },
+    staging:    { demoReset: true,  debugPanel: true,  envBadge: true,  perspectiveSwitcher: true  },
+    production: { demoReset: false, debugPanel: false, envBadge: false, perspectiveSwitcher: false },
   };
 
   const envName = (window.EcosEnv && window.EcosEnv.name) || "production";
