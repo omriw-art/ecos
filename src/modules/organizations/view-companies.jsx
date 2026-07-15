@@ -960,4 +960,4 @@ function ConnectionsTab({ c, overlapCo, onOpenCompany, linkedInUrl, openExternal
   );
 }
 
-Object.assign(window, { CompaniesView, CompanyProfile, orgTypeLabel, spaceSegmentLabel, spaceSegmentShortLabel });
+Object.assign(window, { CompaniesView, CompanyProfile, orgTypeLabel, spaceSegmentLabel, spaceSegmentShortLabel, getRelevantNeedsForCompany });

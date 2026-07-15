@@ -16,14 +16,21 @@ const NAV = [
   { id: "settings",  label: "הגדרות",         icon: "Settings",  section: "פעולות" },
 ];
 
-// Perspective-aware navigation (Batch 1: shallow filtering only).
-// Admin sees the full nav, byte-identical to before. Company/Partner drop the
-// admin-only actions; deeper per-perspective nav is deferred to later batches.
-// This is a presentational lens, never an access-control boundary.
+// Perspective-aware navigation. Admin sees the full nav, byte-identical to
+// before. Company/Partner drop the admin-only actions; Company additionally
+// gets its own overview landing item. Deeper per-perspective nav is deferred
+// to later batches. This is a presentational lens, never an access-control
+// boundary.
 const PERSPECTIVE_ADMIN_ONLY = new Set(["onboard", "settings"]);
+const COMPANY_OVERVIEW_ITEM = { id: "company-overview", label: "סקירת חברה", icon: "Satellite", section: "מבט-על" };
 function navForPerspective(perspective) {
-  if (perspective !== "company" && perspective !== "partner") return NAV;
-  return NAV.filter((n) => !PERSPECTIVE_ADMIN_ONLY.has(n.id));
+  if (perspective === "company") {
+    return [COMPANY_OVERVIEW_ITEM, ...NAV.filter((n) => !PERSPECTIVE_ADMIN_ONLY.has(n.id))];
+  }
+  if (perspective === "partner") {
+    return NAV.filter((n) => !PERSPECTIVE_ADMIN_ONLY.has(n.id));
+  }
+  return NAV;
 }
 
 function Sidebar({ active, onChange, perspective }) {

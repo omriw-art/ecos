@@ -9,6 +9,7 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
 
 const VIEW_TITLES = {
   dashboard:    { title: "לוח ניהול",         crumb: "דשבורד"                        },
+  "company-overview": { title: "סקירת חברה", crumb: "תצוגת חברה · דמו"               },
   companies:    { title: "ארגונים",           crumb: "ECOSYSTEM · COMPANIES"          },
   company:      { title: "פרופיל ארגון",     crumb: "ECOSYSTEM · COMPANIES · PROFILE" },
   capabilities: { title: "יכולות חלל",       crumb: "ECOSYSTEM · CAPABILITIES"       },
@@ -68,11 +69,20 @@ function App() {
     setView(id);
   };
   const changePerspective = (next) => {
+    const previous = perspective;
     const applied = window.EcosPerspective ? window.EcosPerspective.setPerspective(next).perspective : next;
     setPerspectiveState(applied);
-    // If the current view isn't in the new perspective's nav, fall back to the
-    // dashboard (present in every perspective). The company *profile* detail
-    // view ("company") is reachable from every perspective, so it's exempt.
+    // Entering the company perspective always lands on its dedicated overview
+    // (the whole point of this perspective) rather than wherever the admin
+    // view happened to be — "dashboard" would otherwise still count as valid
+    // company nav and never trigger the generic fallback below.
+    if (applied === "company" && previous !== "company") {
+      setView("company-overview");
+      return;
+    }
+    // Otherwise, if the current view isn't in the new perspective's nav, fall
+    // back to the dashboard (present in every perspective). The company
+    // *profile* detail view ("company") is reachable from every perspective.
     const allowed = window.navForPerspective ? window.navForPerspective(applied).map((n) => n.id) : null;
     if (allowed && view !== "company" && allowed.indexOf(view) === -1) setView("dashboard");
   };
@@ -99,6 +109,7 @@ function App() {
         <Topbar title={head.title} crumb={head.crumb} onOpenCopilot={() => setCopilotOpen(true)} onOpenCompany={goCompany}
                 perspective={perspective} onChangePerspective={changePerspective} showPerspectiveSwitcher={showPerspectiveSwitcher} />
         {view === "dashboard"    && <Dashboard onOpenCompany={goCompany} onNav={goNav} />}
+        {view === "company-overview" && <CompanyOverviewView onOpenCompany={goCompany} onNav={goNav} />}
         {view === "companies"    && <CompaniesView onOpenCompany={goCompany} onCreateCompany={createCompany} />}
         {view === "company"      && <CompanyProfile id={companyId} onBack={() => setView("companies")} onNav={goNav} onOpenCompany={goCompany} onUpdateCompany={updateCompany} />}
         {view === "capabilities" && <CapabilitiesView onOpenCompany={goCompany} onNav={goNav} />}
