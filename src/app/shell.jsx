@@ -23,9 +23,10 @@ const NAV = [
 // boundary.
 const PERSPECTIVE_ADMIN_ONLY = new Set(["onboard", "settings"]);
 const COMPANY_OVERVIEW_ITEM = { id: "company-overview", label: "סקירת חברה", icon: "Satellite", section: "מבט-על" };
+const GROWTH_TOOLS_ITEM = { id: "growth-tools", label: "הזדמנויות צמיחה", icon: "Trend", section: "מבט-על" };
 function navForPerspective(perspective) {
   if (perspective === "company") {
-    return [COMPANY_OVERVIEW_ITEM, ...NAV.filter((n) => !PERSPECTIVE_ADMIN_ONLY.has(n.id))];
+    return [COMPANY_OVERVIEW_ITEM, ...NAV.filter((n) => !PERSPECTIVE_ADMIN_ONLY.has(n.id)), GROWTH_TOOLS_ITEM];
   }
   if (perspective === "partner") {
     return NAV.filter((n) => !PERSPECTIVE_ADMIN_ONLY.has(n.id));

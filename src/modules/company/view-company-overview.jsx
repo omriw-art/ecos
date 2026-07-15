@@ -50,6 +50,8 @@ function CompanyOverviewView({ onNav, onOpenCompany }) {
   const relevantNeeds = window.getRelevantNeedsForCompany ? window.getRelevantNeedsForCompany(company).slice(0, 5) : [];
   const ourNeeds = window.NeedsStore ? window.NeedsStore.listNeeds().filter((n) => n.sourceOrgId === company.id) : [];
   const confidenceLabel = (c) => c === "high" ? "התאמה גבוהה" : c === "medium" ? "התאמה בינונית" : "התאמה נמוכה";
+  // Real preview, not personalized — same catalog everyone sees, no eligibility claim.
+  const growthPreview = window.GrowthToolsStore ? window.GrowthToolsStore.getGrowthTools().slice(0, 3) : [];
 
   return (
     <div className="view">
@@ -159,21 +161,36 @@ function CompanyOverviewView({ onNav, onOpenCompany }) {
           <div className="flex center gap-8" style={{ padding: "6px 2px", color: "var(--text-3)", fontSize: 13 }}>
             <window.I.Compass size={13} /> בדקו את הצרכים הרלוונטיים למעלה בעמוד זה
           </div>
-          <div className="flex center gap-8" style={{ padding: "6px 2px", color: "var(--text-3)", fontSize: 13 }}>
-            <window.I.Flag size={13} /> עברו להזדמנויות צמיחה למטה בעמוד זה
-          </div>
+          <button type="button" className="btn" style={{ justifyContent: "flex-start" }} onClick={() => onNav && onNav("growth-tools")}>
+            <window.I.Trend size={13} /> עברו להזדמנויות צמיחה
+          </button>
         </div>
       </div>
 
-      {/* 6. הזדמנויות צמיחה — truthful placeholder only */}
+      {/* 6. הזדמנויות צמיחה — real preview from GrowthToolsStore, not a mock */}
       <div className="card">
-        <div className="card-hd"><div className="card-title"><span className="dot amber" /> הזדמנויות צמיחה</div></div>
-        <div className="muted" style={{ padding: "6px 0" }}>
-          שכבה זו תציג בהמשך קולות קוראים, מענקים, פיילוטים ותוכניות צמיחה מתוך מאגר דמו מקומי.
+        <div className="card-hd">
+          <div className="card-title"><span className="dot amber" /> הזדמנויות צמיחה</div>
+          <button type="button" className="btn btn-ghost" style={{ fontSize: 12.5 }} onClick={() => onNav && onNav("growth-tools")}>
+            לכל ההזדמנויות ←
+          </button>
         </div>
-        <div className="muted tiny" style={{ marginTop: 6 }}>
-          אין כאן בדיקת זכאות, סריקה או חיבור למערכות חיצוניות.
-        </div>
+        <div className="muted tiny" style={{ marginBottom: 10 }}>{window.GROWTH_DISCLAIMER || "מאגר הפניות אוצר לצורכי הדגמה · אינו בדיקת זכאות ואינו מחובר למערכות חיצוניות. אמתו מול הגוף הרלוונטי."}</div>
+        {!growthPreview.length ? (
+          <div className="muted" style={{ padding: "6px 0" }}>אין כרגע הזדמנויות צמיחה במאגר המקומי.</div>
+        ) : (
+          <div className="col gap-8">
+            {growthPreview.map((g) => (
+              <div key={g.id} style={{ padding: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8 }}>
+                <div className="flex center between" style={{ gap: 8 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)" }}>{g.title}</div>
+                  <span className="pill" style={{ fontSize: 10.5, flex: "none" }}>{g.category}</span>
+                </div>
+                <div className="mono tiny" style={{ color: "var(--text-4)", marginTop: 2 }}>{g.provider}</div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

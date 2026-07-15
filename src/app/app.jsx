@@ -10,6 +10,7 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
 const VIEW_TITLES = {
   dashboard:    { title: "לוח ניהול",         crumb: "דשבורד"                        },
   "company-overview": { title: "סקירת חברה", crumb: "תצוגת חברה · דמו"               },
+  "growth-tools": { title: "הזדמנויות צמיחה", crumb: "תצוגת חברה · דמו"              },
   companies:    { title: "ארגונים",           crumb: "ECOSYSTEM · COMPANIES"          },
   company:      { title: "פרופיל ארגון",     crumb: "ECOSYSTEM · COMPANIES · PROFILE" },
   capabilities: { title: "יכולות חלל",       crumb: "ECOSYSTEM · CAPABILITIES"       },
@@ -110,6 +111,7 @@ function App() {
                 perspective={perspective} onChangePerspective={changePerspective} showPerspectiveSwitcher={showPerspectiveSwitcher} />
         {view === "dashboard"    && <Dashboard onOpenCompany={goCompany} onNav={goNav} />}
         {view === "company-overview" && <CompanyOverviewView onOpenCompany={goCompany} onNav={goNav} />}
+        {view === "growth-tools" && <GrowthToolsView />}
         {view === "companies"    && <CompaniesView onOpenCompany={goCompany} onCreateCompany={createCompany} />}
         {view === "company"      && <CompanyProfile id={companyId} onBack={() => setView("companies")} onNav={goNav} onOpenCompany={goCompany} onUpdateCompany={updateCompany} />}
         {view === "capabilities" && <CapabilitiesView onOpenCompany={goCompany} onNav={goNav} />}
