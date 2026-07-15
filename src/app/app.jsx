@@ -10,7 +10,8 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
 const VIEW_TITLES = {
   dashboard:    { title: "לוח ניהול",         crumb: "דשבורד"                        },
   "company-overview": { title: "סקירת חברה", crumb: "תצוגת חברה · דמו"               },
-  "growth-tools": { title: "הזדמנויות צמיחה", crumb: "תצוגת חברה · דמו"              },
+  "partner-overview": { title: "סביבת שותף", crumb: "תצוגת שותף · דמו"               },
+  "growth-tools": { title: "הזדמנויות צמיחה", crumb: "תצוגת דמו"                      },
   companies:    { title: "ארגונים",           crumb: "ECOSYSTEM · COMPANIES"          },
   company:      { title: "פרופיל ארגון",     crumb: "ECOSYSTEM · COMPANIES · PROFILE" },
   capabilities: { title: "יכולות חלל",       crumb: "ECOSYSTEM · CAPABILITIES"       },
@@ -69,16 +70,17 @@ function App() {
     if (id === "copilot") { setCopilotOpen(true); return; }
     setView(id);
   };
+  // Each non-admin perspective's dedicated landing — entering it always lands
+  // here rather than wherever the admin view happened to be, since
+  // "dashboard" would otherwise still count as valid nav in both and never
+  // trigger the generic fallback below.
+  const PERSPECTIVE_LANDING = { company: "company-overview", partner: "partner-overview" };
   const changePerspective = (next) => {
     const previous = perspective;
     const applied = window.EcosPerspective ? window.EcosPerspective.setPerspective(next).perspective : next;
     setPerspectiveState(applied);
-    // Entering the company perspective always lands on its dedicated overview
-    // (the whole point of this perspective) rather than wherever the admin
-    // view happened to be — "dashboard" would otherwise still count as valid
-    // company nav and never trigger the generic fallback below.
-    if (applied === "company" && previous !== "company") {
-      setView("company-overview");
+    if (PERSPECTIVE_LANDING[applied] && previous !== applied) {
+      setView(PERSPECTIVE_LANDING[applied]);
       return;
     }
     // Otherwise, if the current view isn't in the new perspective's nav, fall
@@ -112,6 +114,7 @@ function App() {
         {view === "dashboard"    && <Dashboard onOpenCompany={goCompany} onNav={goNav} />}
         {view === "company-overview" && <CompanyOverviewView onOpenCompany={goCompany} onNav={goNav} />}
         {view === "growth-tools" && <GrowthToolsView />}
+        {view === "partner-overview" && <PartnerOverviewView onOpenCompany={goCompany} onNav={goNav} />}
         {view === "companies"    && <CompaniesView onOpenCompany={goCompany} onCreateCompany={createCompany} />}
         {view === "company"      && <CompanyProfile id={companyId} onBack={() => setView("companies")} onNav={goNav} onOpenCompany={goCompany} onUpdateCompany={updateCompany} />}
         {view === "capabilities" && <CapabilitiesView onOpenCompany={goCompany} onNav={goNav} />}
