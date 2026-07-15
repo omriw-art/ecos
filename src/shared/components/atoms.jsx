@@ -270,4 +270,42 @@ function EnvBadge({ title }) {
   return <span className="pill mono" title={title || "נתונים מקומיים"}>{label}</span>;
 }
 
-Object.assign(window, { ScoreRing, Sparkline, CoLogo, SectorPill, Donut, MiniBar, Funnel, FitBar, EnvBadge });
+// Small reusable label for local-demo-only data/behavior — used wherever a
+// section could otherwise read as live/external (opportunities, catalogs).
+function DemoTag({ children }) {
+  return <span className="pill mono" style={{ fontSize: 10 }}>{children}</span>;
+}
+
+// Three-step strip shown on the Partner/Company/Admin landing pages so the
+// relationship between them (publish → surface → manage) is visible from any
+// one of them, not just implied. Presentational only — no perspective switch
+// wired in, just orientation copy; `active` highlights where the viewer is.
+const DEMO_FLOW_STEPS = [
+  { id: "partner", icon: "Users", label: "פרסמו הזדמנות מקומית" },
+  { id: "company", icon: "Satellite", label: "ראו הזדמנויות שפורסמו בדמו" },
+  { id: "admin", icon: "Layers", label: "נהלו את כלל הצרכים וההזדמנויות" },
+];
+function DemoFlowStrip({ active }) {
+  return (
+    <div className="card" style={{ padding: "10px 14px" }}>
+      <div className="flex center gap-8 wrap" style={{ fontSize: 12 }}>
+        <span style={{ fontWeight: 700, color: "var(--text-2)" }}>איך הדמו הזה עובד:</span>
+        {DEMO_FLOW_STEPS.map((step, i) => {
+          const IconCmp = window.I[step.icon];
+          const isActive = step.id === active;
+          return (
+            <React.Fragment key={step.id}>
+              {i > 0 && <span style={{ color: "var(--text-4)" }}>·</span>}
+              <span className="flex center gap-4" style={{ color: isActive ? "var(--text-1)" : "var(--text-3)", fontWeight: isActive ? 700 : 400 }}>
+                <IconCmp size={12} /> {step.label}
+              </span>
+            </React.Fragment>
+          );
+        })}
+      </div>
+      <div className="muted tiny" style={{ marginTop: 6 }}>תצוגת דמו מקומית · לא כניסת משתמש · לא הפצה חיצונית</div>
+    </div>
+  );
+}
+
+Object.assign(window, { ScoreRing, Sparkline, CoLogo, SectorPill, Donut, MiniBar, Funnel, FitBar, EnvBadge, DemoTag, DemoFlowStrip });

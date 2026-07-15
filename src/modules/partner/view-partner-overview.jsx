@@ -77,6 +77,8 @@ function PartnerOverviewView({ onNav, onOpenCompany }) {
         </div>
       </div>
 
+      {window.DemoFlowStrip && <window.DemoFlowStrip active="partner" />}
+
       {/* 1. סביבת שותף */}
       <div className="card">
         <div className="card-hd"><div className="card-title"><span className="dot" /> מה זו סביבת השותף</div></div>
@@ -126,6 +128,10 @@ function PartnerOverviewView({ onNav, onOpenCompany }) {
             {showOpportunityForm ? "ביטול" : "פרסמו הזדמנות חדשה"}
           </button>
         </div>
+        <div className="flex center gap-6 wrap" style={{ marginBottom: 8 }}>
+          {window.DemoTag && <window.DemoTag>נתוני דמו מקומיים</window.DemoTag>}
+          {window.DemoTag && <window.DemoTag>לא הופץ מחוץ למערכת</window.DemoTag>}
+        </div>
         <div className="muted tiny" style={{ marginBottom: showOpportunityForm ? 12 : 0 }}>
           פרסמו קול קורא, פיילוט, מעבדה פתוחה או צורך לשיתוף פעולה כהזדמנות דמו מקומית. {LOCAL_DEMO_NOTE}.
         </div>
@@ -171,20 +177,27 @@ function PartnerOverviewView({ onNav, onOpenCompany }) {
 
         <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-2)", marginBottom: 8 }}>הזדמנויות שפורסמו בדמו</div>
         {!publishedOpportunities.length ? (
-          <div className="muted" style={{ padding: "6px 0" }}>טרם פורסמו הזדמנויות בדמו.</div>
-        ) : (
-          <div className="col gap-8">
-            {publishedOpportunities.map((o) => (
-              <div key={o.id} style={{ padding: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8 }}>
-                <div className="flex center between" style={{ gap: 8 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)" }}>{o.title}</div>
-                  <span className="pill" style={{ fontSize: 10.5, flex: "none" }}>{window.TaxonomyStore ? window.TaxonomyStore.labelFor("needType", o.needType) : o.needType}</span>
-                </div>
-                {!!o.description && <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>{o.description}</div>}
-                <div className="muted tiny" style={{ marginTop: 6 }}>{LOCAL_DEMO_NOTE}</div>
-              </div>
-            ))}
+          <div className="muted" style={{ padding: "6px 0" }}>
+            טרם פורסמו הזדמנויות בדמו. הזדמנויות שתפרסמו כאן יופיעו גם ברשימה זו וגם בתצוגת חברה.
           </div>
+        ) : (
+          <>
+            <div className="col gap-8">
+              {publishedOpportunities.map((o) => (
+                <div key={o.id} style={{ padding: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8 }}>
+                  <div className="flex center between" style={{ gap: 8 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)" }}>{o.title}</div>
+                    <span className="pill" style={{ fontSize: 10.5, flex: "none" }}>{window.TaxonomyStore ? window.TaxonomyStore.labelFor("needType", o.needType) : o.needType}</span>
+                  </div>
+                  {!!o.description && <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>{o.description}</div>}
+                  <div className="muted tiny" style={{ marginTop: 6 }}>{LOCAL_DEMO_NOTE}</div>
+                </div>
+              ))}
+            </div>
+            <div className="muted tiny" style={{ marginTop: 10 }}>
+              עברו לתצוגת חברה (למעלה, בבורר התצוגה) כדי לראות איך ההזדמנות מופיעה לצד הזדמנויות אחרות.
+            </div>
+          </>
         )}
       </div>
 
@@ -238,7 +251,13 @@ function PartnerOverviewView({ onNav, onOpenCompany }) {
             לכל ההזדמנויות ←
           </button>
         </div>
-        <div className="muted tiny" style={{ marginBottom: 10 }}>{window.GROWTH_DISCLAIMER || "מאגר הפניות אוצר לצורכי הדגמה · אינו בדיקת זכאות ואינו מחובר למערכות חיצוניות. אמתו מול הגוף הרלוונטי."}</div>
+        <div className="flex center gap-6 wrap" style={{ marginBottom: 8 }}>
+          {window.DemoTag && <window.DemoTag>קטלוג אוצר קבוע</window.DemoTag>}
+          {window.DemoTag && <window.DemoTag>לא בדיקת זכאות</window.DemoTag>}
+        </div>
+        <div className="muted tiny" style={{ marginBottom: 10 }}>
+          קטלוג אחיד לכולם, שונה מהזדמנויות שפורסמו על ידי שותפים למעלה. {window.GROWTH_DISCLAIMER || "מאגר הפניות אוצר לצורכי הדגמה · אינו בדיקת זכאות ואינו מחובר למערכות חיצוניות. אמתו מול הגוף הרלוונטי."}
+        </div>
         {!growthPreview.length ? (
           <div className="muted" style={{ padding: "6px 0" }}>אין כרגע הזדמנויות צמיחה במאגר המקומי.</div>
         ) : (

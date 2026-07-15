@@ -68,6 +68,8 @@ function CompanyOverviewView({ onNav, onOpenCompany }) {
         </div>
       </div>
 
+      {window.DemoFlowStrip && <window.DemoFlowStrip active="company" />}
+
       {/* 1. סקירת חברה */}
       <div className="card">
         <div className="flex gap-14" style={{ alignItems: "flex-start" }}>
@@ -162,9 +164,15 @@ function CompanyOverviewView({ onNav, onOpenCompany }) {
           <div className="card-title"><span className="dot amber" /> הזדמנויות מהאקו-סיסטם</div>
           {!!ecosystemOpportunities.length && <span className="pill">{ecosystemOpportunities.length}</span>}
         </div>
+        <div className="flex center gap-6 wrap" style={{ marginBottom: 8 }}>
+          {window.DemoTag && <window.DemoTag>נתוני דמו מקומיים</window.DemoTag>}
+          {window.DemoTag && <window.DemoTag>לא הופץ מחוץ למערכת</window.DemoTag>}
+        </div>
         <div className="muted tiny" style={{ marginBottom: 10 }}>הזדמנויות שפורסמו על ידי שותפים בתצוגת הדמו המקומית</div>
         {!ecosystemOpportunities.length ? (
-          <div className="muted" style={{ padding: "8px 0" }}>אין עדיין הזדמנויות שפורסמו בדמו.</div>
+          <div className="muted" style={{ padding: "8px 0" }}>
+            אין עדיין הזדמנויות שפורסמו בדמו. כשיפורסמו הזדמנויות בתצוגת שותף, הן יופיעו כאן.
+          </div>
         ) : (
           <div className="col gap-8">
             {ecosystemOpportunities.map((o) => (
@@ -176,7 +184,7 @@ function CompanyOverviewView({ onNav, onOpenCompany }) {
                   {o.priority && <span className="pill" style={{ fontSize: 10.5 }}>עדיפות {window.TaxonomyStore ? window.TaxonomyStore.labelFor("priority", o.priority) : o.priority}</span>}
                   {o.sourceOrgName && <span className="mono tiny" style={{ color: "var(--text-4)" }}>{o.sourceOrgName}</span>}
                 </div>
-                <div className="muted tiny" style={{ marginTop: 6 }}>פורסם מקומית בדמו · לא הופץ מחוץ למערכת</div>
+                <div className="muted tiny" style={{ marginTop: 6 }}>מקור: הזדמנות מקומית שפורסמה בתצוגת שותף · פורסם מקומית בדמו · לא הופץ מחוץ למערכת</div>
               </div>
             ))}
           </div>
@@ -215,7 +223,13 @@ function CompanyOverviewView({ onNav, onOpenCompany }) {
             לכל ההזדמנויות ←
           </button>
         </div>
-        <div className="muted tiny" style={{ marginBottom: 10 }}>{window.GROWTH_DISCLAIMER || "מאגר הפניות אוצר לצורכי הדגמה · אינו בדיקת זכאות ואינו מחובר למערכות חיצוניות. אמתו מול הגוף הרלוונטי."}</div>
+        <div className="flex center gap-6 wrap" style={{ marginBottom: 8 }}>
+          {window.DemoTag && <window.DemoTag>קטלוג אוצר קבוע</window.DemoTag>}
+          {window.DemoTag && <window.DemoTag>לא בדיקת זכאות</window.DemoTag>}
+        </div>
+        <div className="muted tiny" style={{ marginBottom: 10 }}>
+          קטלוג אחיד לכולם, שונה מהזדמנויות שפורסמו על ידי שותפים למעלה. {window.GROWTH_DISCLAIMER || "מאגר הפניות אוצר לצורכי הדגמה · אינו בדיקת זכאות ואינו מחובר למערכות חיצוניות. אמתו מול הגוף הרלוונטי."}
+        </div>
         {!growthPreview.length ? (
           <div className="muted" style={{ padding: "6px 0" }}>אין כרגע הזדמנויות צמיחה במאגר המקומי.</div>
         ) : (

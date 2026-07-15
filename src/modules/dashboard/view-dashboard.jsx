@@ -235,6 +235,8 @@ function Dashboard({ onOpenCompany, onNav }) {
         </div>
       </div>
 
+      {window.DemoFlowStrip && <window.DemoFlowStrip active="admin" />}
+
       {importPreview && (
         <div className="card" style={{ border: "1px solid oklch(0.55 0.15 80)", background: "oklch(0.14 0.04 80 / 0.35)" }}>
           <div className="card-hd">
