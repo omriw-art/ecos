@@ -49,6 +49,12 @@ function CompanyOverviewView({ onNav, onOpenCompany }) {
   const sectors = Array.isArray(company.sectors) ? company.sectors : [];
   const relevantNeeds = window.getRelevantNeedsForCompany ? window.getRelevantNeedsForCompany(company).slice(0, 5) : [];
   const ourNeeds = window.NeedsStore ? window.NeedsStore.listNeeds().filter((n) => n.sourceOrgId === company.id) : [];
+  // Locally published partner opportunities (Partner Opportunity Publishing v1)
+  // — same NeedsStore records, not a separate feed. Not personalized/matched,
+  // just the raw local list, same honesty stance as the Growth Tools preview.
+  const ecosystemOpportunities = window.NeedsStore
+    ? window.NeedsStore.listNeeds().filter((n) => n.sourceType === "opportunity").slice(0, 5)
+    : [];
   const confidenceLabel = (c) => c === "high" ? "התאמה גבוהה" : c === "medium" ? "התאמה בינונית" : "התאמה נמוכה";
   // Real preview, not personalized — same catalog everyone sees, no eligibility claim.
   const growthPreview = window.GrowthToolsStore ? window.GrowthToolsStore.getGrowthTools().slice(0, 3) : [];
@@ -148,7 +154,41 @@ function CompanyOverviewView({ onNav, onOpenCompany }) {
         )}
       </div>
 
-      {/* 5. הצעדים הבאים */}
+      {/* 5. הזדמנויות מהאקו-סיסטם — locally published partner opportunities
+          (NeedsStore, sourceType: "opportunity"). Separate feed from Growth
+          Tools below — not merged, not eligibility-checked. */}
+      <div className="card">
+        <div className="card-hd">
+          <div className="card-title"><span className="dot amber" /> הזדמנויות מהאקו-סיסטם</div>
+          {!!ecosystemOpportunities.length && <span className="pill">{ecosystemOpportunities.length}</span>}
+        </div>
+        <div className="muted tiny" style={{ marginBottom: 10 }}>הזדמנויות שפורסמו על ידי שותפים בתצוגת הדמו המקומית</div>
+        {!ecosystemOpportunities.length ? (
+          <div className="muted" style={{ padding: "8px 0" }}>אין עדיין הזדמנויות שפורסמו בדמו.</div>
+        ) : (
+          <div className="col gap-8">
+            {ecosystemOpportunities.map((o) => (
+              <div key={o.id} style={{ padding: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)" }}>{o.title}</div>
+                {!!o.description && <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>{o.description}</div>}
+                <div className="flex center gap-6 wrap" style={{ marginTop: 6 }}>
+                  {o.needType && <span className="pill" style={{ fontSize: 10.5 }}>{window.TaxonomyStore ? window.TaxonomyStore.labelFor("needType", o.needType) : o.needType}</span>}
+                  {o.priority && <span className="pill" style={{ fontSize: 10.5 }}>עדיפות {window.TaxonomyStore ? window.TaxonomyStore.labelFor("priority", o.priority) : o.priority}</span>}
+                  {o.sourceOrgName && <span className="mono tiny" style={{ color: "var(--text-4)" }}>{o.sourceOrgName}</span>}
+                </div>
+                <div className="muted tiny" style={{ marginTop: 6 }}>פורסם מקומית בדמו · לא הופץ מחוץ למערכת</div>
+              </div>
+            ))}
+          </div>
+        )}
+        {!!ecosystemOpportunities.length && (
+          <button type="button" className="btn btn-ghost" style={{ fontSize: 12.5, marginTop: 10 }} onClick={() => onNav && onNav("needs")}>
+            פתח בלוח צרכים ←
+          </button>
+        )}
+      </div>
+
+      {/* 6. הצעדים הבאים */}
       <div className="card">
         <div className="card-hd"><div className="card-title"><span className="dot" /> הצעדים הבאים</div></div>
         <div className="col gap-8">
@@ -167,7 +207,7 @@ function CompanyOverviewView({ onNav, onOpenCompany }) {
         </div>
       </div>
 
-      {/* 6. הזדמנויות צמיחה — real preview from GrowthToolsStore, not a mock */}
+      {/* 7. הזדמנויות צמיחה — real preview from GrowthToolsStore, not a mock */}
       <div className="card">
         <div className="card-hd">
           <div className="card-title"><span className="dot amber" /> הזדמנויות צמיחה</div>
