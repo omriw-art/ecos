@@ -7,6 +7,12 @@
 
 const PARTNER_ORG_TYPES = new Set(["investor", "accelerator", "academic", "research", "government", "service-provider", "nonprofit"]);
 const PARTNER_NEED_TYPES = new Set(["partner", "pilot", "customer", "research", "challenge"]);
+// Opportunity publishing (v1) reuses NeedsStore as-is — no schema change.
+// sourceType "opportunity" already exists in the store; publishing here just
+// writes through the same createNeed() the admin needs board uses.
+const OPPORTUNITY_NEED_TYPES = ["pilot", "partner", "research", "customer"];
+const OPPORTUNITY_FORM_DEFAULTS = { title: "", description: "", needType: "partner", priority: "medium" };
+const LOCAL_DEMO_NOTE = "נשמר מקומית בדמו · לא הופץ לגורמים חיצוניים";
 
 function resolvePartnerOrg(companies) {
   // Deterministic, not a real "logged in" identity — same pattern as the
@@ -19,6 +25,37 @@ function resolvePartnerOrg(companies) {
 function PartnerOverviewView({ onNav, onOpenCompany }) {
   const companies = window.CompanyStore ? window.CompanyStore.getCompanies() : (window.COMPANIES || []);
   const partnerOrg = React.useMemo(() => resolvePartnerOrg(companies), [companies]);
+
+  const [showOpportunityForm, setShowOpportunityForm] = React.useState(false);
+  const [opportunityForm, setOpportunityForm] = React.useState(OPPORTUNITY_FORM_DEFAULTS);
+  const [opportunitiesVersion, setOpportunitiesVersion] = React.useState(0);
+  const setOpportunityField = (key, value) => setOpportunityForm((f) => Object.assign({}, f, { [key]: value }));
+
+  const publishedOpportunities = React.useMemo(() => {
+    if (!window.NeedsStore) return [];
+    const orgId = partnerOrg ? partnerOrg.id : null;
+    return window.NeedsStore.listNeeds()
+      .filter((n) => n.sourceType === "opportunity" && n.sourceOrgId === orgId)
+      .slice(0, 8);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [partnerOrg, opportunitiesVersion]);
+
+  const submitOpportunity = (e) => {
+    e.preventDefault();
+    const title = opportunityForm.title.trim();
+    if (!title || !window.NeedsStore) return;
+    window.NeedsStore.createNeed({
+      title,
+      description: opportunityForm.description.trim(),
+      needType: OPPORTUNITY_NEED_TYPES.includes(opportunityForm.needType) ? opportunityForm.needType : "partner",
+      priority: opportunityForm.priority,
+      sourceType: "opportunity",
+      sourceOrganizationId: partnerOrg ? partnerOrg.id : null,
+    });
+    setOpportunityForm(OPPORTUNITY_FORM_DEFAULTS);
+    setShowOpportunityForm(false);
+    setOpportunitiesVersion((v) => v + 1);
+  };
 
   const collaborationNeeds = React.useMemo(() => {
     if (!window.NeedsStore) return [];
@@ -81,15 +118,74 @@ function PartnerOverviewView({ onNav, onOpenCompany }) {
         )}
       </div>
 
-      {/* 3. הזדמנויות לפרסום — truthful placeholder only, no fake publishing */}
+      {/* 3. הזדמנויות לפרסום — small local-only publishing flow, no real distribution */}
       <div className="card">
-        <div className="card-hd"><div className="card-title"><span className="dot amber" /> הזדמנויות לפרסום</div></div>
-        <div className="muted" style={{ padding: "6px 0" }}>
-          בשלב הבא ניתן יהיה לפרסם קול קורא, פיילוט, מעבדה פתוחה או צורך לשיתוף פעולה.
+        <div className="card-hd">
+          <div className="card-title"><span className="dot amber" /> הזדמנויות לפרסום</div>
+          <button type="button" className="btn btn-ghost" style={{ fontSize: 12.5 }} onClick={() => setShowOpportunityForm((v) => !v)}>
+            {showOpportunityForm ? "ביטול" : "פרסמו הזדמנות חדשה"}
+          </button>
         </div>
-        <div className="muted tiny" style={{ marginTop: 6 }}>
-          יכולת הפרסום אינה זמינה עדיין בתצוגת הדמו — אין כאן פרסום פעיל או הפצה חיצונית.
+        <div className="muted tiny" style={{ marginBottom: showOpportunityForm ? 12 : 0 }}>
+          פרסמו קול קורא, פיילוט, מעבדה פתוחה או צורך לשיתוף פעולה כהזדמנות דמו מקומית. {LOCAL_DEMO_NOTE}.
         </div>
+
+        {showOpportunityForm && (
+          <form className="col gap-8" onSubmit={submitOpportunity} style={{ marginTop: 4, marginBottom: 14, padding: 12, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8 }}>
+            <div className="field">
+              <label style={{ fontSize: 13, fontWeight: 700 }}>כותרת</label>
+              <input className="input" value={opportunityForm.title} onChange={(e) => setOpportunityField("title", e.target.value)}
+                     placeholder="לדוגמה: קול קורא לפיילוט משותף" />
+            </div>
+            <div className="field">
+              <label style={{ fontSize: 13, fontWeight: 700 }}>תיאור (אופציונלי)</label>
+              <input className="input" value={opportunityForm.description} onChange={(e) => setOpportunityField("description", e.target.value)}
+                     placeholder="פרטים נוספים על ההזדמנות" />
+            </div>
+            <div className="flex gap-8 wrap">
+              <div className="field" style={{ flex: 1, minWidth: 160 }}>
+                <label style={{ fontSize: 13, fontWeight: 700 }}>סוג</label>
+                <select className="select" value={opportunityForm.needType} onChange={(e) => setOpportunityField("needType", e.target.value)}>
+                  {OPPORTUNITY_NEED_TYPES.map((nt) => (
+                    <option key={nt} value={nt}>{window.TaxonomyStore ? window.TaxonomyStore.labelFor("needType", nt) : nt}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="field" style={{ flex: 1, minWidth: 160 }}>
+                <label style={{ fontSize: 13, fontWeight: 700 }}>עדיפות</label>
+                <select className="select" value={opportunityForm.priority} onChange={(e) => setOpportunityField("priority", e.target.value)}>
+                  {(window.NeedsStore ? window.NeedsStore.PRIORITIES : ["high", "medium", "low"]).map((p) => (
+                    <option key={p} value={p}>{window.TaxonomyStore ? window.TaxonomyStore.labelFor("priority", p) : p}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="flex center gap-8" style={{ marginTop: 4 }}>
+              <button type="submit" className="btn btn-primary" disabled={!opportunityForm.title.trim()}>
+                <window.I.Plus size={13} /> פרסמו בדמו
+              </button>
+              <span className="muted tiny">{LOCAL_DEMO_NOTE}</span>
+            </div>
+          </form>
+        )}
+
+        <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-2)", marginBottom: 8 }}>הזדמנויות שפורסמו בדמו</div>
+        {!publishedOpportunities.length ? (
+          <div className="muted" style={{ padding: "6px 0" }}>טרם פורסמו הזדמנויות בדמו.</div>
+        ) : (
+          <div className="col gap-8">
+            {publishedOpportunities.map((o) => (
+              <div key={o.id} style={{ padding: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8 }}>
+                <div className="flex center between" style={{ gap: 8 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)" }}>{o.title}</div>
+                  <span className="pill" style={{ fontSize: 10.5, flex: "none" }}>{window.TaxonomyStore ? window.TaxonomyStore.labelFor("needType", o.needType) : o.needType}</span>
+                </div>
+                {!!o.description && <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>{o.description}</div>}
+                <div className="muted tiny" style={{ marginTop: 6 }}>{LOCAL_DEMO_NOTE}</div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* 4. צרכים ותחומי עניין */}
