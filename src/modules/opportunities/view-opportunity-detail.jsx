@@ -102,6 +102,16 @@ function OpportunityDetailView({ id, perspective, onNav }) {
           )}
         </div>
         <div className="muted tiny">פורסם מקומית בדמו · לא הופץ מחוץ למערכת</div>
+        {/* Partner Interest Signals v1 — aggregate count only, same signal
+            shown in the Partner overview's published-opportunities list.
+            Never names/contacts/scores/status. */}
+        {perspective === "partner" && window.OpportunityInterestStore && (
+          <div className="muted tiny" style={{ marginTop: 6 }}>
+            {window.OpportunityInterestStore.countForOpportunity(opportunity.id) > 0
+              ? `סומנו ${window.OpportunityInterestStore.countForOpportunity(opportunity.id)} התעניינויות בדמו`
+              : "עדיין לא סומנה התעניינות בדמו"}
+          </div>
+        )}
       </div>
 
       {perspective === "company" && (

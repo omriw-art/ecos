@@ -216,6 +216,12 @@ function PartnerOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
                   </div>
                   {!!o.description && <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>{o.description}</div>}
                   <div className="muted tiny" style={{ marginTop: 6 }}>{LOCAL_DEMO_NOTE}</div>
+                  {/* Aggregate-only signal — count, never names/contacts/scores/status. */}
+                  <div className="muted tiny" style={{ marginTop: 4 }}>
+                    {window.OpportunityInterestStore && window.OpportunityInterestStore.countForOpportunity(o.id) > 0
+                      ? `סומנו ${window.OpportunityInterestStore.countForOpportunity(o.id)} התעניינויות בדמו`
+                      : "עדיין לא סומנה התעניינות בדמו"}
+                  </div>
                   <button type="button" className="btn btn-ghost" style={{ fontSize: 12, marginTop: 6 }} onClick={() => onOpenOpportunity && onOpenOpportunity(o.id)}>
                     פתח ←
                   </button>

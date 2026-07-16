@@ -83,6 +83,13 @@
     return getInterests().filter((i) => i.companyId === compId);
   }
 
+  // Aggregate-only count for Partner-side display (Partner Interest Signals
+  // v1) — deliberately returns a number, never the underlying records, so a
+  // Partner view can only ever show "how many", never who.
+  function countForOpportunity(opportunityId) {
+    return listForOpportunity(opportunityId).length;
+  }
+
   function clearInterests() {
     return saveInterests([]);
   }
@@ -94,6 +101,7 @@
     hasInterest,
     listForOpportunity,
     listForCompany,
+    countForOpportunity,
     clearInterests,
   };
 })();
