@@ -61,8 +61,12 @@
 
   function setPerspective(perspective) {
     if (PERSPECTIVES.indexOf(perspective) === -1) return get();
-    // actingCompanyId is only meaningful while acting as a company.
-    const actingCompanyId = perspective === "company" ? state.actingCompanyId : null;
+    // actingCompanyId is only meaningful while acting as a company or partner
+    // org (both resolve it against CompanyStore, each filtered to its own
+    // eligible organizationType set) — cleared for admin, which has no acting
+    // entity. Kept across company<->partner switches so a chosen org survives
+    // a round trip through the other perspective for the same session.
+    const actingCompanyId = (perspective === "company" || perspective === "partner") ? state.actingCompanyId : null;
     state = { perspective, actingCompanyId };
     persist();
     emit();

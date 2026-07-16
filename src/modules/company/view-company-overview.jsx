@@ -26,16 +26,36 @@ const CO_STAGE_LABEL_HE = {
   "Unknown": "לא ידוע",
 };
 
-function resolveActingCompany(companies) {
-  const perspective = window.EcosPerspective ? window.EcosPerspective.get() : { actingCompanyId: null };
-  const acting = perspective.actingCompanyId ? companies.find((c) => c.id === perspective.actingCompanyId) : null;
+// Same partner organizationType set as view-partner-overview.jsx (duplicated
+// per-file, same convention as the label maps above) — used only to prefer
+// non-partner-like orgs in the "חברה בתצוגה" selector/resolution, never to
+// gate data access.
+const CO_PARTNER_ORG_TYPES = new Set(["investor", "accelerator", "academic", "research", "government", "service-provider", "nonprofit"]);
+
+function resolveActingCompany(companies, actingCompanyId) {
+  const eligible = companies.filter((c) => !c.organizationType || !CO_PARTNER_ORG_TYPES.has(c.organizationType));
+  const acting = actingCompanyId ? eligible.find((c) => c.id === actingCompanyId) : null;
   // Safe seeded default — deterministic, not a real "logged in" identity.
-  return acting || companies[0] || null;
+  return acting || eligible[0] || companies[0] || null;
 }
 
 function CompanyOverviewView({ onNav, onOpenCompany }) {
   const companies = window.CompanyStore ? window.CompanyStore.getCompanies() : (window.COMPANIES || []);
-  const company = React.useMemo(() => resolveActingCompany(companies), [companies]);
+  // Local mirror of EcosPerspective.actingCompanyId — a plain useMemo can't
+  // react to session state that changes outside props/state, so the selector
+  // below updates this alongside the store call.
+  const [actingCompanyId, setActingCompanyId] = React.useState(
+    () => (window.EcosPerspective ? window.EcosPerspective.get().actingCompanyId : null)
+  );
+  const company = React.useMemo(() => resolveActingCompany(companies, actingCompanyId), [companies, actingCompanyId]);
+  const companyOptions = React.useMemo(
+    () => companies.filter((c) => !c.organizationType || !CO_PARTNER_ORG_TYPES.has(c.organizationType)),
+    [companies]
+  );
+  const handleSelectCompany = (id) => {
+    if (window.EcosPerspective) window.EcosPerspective.setActingCompanyId(id);
+    setActingCompanyId(id || null);
+  };
 
   if (!company) {
     return (
@@ -69,6 +89,16 @@ function CompanyOverviewView({ onNav, onOpenCompany }) {
       </div>
 
       {window.DemoFlowStrip && <window.DemoFlowStrip active="company" />}
+
+      {window.ActingOrgSelector && (
+        <window.ActingOrgSelector
+          label="חברה בתצוגה"
+          options={companyOptions.map((c) => ({ id: c.id, name: c.name }))}
+          value={company.id}
+          onChange={handleSelectCompany}
+          emptyText="אין חברות זמינות במאגר המקומי כרגע."
+        />
+      )}
 
       {/* 1. סקירת חברה */}
       <div className="card">

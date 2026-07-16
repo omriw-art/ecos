@@ -308,4 +308,32 @@ function DemoFlowStrip({ active }) {
   );
 }
 
-Object.assign(window, { ScoreRing, Sparkline, CoLogo, SectorPill, Donut, MiniBar, Funnel, FitBar, EnvBadge, DemoTag, DemoFlowStrip });
+// Demo "acting org" selector — lets the viewer pick which company/partner
+// EcosPerspective.actingCompanyId points at. Presentational only: it never
+// validates against real auth, never isolates data, and the same selector
+// shape is reused for both Company and Partner (different label/options/
+// empty text passed in by the caller). No avatar/logout/lock iconography —
+// deliberately not styled like a real account switcher.
+function ActingOrgSelector({ label, options, value, onChange, emptyText }) {
+  if (!options.length) {
+    return (
+      <div className="card" style={{ padding: "10px 14px" }}>
+        <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-2)", marginBottom: 6 }}>{label}</div>
+        <div className="muted tiny">{emptyText}</div>
+      </div>
+    );
+  }
+  return (
+    <div className="card" style={{ padding: "10px 14px" }}>
+      <div className="flex center gap-8 wrap">
+        <label style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-2)", flex: "none" }}>{label}</label>
+        <select className="select" style={{ maxWidth: 320 }} value={value || ""} onChange={(e) => onChange(e.target.value)}>
+          {options.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
+        </select>
+      </div>
+      <div className="muted tiny" style={{ marginTop: 6 }}>בחירת תצוגת דמו בלבד · לא כניסת משתמש</div>
+    </div>
+  );
+}
+
+Object.assign(window, { ScoreRing, Sparkline, CoLogo, SectorPill, Donut, MiniBar, Funnel, FitBar, EnvBadge, DemoTag, DemoFlowStrip, ActingOrgSelector });

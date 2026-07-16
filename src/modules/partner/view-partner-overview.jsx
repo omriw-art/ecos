@@ -14,17 +14,32 @@ const OPPORTUNITY_NEED_TYPES = ["pilot", "partner", "research", "customer"];
 const OPPORTUNITY_FORM_DEFAULTS = { title: "", description: "", needType: "partner", priority: "medium" };
 const LOCAL_DEMO_NOTE = "נשמר מקומית בדמו · לא הופץ לגורמים חיצוניים";
 
-function resolvePartnerOrg(companies) {
-  // Deterministic, not a real "logged in" identity — same pattern as the
-  // company overview's seeded fallback. EcosPerspective.actingCompanyId is
-  // intentionally null outside the company perspective, so partner v1 picks
-  // the first matching organization instead of extending perspective state.
-  return companies.find((c) => PARTNER_ORG_TYPES.has(c.organizationType)) || null;
+function resolvePartnerOrg(companies, actingCompanyId) {
+  // Prefer the selected acting org, but only if it's actually partner-like —
+  // EcosPerspective.actingCompanyId is shared across company/partner (see
+  // perspective.js), so it may point at a plain company selected in the other
+  // perspective. Falls back to the deterministic first match, same as before.
+  const eligible = companies.filter((c) => PARTNER_ORG_TYPES.has(c.organizationType));
+  const acting = actingCompanyId ? eligible.find((c) => c.id === actingCompanyId) : null;
+  return acting || eligible[0] || null;
 }
 
 function PartnerOverviewView({ onNav, onOpenCompany }) {
   const companies = window.CompanyStore ? window.CompanyStore.getCompanies() : (window.COMPANIES || []);
-  const partnerOrg = React.useMemo(() => resolvePartnerOrg(companies), [companies]);
+  // Local mirror of EcosPerspective.actingCompanyId — see the same pattern in
+  // view-company-overview.jsx for why a plain useMemo isn't enough here.
+  const [actingCompanyId, setActingCompanyId] = React.useState(
+    () => (window.EcosPerspective ? window.EcosPerspective.get().actingCompanyId : null)
+  );
+  const partnerOrg = React.useMemo(() => resolvePartnerOrg(companies, actingCompanyId), [companies, actingCompanyId]);
+  const partnerOptions = React.useMemo(
+    () => companies.filter((c) => PARTNER_ORG_TYPES.has(c.organizationType)),
+    [companies]
+  );
+  const handleSelectPartner = (id) => {
+    if (window.EcosPerspective) window.EcosPerspective.setActingCompanyId(id);
+    setActingCompanyId(id || null);
+  };
 
   const [showOpportunityForm, setShowOpportunityForm] = React.useState(false);
   const [opportunityForm, setOpportunityForm] = React.useState(OPPORTUNITY_FORM_DEFAULTS);
@@ -78,6 +93,16 @@ function PartnerOverviewView({ onNav, onOpenCompany }) {
       </div>
 
       {window.DemoFlowStrip && <window.DemoFlowStrip active="partner" />}
+
+      {window.ActingOrgSelector && (
+        <window.ActingOrgSelector
+          label="שותף בתצוגה"
+          options={partnerOptions.map((c) => ({ id: c.id, name: c.name }))}
+          value={partnerOrg ? partnerOrg.id : ""}
+          onChange={handleSelectPartner}
+          emptyText="אין כרגע ארגוני שותפים לדוגמה במאגר המקומי."
+        />
+      )}
 
       {/* 1. סביבת שותף */}
       <div className="card">
