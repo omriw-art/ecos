@@ -1,14 +1,53 @@
-// ecos — Local opportunity detail (Opportunity Detail v1).
+// ecos — Local opportunity detail (Opportunity Detail v1 + Company Interest v1).
 // A small inspection screen for a single partner-published opportunity.
 // Not a marketplace: no application flow, no eligibility, no external
 // distribution. Reads the exact same NeedsStore record Partner/Company/Admin
-// already see — no new store, no new data shape.
+// already see — no new store, no new data shape for the opportunity itself.
+// "Mark interest" (company perspective only) writes to the separate, additive
+// OpportunityInterestStore — never mutates the NeedsStore opportunity record.
+
+// Same partner organizationType set duplicated per-file elsewhere (see
+// view-company-overview.jsx's CO_PARTNER_ORG_TYPES) — used only to keep the
+// acting-company resolution consistent with the Company overview's own
+// exclusion of partner-like orgs, never to gate data access.
+const OD_PARTNER_ORG_TYPES = new Set(["investor", "accelerator", "academic", "research", "government", "service-provider", "nonprofit"]);
+
+function resolveActingCompanyForInterest() {
+  if (!window.EcosPerspective || !window.CompanyStore) return null;
+  const actingId = window.EcosPerspective.get().actingCompanyId;
+  const companies = window.CompanyStore.getCompanies();
+  const eligible = companies.filter((c) => !c.organizationType || !OD_PARTNER_ORG_TYPES.has(c.organizationType));
+  const acting = actingId ? eligible.find((c) => c.id === actingId) : null;
+  return acting || eligible[0] || companies[0] || null;
+}
 
 function OpportunityDetailView({ id, perspective, onNav }) {
   const opportunity = React.useMemo(() => {
     if (!window.NeedsStore || !id) return null;
     return window.NeedsStore.listNeeds().find((n) => n.id === id && n.sourceType === "opportunity") || null;
   }, [id]);
+
+  const actingCompany = React.useMemo(
+    () => (perspective === "company" ? resolveActingCompanyForInterest() : null),
+    [perspective]
+  );
+  const [interestVersion, setInterestVersion] = React.useState(0);
+  // Distinguishes "just marked it in this view" (shows the full confirmation
+  // line) from "was already marked before this page loaded" (shows the short
+  // status) — both read the same underlying persisted record.
+  const [justMarked, setJustMarked] = React.useState(false);
+  const alreadyInterested = React.useMemo(() => {
+    if (!window.OpportunityInterestStore || !opportunity || !actingCompany) return false;
+    return window.OpportunityInterestStore.hasInterest(opportunity.id, actingCompany.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [opportunity, actingCompany, interestVersion]);
+
+  const handleMarkInterest = () => {
+    if (!window.OpportunityInterestStore || !opportunity || !actingCompany) return;
+    window.OpportunityInterestStore.markInterest(opportunity.id, actingCompany.id);
+    setJustMarked(true);
+    setInterestVersion((v) => v + 1);
+  };
 
   const backTarget = perspective === "partner" ? "partner-overview" : perspective === "company" ? "company-overview" : "dashboard";
   const backLabel = perspective === "partner" ? "חזרה לסביבת שותף" : perspective === "company" ? "חזרה לסביבת חברה" : "חזרה ללוח הניהול";
@@ -64,6 +103,24 @@ function OpportunityDetailView({ id, perspective, onNav }) {
         </div>
         <div className="muted tiny">פורסם מקומית בדמו · לא הופץ מחוץ למערכת</div>
       </div>
+
+      {perspective === "company" && (
+        <div className="card">
+          <div className="card-hd"><div className="card-title"><span className="dot violet" /> עניין בהזדמנות</div></div>
+          <div className="muted tiny" style={{ marginBottom: 10 }}>סימון עניין הוא מקומי בלבד · לא נוצר קשר עם השותף</div>
+          {alreadyInterested ? (
+            <div className="muted" style={{ padding: "6px 0" }}>
+              {justMarked ? "עניין נשמר מקומית בדמו · לא נשלחה פנייה חיצונית" : "סומן עניין בדמו"}
+            </div>
+          ) : actingCompany ? (
+            <button type="button" className="btn btn-primary" onClick={handleMarkInterest}>
+              <window.I.Star size={13} /> סמן עניין
+            </button>
+          ) : (
+            <div className="muted" style={{ padding: "6px 0" }}>לא נמצאה חברה פעילה בתצוגת דמו כרגע.</div>
+          )}
+        </div>
+      )}
 
       <div className="card">
         <div className="card-hd"><div className="card-title"><span className="dot" /> צעדים נוספים</div></div>
