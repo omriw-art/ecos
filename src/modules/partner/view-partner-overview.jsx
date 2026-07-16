@@ -200,7 +200,9 @@ function PartnerOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
       <div className="card">
         <div className="card-hd">
           <div className="card-title"><span className="dot amber" /> הזדמנויות לפרסום</div>
-          <button type="button" className="btn btn-ghost" style={{ fontSize: 12.5 }} onClick={() => setShowOpportunityForm((v) => !v)}>
+          {/* Golden-path entry point for the whole demo loop — primary emphasis
+              when closed, ghost "cancel" emphasis once the form is open. */}
+          <button type="button" className={showOpportunityForm ? "btn btn-ghost" : "btn btn-primary"} style={{ fontSize: 12.5 }} onClick={() => setShowOpportunityForm((v) => !v)}>
             {showOpportunityForm ? "ביטול" : "פרסמו הזדמנות חדשה"}
           </button>
         </div>
@@ -303,11 +305,13 @@ function PartnerOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
                     </div>
                     {!!o.description && <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>{o.description}</div>}
                     <div className="muted tiny" style={{ marginTop: 6 }}>{LOCAL_DEMO_NOTE}</div>
-                    {/* Aggregate-only signal — count, never names/contacts/scores/status. */}
-                    <div className="muted tiny" style={{ marginTop: 4 }}>
+                    {/* Aggregate-only signal — count, never names/contacts/scores/status.
+                        Rendered as a pill (not plain text) so it reads at a glance during
+                        a live demo walkthrough (Golden Path CTA Polish v1). */}
+                    <div style={{ marginTop: 6 }}>
                       {window.OpportunityInterestStore && window.OpportunityInterestStore.countForOpportunity(o.id) > 0
-                        ? `סומנו ${window.OpportunityInterestStore.countForOpportunity(o.id)} התעניינויות בדמו`
-                        : "עדיין לא סומנה התעניינות בדמו"}
+                        ? <span className="pill violet">{`סומנו ${window.OpportunityInterestStore.countForOpportunity(o.id)} התעניינויות בדמו`}</span>
+                        : <span className="pill">עדיין לא סומנה התעניינות בדמו</span>}
                     </div>
                     <div className="flex center gap-8 wrap" style={{ marginTop: 6 }}>
                       <button type="button" className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => onOpenOpportunity && onOpenOpportunity(o.id)}>

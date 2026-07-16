@@ -106,10 +106,10 @@ function OpportunityDetailView({ id, perspective, onNav }) {
             shown in the Partner overview's published-opportunities list.
             Never names/contacts/scores/status. */}
         {perspective === "partner" && window.OpportunityInterestStore && (
-          <div className="muted tiny" style={{ marginTop: 6 }}>
+          <div style={{ marginTop: 6 }}>
             {window.OpportunityInterestStore.countForOpportunity(opportunity.id) > 0
-              ? `סומנו ${window.OpportunityInterestStore.countForOpportunity(opportunity.id)} התעניינויות בדמו`
-              : "עדיין לא סומנה התעניינות בדמו"}
+              ? <span className="pill violet">{`סומנו ${window.OpportunityInterestStore.countForOpportunity(opportunity.id)} התעניינויות בדמו`}</span>
+              : <span className="pill">עדיין לא סומנה התעניינות בדמו</span>}
           </div>
         )}
       </div>
