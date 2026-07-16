@@ -114,7 +114,7 @@ function App() {
       <main className="main">
         <Topbar title={head.title} crumb={head.crumb} onOpenCopilot={() => setCopilotOpen(true)} onOpenCompany={goCompany}
                 perspective={perspective} onChangePerspective={changePerspective} showPerspectiveSwitcher={showPerspectiveSwitcher} />
-        {view === "dashboard"    && <Dashboard onOpenCompany={goCompany} onNav={goNav} />}
+        {view === "dashboard"    && <Dashboard onOpenCompany={goCompany} onNav={goNav} onChangePerspective={changePerspective} />}
         {view === "company-overview" && <CompanyOverviewView onOpenCompany={goCompany} onNav={goNav} onOpenOpportunity={goOpportunity} />}
         {view === "growth-tools" && <GrowthToolsView />}
         {view === "partner-overview" && <PartnerOverviewView onOpenCompany={goCompany} onNav={goNav} onOpenOpportunity={goOpportunity} />}

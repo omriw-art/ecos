@@ -1,7 +1,7 @@
 // ecos — Dashboard (לוח ניהול אקו־סיסטם)
 // Answers: what needs attention, what opportunities are active, and where ecosystem gaps exist.
 
-function Dashboard({ onOpenCompany, onNav }) {
+function Dashboard({ onOpenCompany, onNav, onChangePerspective }) {
   const COMPANIES = asArray(window.COMPANIES);
   const OPPORTUNITIES = asArray(window.OPPORTUNITIES);
   const rawSubmissions = window.SubmissionStore ? window.SubmissionStore.getSubmissions() : [];
@@ -237,18 +237,29 @@ function Dashboard({ onOpenCompany, onNav }) {
 
       {window.DemoFlowStrip && <window.DemoFlowStrip active="admin" />}
 
-      {/* Perspective Demo Script v1 — internal presenter's guide for walking
-          the multi-perspective opportunity loop. Demo-only, local, non-auth;
-          not shown to an "end user", just a script for whoever runs the demo. */}
+      {/* Showcase Landing Polish v1 (builds on Perspective Demo Script v1) —
+          internal presenter's guide for walking the multi-perspective
+          opportunity loop. Demo-only, local, non-auth; not an end-user
+          feature, just a script + orientation for whoever runs the demo. */}
       <div className="card">
-        <div className="card-hd"><div className="card-title"><span className="dot" /> מדריך הדגמה · לולאת הזדמנויות</div></div>
+        <div className="card-hd"><div className="card-title"><span className="dot" /> מסלול הדמו · לולאת הזדמנויות</div></div>
         <div className="muted tiny" style={{ marginBottom: 10 }}>מדריך פנימי להצגת הדמו · תצוגת דמו מקומית בלבד · לא כניסת משתמש</div>
+        <div className="flex gap-6 wrap" style={{ marginBottom: 12 }}>
+          <span className="pill">גוף מנהל · ניהול מלא</span>
+          <span className="pill">חברה · רואה הזדמנויות</span>
+          <span className="pill">שותף · מפרסם הזדמנויות</span>
+        </div>
         <ol style={{ margin: 0, paddingInlineStart: 20, display: "flex", flexDirection: "column", gap: 8, fontSize: 13.5, color: "var(--text-2)" }}>
           <li>עברו לתצוגת שותף ופרסמו הזדמנות</li>
           <li>עברו לתצוגת חברה וסמנו עניין</li>
           <li>חזרו לתצוגת שותף וראו signal מצטבר</li>
           <li>גוף מנהל רואה את כלל הצרכים וההזדמנויות</li>
         </ol>
+        {onChangePerspective && window.EcosFlags && window.EcosFlags.perspectiveSwitcher && (
+          <button type="button" className="btn btn-primary" style={{ marginTop: 12 }} onClick={() => onChangePerspective("partner")}>
+            <window.I.Rocket size={13} /> התחילו בתצוגת שותף
+          </button>
+        )}
       </div>
 
       {importPreview && (
