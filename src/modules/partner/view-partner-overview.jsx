@@ -12,7 +12,12 @@ const PARTNER_NEED_TYPES = new Set(["partner", "pilot", "customer", "research", 
 // writes through the same createNeed() the admin needs board uses.
 const OPPORTUNITY_NEED_TYPES = ["pilot", "partner", "research", "customer"];
 const OPPORTUNITY_FORM_DEFAULTS = { title: "", description: "", needType: "partner", priority: "medium" };
-const LOCAL_DEMO_NOTE = "נשמר מקומית בדמו · לא הופץ לגורמים חיצוניים";
+// Aligned with the same "not externally distributed" phrasing used
+// everywhere else this concept appears (Company overview, Opportunity
+// Detail, DemoTag badges) — was previously "לא הופץ לגורמים חיצוניים" here
+// only, a different wording for the same fact (Opportunity Language
+// Consistency v1).
+const LOCAL_DEMO_NOTE = "נשמר מקומית בדמו · לא הופץ מחוץ למערכת";
 
 function resolvePartnerOrg(companies, actingCompanyId) {
   // Prefer the selected acting org, but only if it's actually partner-like —

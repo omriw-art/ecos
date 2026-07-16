@@ -116,11 +116,11 @@ function OpportunityDetailView({ id, perspective, onNav }) {
 
       {perspective === "company" && (
         <div className="card">
-          <div className="card-hd"><div className="card-title"><span className="dot violet" /> עניין בהזדמנות</div></div>
+          <div className="card-hd"><div className="card-title"><span className="dot violet" /> סימון עניין</div></div>
           <div className="muted tiny" style={{ marginBottom: 10 }}>סימון עניין הוא מקומי בלבד · לא נוצר קשר עם השותף</div>
           {alreadyInterested ? (
             <div className="muted" style={{ padding: "6px 0" }}>
-              {justMarked ? "עניין נשמר מקומית בדמו · לא נשלחה פנייה חיצונית" : "סומן עניין בדמו"}
+              {justMarked ? "עניין נשמר מקומית בדמו · לא נשלחה פנייה" : "סומן עניין בדמו"}
             </div>
           ) : actingCompany ? (
             <button type="button" className="btn btn-primary" onClick={handleMarkInterest}>
