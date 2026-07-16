@@ -78,6 +78,11 @@
     return getInterests().filter((i) => i.opportunityId === oppId);
   }
 
+  function listForCompany(companyId) {
+    const compId = text(companyId);
+    return getInterests().filter((i) => i.companyId === compId);
+  }
+
   function clearInterests() {
     return saveInterests([]);
   }
@@ -88,6 +93,7 @@
     markInterest,
     hasInterest,
     listForOpportunity,
+    listForCompany,
     clearInterests,
   };
 })();
