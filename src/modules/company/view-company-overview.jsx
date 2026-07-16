@@ -254,6 +254,9 @@ function CompanyOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
           {window.DemoTag && <window.DemoTag>נתוני דמו מקומיים</window.DemoTag>}
           {window.DemoTag && <window.DemoTag>לא נשלחה פנייה</window.DemoTag>}
         </div>
+        <div className="muted tiny" style={{ marginBottom: 10 }}>
+          הסימון נשמר עבור החברה שנבחרה בתצוגת הדמו · לא נשלחה פנייה לשותף
+        </div>
         {!markedOpportunities.length ? (
           <div className="muted" style={{ padding: "8px 0" }}>
             עדיין לא סומנו הזדמנויות עבור החברה בתצוגת הדמו.
@@ -262,14 +265,16 @@ function CompanyOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
           <div className="col gap-8">
             {markedOpportunities.map((o) => (
               <div key={o.id} style={{ padding: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)" }}>{o.title}</div>
-                {!!o.description && <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>{o.description}</div>}
-                <div className="flex center gap-6 wrap" style={{ marginTop: 6 }}>
-                  {o.needType && <span className="pill" style={{ fontSize: 10.5 }}>{window.TaxonomyStore ? window.TaxonomyStore.labelFor("needType", o.needType) : o.needType}</span>}
-                  {o.sourceOrgName && <span className="mono tiny" style={{ color: "var(--text-4)" }}>{o.sourceOrgName}</span>}
+                <div className="flex center between" style={{ gap: 8 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)" }}>{o.title}</div>
+                  {o.needType && <span className="pill" style={{ fontSize: 10.5, flex: "none" }}>{window.TaxonomyStore ? window.TaxonomyStore.labelFor("needType", o.needType) : o.needType}</span>}
                 </div>
-                <div className="muted tiny" style={{ marginTop: 6 }}>סומן מקומית בדמו · לא נשלחה פנייה</div>
-                <button type="button" className="btn btn-ghost" style={{ fontSize: 12, marginTop: 6 }} onClick={() => onOpenOpportunity && onOpenOpportunity(o.id)}>
+                {!!o.description && <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>{o.description}</div>}
+                {o.sourceOrgName && <div className="mono tiny" style={{ color: "var(--text-4)", marginTop: 4 }}>{o.sourceOrgName}</div>}
+                <div className="flex center gap-6 wrap" style={{ marginTop: 6 }}>
+                  {window.DemoTag && <window.DemoTag>סומן מקומית בדמו</window.DemoTag>}
+                </div>
+                <button type="button" className="btn btn-ghost" style={{ fontSize: 12, marginTop: 8 }} onClick={() => onOpenOpportunity && onOpenOpportunity(o.id)}>
                   פתח הזדמנות ←
                 </button>
               </div>
