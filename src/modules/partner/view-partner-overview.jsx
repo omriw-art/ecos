@@ -24,7 +24,7 @@ function resolvePartnerOrg(companies, actingCompanyId) {
   return acting || eligible[0] || null;
 }
 
-function PartnerOverviewView({ onNav, onOpenCompany }) {
+function PartnerOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
   const companies = window.CompanyStore ? window.CompanyStore.getCompanies() : (window.COMPANIES || []);
   // Local mirror of EcosPerspective.actingCompanyId — see the same pattern in
   // view-company-overview.jsx for why a plain useMemo isn't enough here.
@@ -216,6 +216,9 @@ function PartnerOverviewView({ onNav, onOpenCompany }) {
                   </div>
                   {!!o.description && <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>{o.description}</div>}
                   <div className="muted tiny" style={{ marginTop: 6 }}>{LOCAL_DEMO_NOTE}</div>
+                  <button type="button" className="btn btn-ghost" style={{ fontSize: 12, marginTop: 6 }} onClick={() => onOpenOpportunity && onOpenOpportunity(o.id)}>
+                    פתח ←
+                  </button>
                 </div>
               ))}
             </div>

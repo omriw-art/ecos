@@ -12,6 +12,7 @@ const VIEW_TITLES = {
   "company-overview": { title: "סקירת חברה", crumb: "תצוגת חברה · דמו"               },
   "partner-overview": { title: "סביבת שותף", crumb: "תצוגת שותף · דמו"               },
   "growth-tools": { title: "הזדמנויות צמיחה", crumb: "תצוגת דמו"                      },
+  opportunity:  { title: "הזדמנות",          crumb: "תצוגת דמו"                      },
   companies:    { title: "ארגונים",           crumb: "ECOSYSTEM · COMPANIES"          },
   company:      { title: "פרופיל ארגון",     crumb: "ECOSYSTEM · COMPANIES · PROFILE" },
   capabilities: { title: "יכולות חלל",       crumb: "ECOSYSTEM · CAPABILITIES"       },
@@ -29,6 +30,7 @@ function App() {
   const [companies, setCompanies] = React.useState(() => window.CompanyStore ? window.CompanyStore.getCompanies() : (window.COMPANIES || []));
   const [view, setView] = React.useState("dashboard");
   const [companyId, setCompanyId] = React.useState(null);
+  const [opportunityId, setOpportunityId] = React.useState(null);
   const [copilotOpen, setCopilotOpen] = React.useState(false);
   // Product view "perspective" (view-as). Presentational only — never an
   // authorization signal. Defaults to admin so Admin behaviour is unchanged.
@@ -66,6 +68,7 @@ function App() {
   }, []);
 
   const goCompany = (id) => { setCompanyId(id); setView("company"); };
+  const goOpportunity = (id) => { setOpportunityId(id); setView("opportunity"); };
   const goNav = (id) => {
     if (id === "copilot") { setCopilotOpen(true); return; }
     setView(id);
@@ -112,9 +115,10 @@ function App() {
         <Topbar title={head.title} crumb={head.crumb} onOpenCopilot={() => setCopilotOpen(true)} onOpenCompany={goCompany}
                 perspective={perspective} onChangePerspective={changePerspective} showPerspectiveSwitcher={showPerspectiveSwitcher} />
         {view === "dashboard"    && <Dashboard onOpenCompany={goCompany} onNav={goNav} />}
-        {view === "company-overview" && <CompanyOverviewView onOpenCompany={goCompany} onNav={goNav} />}
+        {view === "company-overview" && <CompanyOverviewView onOpenCompany={goCompany} onNav={goNav} onOpenOpportunity={goOpportunity} />}
         {view === "growth-tools" && <GrowthToolsView />}
-        {view === "partner-overview" && <PartnerOverviewView onOpenCompany={goCompany} onNav={goNav} />}
+        {view === "partner-overview" && <PartnerOverviewView onOpenCompany={goCompany} onNav={goNav} onOpenOpportunity={goOpportunity} />}
+        {view === "opportunity" && <OpportunityDetailView id={opportunityId} perspective={perspective} onNav={goNav} />}
         {view === "companies"    && <CompaniesView onOpenCompany={goCompany} onCreateCompany={createCompany} />}
         {view === "company"      && <CompanyProfile id={companyId} onBack={() => setView("companies")} onNav={goNav} onOpenCompany={goCompany} onUpdateCompany={updateCompany} />}
         {view === "capabilities" && <CapabilitiesView onOpenCompany={goCompany} onNav={goNav} />}

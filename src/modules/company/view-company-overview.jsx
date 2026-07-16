@@ -39,7 +39,7 @@ function resolveActingCompany(companies, actingCompanyId) {
   return acting || eligible[0] || companies[0] || null;
 }
 
-function CompanyOverviewView({ onNav, onOpenCompany }) {
+function CompanyOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
   const companies = window.CompanyStore ? window.CompanyStore.getCompanies() : (window.COMPANIES || []);
   // Local mirror of EcosPerspective.actingCompanyId — a plain useMemo can't
   // react to session state that changes outside props/state, so the selector
@@ -215,6 +215,9 @@ function CompanyOverviewView({ onNav, onOpenCompany }) {
                   {o.sourceOrgName && <span className="mono tiny" style={{ color: "var(--text-4)" }}>{o.sourceOrgName}</span>}
                 </div>
                 <div className="muted tiny" style={{ marginTop: 6 }}>מקור: הזדמנות מקומית שפורסמה בתצוגת שותף · פורסם מקומית בדמו · לא הופץ מחוץ למערכת</div>
+                <button type="button" className="btn btn-ghost" style={{ fontSize: 12, marginTop: 6 }} onClick={() => onOpenOpportunity && onOpenOpportunity(o.id)}>
+                  פתח הזדמנות ←
+                </button>
               </div>
             ))}
           </div>
