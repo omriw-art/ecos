@@ -72,10 +72,56 @@ function PartnerOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
     setOpportunitiesVersion((v) => v + 1);
   };
 
+  // Partner Opportunity Management v1 — edit/remove the partner's own
+  // published opportunities. Same NeedsStore.updateNeed/deleteNeed the admin
+  // needs board already uses (view-needs.jsx); no new store, no schema
+  // change, no confirm-dialog (this codebase has no such convention — admin
+  // deletes are direct, same here).
+  const [editingOpportunityId, setEditingOpportunityId] = React.useState(null);
+  const [editForm, setEditForm] = React.useState(OPPORTUNITY_FORM_DEFAULTS);
+  const setEditField = (key, value) => setEditForm((f) => Object.assign({}, f, { [key]: value }));
+
+  const startEditOpportunity = (o) => {
+    setEditingOpportunityId(o.id);
+    setEditForm({
+      title: o.title || "",
+      description: o.description || "",
+      needType: OPPORTUNITY_NEED_TYPES.includes(o.needType) ? o.needType : "partner",
+      priority: o.priority || "medium",
+    });
+  };
+
+  const saveEditOpportunity = (e) => {
+    e.preventDefault();
+    const title = editForm.title.trim();
+    if (!title || !window.NeedsStore || !editingOpportunityId) return;
+    window.NeedsStore.updateNeed(editingOpportunityId, {
+      title,
+      description: editForm.description.trim(),
+      needType: OPPORTUNITY_NEED_TYPES.includes(editForm.needType) ? editForm.needType : "partner",
+      priority: editForm.priority,
+    });
+    setEditingOpportunityId(null);
+    setOpportunitiesVersion((v) => v + 1);
+    window.toast && window.toast("השינויים נשמרו בדמו · לא הופצו מחוץ למערכת", "ok");
+  };
+
+  const removeOpportunity = (id) => {
+    if (!window.NeedsStore) return;
+    window.NeedsStore.deleteNeed(id);
+    if (editingOpportunityId === id) setEditingOpportunityId(null);
+    setOpportunitiesVersion((v) => v + 1);
+    window.toast && window.toast("ההזדמנות הוסרה מהדמו · לא הופצה מחוץ למערכת", "ok");
+  };
+
   const collaborationNeeds = React.useMemo(() => {
     if (!window.NeedsStore) return [];
     return window.NeedsStore.listNeeds().filter((n) => n.needType && PARTNER_NEED_TYPES.has(n.needType)).slice(0, 6);
-  }, []);
+    // Depends on opportunitiesVersion (not just mount) — a published/edited/
+    // removed opportunity can share a needType with this list (e.g. "partner"),
+    // so this must stay in sync with create/edit/delete, same as
+    // publishedOpportunities below.
+  }, [opportunitiesVersion]);
 
   const growthPreview = window.GrowthToolsStore ? window.GrowthToolsStore.getGrowthTools().slice(0, 3) : [];
   const collaborationCategories = Array.from(PARTNER_NEED_TYPES).map((needType) => ({
@@ -209,23 +255,68 @@ function PartnerOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
           <>
             <div className="col gap-8">
               {publishedOpportunities.map((o) => (
-                <div key={o.id} style={{ padding: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8 }}>
-                  <div className="flex center between" style={{ gap: 8 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)" }}>{o.title}</div>
-                    <span className="pill" style={{ fontSize: 10.5, flex: "none" }}>{window.TaxonomyStore ? window.TaxonomyStore.labelFor("needType", o.needType) : o.needType}</span>
+                editingOpportunityId === o.id ? (
+                  <form key={o.id} className="col gap-8" onSubmit={saveEditOpportunity}
+                        style={{ padding: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8 }}>
+                    <div className="field">
+                      <label style={{ fontSize: 13, fontWeight: 700 }}>כותרת</label>
+                      <input className="input" value={editForm.title} onChange={(e) => setEditField("title", e.target.value)} />
+                    </div>
+                    <div className="field">
+                      <label style={{ fontSize: 13, fontWeight: 700 }}>תיאור (אופציונלי)</label>
+                      <input className="input" value={editForm.description} onChange={(e) => setEditField("description", e.target.value)} />
+                    </div>
+                    <div className="flex gap-8 wrap">
+                      <div className="field" style={{ flex: 1, minWidth: 160 }}>
+                        <label style={{ fontSize: 13, fontWeight: 700 }}>סוג</label>
+                        <select className="select" value={editForm.needType} onChange={(e) => setEditField("needType", e.target.value)}>
+                          {OPPORTUNITY_NEED_TYPES.map((nt) => (
+                            <option key={nt} value={nt}>{window.TaxonomyStore ? window.TaxonomyStore.labelFor("needType", nt) : nt}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="field" style={{ flex: 1, minWidth: 160 }}>
+                        <label style={{ fontSize: 13, fontWeight: 700 }}>עדיפות</label>
+                        <select className="select" value={editForm.priority} onChange={(e) => setEditField("priority", e.target.value)}>
+                          {(window.NeedsStore ? window.NeedsStore.PRIORITIES : ["high", "medium", "low"]).map((p) => (
+                            <option key={p} value={p}>{window.TaxonomyStore ? window.TaxonomyStore.labelFor("priority", p) : p}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex center gap-8" style={{ marginTop: 4 }}>
+                      <button type="submit" className="btn btn-primary" disabled={!editForm.title.trim()}>שמרו שינויים</button>
+                      <button type="button" className="btn" onClick={() => setEditingOpportunityId(null)}>ביטול</button>
+                      <span className="muted tiny">{LOCAL_DEMO_NOTE}</span>
+                    </div>
+                  </form>
+                ) : (
+                  <div key={o.id} style={{ padding: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8 }}>
+                    <div className="flex center between" style={{ gap: 8 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)" }}>{o.title}</div>
+                      <span className="pill" style={{ fontSize: 10.5, flex: "none" }}>{window.TaxonomyStore ? window.TaxonomyStore.labelFor("needType", o.needType) : o.needType}</span>
+                    </div>
+                    {!!o.description && <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>{o.description}</div>}
+                    <div className="muted tiny" style={{ marginTop: 6 }}>{LOCAL_DEMO_NOTE}</div>
+                    {/* Aggregate-only signal — count, never names/contacts/scores/status. */}
+                    <div className="muted tiny" style={{ marginTop: 4 }}>
+                      {window.OpportunityInterestStore && window.OpportunityInterestStore.countForOpportunity(o.id) > 0
+                        ? `סומנו ${window.OpportunityInterestStore.countForOpportunity(o.id)} התעניינויות בדמו`
+                        : "עדיין לא סומנה התעניינות בדמו"}
+                    </div>
+                    <div className="flex center gap-8 wrap" style={{ marginTop: 6 }}>
+                      <button type="button" className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => onOpenOpportunity && onOpenOpportunity(o.id)}>
+                        פתח ←
+                      </button>
+                      <button type="button" className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => startEditOpportunity(o)}>
+                        ערוך
+                      </button>
+                      <button type="button" className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => removeOpportunity(o.id)}>
+                        הסר מהדמו
+                      </button>
+                    </div>
                   </div>
-                  {!!o.description && <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>{o.description}</div>}
-                  <div className="muted tiny" style={{ marginTop: 6 }}>{LOCAL_DEMO_NOTE}</div>
-                  {/* Aggregate-only signal — count, never names/contacts/scores/status. */}
-                  <div className="muted tiny" style={{ marginTop: 4 }}>
-                    {window.OpportunityInterestStore && window.OpportunityInterestStore.countForOpportunity(o.id) > 0
-                      ? `סומנו ${window.OpportunityInterestStore.countForOpportunity(o.id)} התעניינויות בדמו`
-                      : "עדיין לא סומנה התעניינות בדמו"}
-                  </div>
-                  <button type="button" className="btn btn-ghost" style={{ fontSize: 12, marginTop: 6 }} onClick={() => onOpenOpportunity && onOpenOpportunity(o.id)}>
-                    פתח ←
-                  </button>
-                </div>
+                )
               ))}
             </div>
             <div className="muted tiny" style={{ marginTop: 10 }}>
