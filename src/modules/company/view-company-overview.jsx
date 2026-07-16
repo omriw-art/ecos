@@ -296,9 +296,9 @@ function CompanyOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
           <div className="flex center gap-8" style={{ padding: "6px 2px", color: "var(--text-3)", fontSize: 13 }}>
             <window.I.Compass size={13} /> בדקו את הצרכים הרלוונטיים למעלה בעמוד זה
           </div>
-          <button type="button" className="btn" style={{ justifyContent: "flex-start" }} onClick={() => onNav && onNav("growth-tools")}>
-            <window.I.Trend size={13} /> עברו להזדמנויות צמיחה
-          </button>
+          {/* Growth Tools has its own dedicated entry point in the card
+              directly below — not repeated here to avoid a confusing
+              duplicate CTA to the same destination. */}
         </div>
       </div>
 

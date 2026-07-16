@@ -199,7 +199,10 @@ function PartnerOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
       {/* 3. הזדמנויות לפרסום — small local-only publishing flow, no real distribution */}
       <div className="card">
         <div className="card-hd">
-          <div className="card-title"><span className="dot amber" /> הזדמנויות לפרסום</div>
+          <div className="flex center gap-8">
+            <div className="card-title"><span className="dot amber" /> הזדמנויות לפרסום</div>
+            {!!publishedOpportunities.length && <span className="pill">{publishedOpportunities.length}</span>}
+          </div>
           {/* Golden-path entry point for the whole demo loop — primary emphasis
               when closed, ghost "cancel" emphasis once the form is open. */}
           <button type="button" className={showOpportunityForm ? "btn btn-ghost" : "btn btn-primary"} style={{ fontSize: 12.5 }} onClick={() => setShowOpportunityForm((v) => !v)}>
@@ -368,11 +371,11 @@ function PartnerOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
         </div>
         <div className="divider" />
         <div className="col gap-8" style={{ marginTop: 10 }}>
+          {/* Growth Tools has its own dedicated entry point in the "קטלוג
+              משאבים" card directly below — not repeated here to avoid a
+              confusing duplicate CTA to the same destination. */}
           <button type="button" className="btn" style={{ justifyContent: "flex-start" }} onClick={() => onNav && onNav("needs")}>
             <window.I.Compass size={13} /> עברו ללוח הצרכים לבדיקת פרטים נוספים
-          </button>
-          <button type="button" className="btn" style={{ justifyContent: "flex-start" }} onClick={() => onNav && onNav("growth-tools")}>
-            <window.I.Trend size={13} /> עיינו בהזדמנויות צמיחה
           </button>
         </div>
       </div>

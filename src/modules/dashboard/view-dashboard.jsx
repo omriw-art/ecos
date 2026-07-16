@@ -252,7 +252,7 @@ function Dashboard({ onOpenCompany, onNav, onChangePerspective }) {
         <ol style={{ margin: 0, paddingInlineStart: 20, display: "flex", flexDirection: "column", gap: 8, fontSize: 13.5, color: "var(--text-2)" }}>
           <li>עברו לתצוגת שותף ופרסמו הזדמנות</li>
           <li>עברו לתצוגת חברה וסמנו עניין</li>
-          <li>חזרו לתצוגת שותף וראו signal מצטבר</li>
+          <li>חזרו לתצוגת שותף וראו כמה סימוני עניין נאספו</li>
           <li>גוף מנהל רואה את כלל הצרכים וההזדמנויות</li>
         </ol>
         {onChangePerspective && window.EcosFlags && window.EcosFlags.perspectiveSwitcher && (
