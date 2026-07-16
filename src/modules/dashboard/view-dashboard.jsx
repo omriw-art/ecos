@@ -237,6 +237,20 @@ function Dashboard({ onOpenCompany, onNav }) {
 
       {window.DemoFlowStrip && <window.DemoFlowStrip active="admin" />}
 
+      {/* Perspective Demo Script v1 — internal presenter's guide for walking
+          the multi-perspective opportunity loop. Demo-only, local, non-auth;
+          not shown to an "end user", just a script for whoever runs the demo. */}
+      <div className="card">
+        <div className="card-hd"><div className="card-title"><span className="dot" /> מדריך הדגמה · לולאת הזדמנויות</div></div>
+        <div className="muted tiny" style={{ marginBottom: 10 }}>מדריך פנימי להצגת הדמו · תצוגת דמו מקומית בלבד · לא כניסת משתמש</div>
+        <ol style={{ margin: 0, paddingInlineStart: 20, display: "flex", flexDirection: "column", gap: 8, fontSize: 13.5, color: "var(--text-2)" }}>
+          <li>עברו לתצוגת שותף ופרסמו הזדמנות</li>
+          <li>עברו לתצוגת חברה וסמנו עניין</li>
+          <li>חזרו לתצוגת שותף וראו signal מצטבר</li>
+          <li>גוף מנהל רואה את כלל הצרכים וההזדמנויות</li>
+        </ol>
+      </div>
+
       {importPreview && (
         <div className="card" style={{ border: "1px solid oklch(0.55 0.15 80)", background: "oklch(0.14 0.04 80 / 0.35)" }}>
           <div className="card-hd">
