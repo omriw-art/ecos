@@ -97,6 +97,7 @@
   window.OpportunityInterestStore = {
     key: STORAGE_KEY,
     getInterests,
+    saveInterests,
     markInterest,
     hasInterest,
     listForOpportunity,

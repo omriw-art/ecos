@@ -17,6 +17,10 @@
       submissions: window.SubmissionStore.getSubmissions(),
       needs: window.NeedsStore ? window.NeedsStore.getNeeds() : [],
       taxonomy: window.TaxonomyStore ? window.TaxonomyStore.getOptions() : null,
+      // Partner-marked "interest" is local demo activity same as needs/
+      // submissions — backed up and restored alongside them so a reset
+      // doesn't orphan it and a restore doesn't silently lose it.
+      opportunityInterests: window.OpportunityInterestStore ? window.OpportunityInterestStore.getInterests() : [],
       backedUpAt: new Date().toISOString(),
     };
     window.EcosStorage.write(BACKUP_KEY, backup);
@@ -29,6 +33,7 @@
     window.SubmissionStore.clearSubmissions();
     if (window.NeedsStore) window.NeedsStore.clearNeeds();
     if (window.TaxonomyStore) window.TaxonomyStore.resetAll();
+    if (window.OpportunityInterestStore) window.OpportunityInterestStore.clearInterests();
     return backup;
   }
 
@@ -39,6 +44,7 @@
     window.SubmissionStore.saveSubmissions(backup.submissions || []);
     if (window.NeedsStore) window.NeedsStore.saveNeeds(backup.needs || []);
     if (window.TaxonomyStore && backup.taxonomy) window.TaxonomyStore.setOptions(backup.taxonomy);
+    if (window.OpportunityInterestStore) window.OpportunityInterestStore.saveInterests(backup.opportunityInterests || []);
     return backup;
   }
 
