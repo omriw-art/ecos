@@ -734,21 +734,29 @@ function OverviewTab({ c, onNav, onEdit, linkedInUrl, openExternalLink }) {
   );
 }
 
+// Pilot consumer for the OrganizationProfile projection (B5d) — this tab's
+// two cards already split cleanly along the same identity/profile line the
+// projection draws, so org.* holds the identity fields and profile.* holds
+// everything else. Falls back to the flat record c itself if the service
+// isn't loaded, since Organization/Profile field names are a strict subset
+// of it.
 function OrgDetailsTab({ c }) {
+  const org = window.OrganizationProfile ? window.OrganizationProfile.toOrganization(c) : c;
+  const profile = window.OrganizationProfile ? window.OrganizationProfile.toOrganizationProfile(c) : c;
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
       <div className="card">
         <div className="card-hd"><div className="card-title"><span className="dot" /> פרטי ארגון</div></div>
         <div className="col gap-10">
-          <KV k="שם" v={c.name} />
-          <KV k="מיקום" v={c.hq} />
-          <KV k="אתר" v={c.website || "—"} />
-          <KV k="שלב" v={STAGE_LABEL_HE[c.stage] || c.stage} />
-          <KV k="שנת הקמה" v={c.founded} />
-          <KV k="מועסקים" v={c.size} />
-          <KV k="סטטוס" v={READINESS_LABEL_HE[c.readiness] || c.readiness} />
-          {c.fundingM > 0 && <KV k="גיוס מצטבר" v={`$${c.fundingM}M`} />}
-          <KV k="מזהה פנימי" v={c.id} />
+          <KV k="שם" v={org.name} />
+          <KV k="מיקום" v={org.hq} />
+          <KV k="אתר" v={org.website || "—"} />
+          <KV k="שלב" v={STAGE_LABEL_HE[profile.stage] || profile.stage} />
+          <KV k="שנת הקמה" v={org.founded} />
+          <KV k="מועסקים" v={profile.size} />
+          <KV k="סטטוס" v={READINESS_LABEL_HE[profile.readiness] || profile.readiness} />
+          {profile.fundingM > 0 && <KV k="גיוס מצטבר" v={`$${profile.fundingM}M`} />}
+          <KV k="מזהה פנימי" v={org.id} />
         </div>
       </div>
 
@@ -756,18 +764,18 @@ function OrgDetailsTab({ c }) {
         <div className="card">
           <div className="card-hd"><div className="card-title"><span className="dot" /> תיאור בסיסי</div></div>
           <div style={{ fontSize: 15, color: "var(--text-1)", lineHeight: 1.6 }}>
-            {c.blurb || <span className="muted">לא הוזן תיאור לארגון זה</span>}
+            {profile.blurb || <span className="muted">לא הוזן תיאור לארגון זה</span>}
           </div>
         </div>
         <div className="card">
           <div className="card-hd"><div className="card-title"><span className="dot" /> סיווג וקטגוריה</div></div>
           <div className="col gap-10">
-            <KV k="סוג ארגון" v={orgTypeLabel(c.organizationType)} />
-            <KV k="סגמנט פעילות" v={spaceSegmentLabel(c.spaceSegment)} />
+            <KV k="סוג ארגון" v={orgTypeLabel(org.organizationType)} />
+            <KV k="סגמנט פעילות" v={spaceSegmentLabel(profile.spaceSegment)} />
           </div>
-          {!!(c.sectors && c.sectors.length) && (
+          {!!(profile.sectors && profile.sectors.length) && (
             <div className="co-tags" style={{ marginTop: 10 }}>
-              {c.sectors.map((s) => window.SECTORS.find((x) => x.id === s) ? <SectorPill key={s} id={s} /> : <span key={s} className="pill">{s}</span>)}
+              {profile.sectors.map((s) => window.SECTORS.find((x) => x.id === s) ? <SectorPill key={s} id={s} /> : <span key={s} className="pill">{s}</span>)}
             </div>
           )}
         </div>
