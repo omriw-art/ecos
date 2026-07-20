@@ -153,6 +153,9 @@
     normalizeCompany,
     normalizeName,
     findCompanyByName,
+    // Stable-reference read (same object window.COMPANIES's getter returns) for callers
+    // that memoize on array identity, unlike getCompanies() which always re-reads/re-normalizes.
+    getCachedCompanies,
   };
 
   // window.COMPANIES is a cached accessor, not a plain property: the getter
@@ -170,6 +173,8 @@
     get() { return companiesCache; },
     set(value) { companiesCache = asArray(value); },
   });
+
+  function getCachedCompanies() { return companiesCache; }
 
   window.COMPANIES = getCompanies();
 })();

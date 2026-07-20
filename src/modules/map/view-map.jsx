@@ -2,7 +2,11 @@
 // Positions are precomputed via a small force-directed sim on first render.
 
 function MapView({ onOpenCompany }) {
-  const { COMPANIES, SECTORS } = window;
+  const { SECTORS } = window;
+  // Stable reference, not getCompanies() — the two useMemo hooks below (a
+  // 60-iteration O(n^2) layout relaxation among them) key off [COMPANIES]
+  // identity; a fresh array on every render would recompute both every render.
+  const COMPANIES = window.CompanyStore ? window.CompanyStore.getCachedCompanies() : (window.COMPANIES || []);
   // Connections are derived live from MatchEngine (capability overlap +
   // need/offer keyword matching) instead of a fixed seed list, so the graph
   // reflects the current local company data rather than a static demo edge set.
