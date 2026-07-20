@@ -13,6 +13,17 @@
 //
 // State is session-only (sessionStorage, its own key) so it can never corrupt
 // the persistent data stores and resets cleanly when the tab closes.
+//
+// Perspective Becomes Derived (B4): the *default* lens for a fresh session
+// is derived from EcosSession's active membership role, when session
+// primitives are loaded — no more hardcoded "admin" default. The setters
+// (setPerspective / setActingCompanyId / reset) are operator/dev "view-as"
+// only, gated on EcosSession's isOperator flag — this is still not a
+// permission check (there is no non-operator identity in the local demo
+// today, so this gate is currently a no-op in practice), it only wires the
+// mechanism so a future non-operator user is blocked from widening their own
+// view the moment real identities exist. setActingCompanyId also no longer
+// accepts an arbitrary string — it's validated against CompanyStore.
 
 (function () {
   if (window.EcosPerspective) return;
@@ -21,11 +32,33 @@
   const PERSPECTIVES = ["admin", "company", "partner"];
   const listeners = new Set();
 
+  function isOperator() {
+    const session = window.EcosSession;
+    if (!session) return true; // no session primitives loaded — preserve prior unrestricted demo behavior
+    const user = session.getUser();
+    return !!(user && user.isOperator);
+  }
+
+  function sessionDefaultPerspective() {
+    const session = window.EcosSession;
+    if (!session) return "admin";
+    const roleKey = session.getActiveRoleKey();
+    return PERSPECTIVES.indexOf(roleKey) !== -1 ? roleKey : "admin";
+  }
+
+  function isKnownCompanyId(id) {
+    const store = window.CompanyStore;
+    if (!store || typeof store.getCompanies !== "function") return true; // store not loaded yet — can't validate, accept as before
+    return store.getCompanies().some((c) => c.id === id);
+  }
+
   function normalize(raw) {
-    const fallback = { perspective: "admin", actingCompanyId: null };
+    const fallback = { perspective: sessionDefaultPerspective(), actingCompanyId: null };
     if (!raw || typeof raw !== "object") return fallback;
-    const perspective = PERSPECTIVES.indexOf(raw.perspective) !== -1 ? raw.perspective : "admin";
-    const actingCompanyId = typeof raw.actingCompanyId === "string" && raw.actingCompanyId ? raw.actingCompanyId : null;
+    const perspective = PERSPECTIVES.indexOf(raw.perspective) !== -1 ? raw.perspective : fallback.perspective;
+    const actingCompanyId = (typeof raw.actingCompanyId === "string" && raw.actingCompanyId && isKnownCompanyId(raw.actingCompanyId))
+      ? raw.actingCompanyId
+      : null;
     return { perspective, actingCompanyId };
   }
 
@@ -34,7 +67,7 @@
       const raw = window.sessionStorage.getItem(KEY);
       return normalize(raw ? JSON.parse(raw) : null);
     } catch (err) {
-      return { perspective: "admin", actingCompanyId: null };
+      return { perspective: sessionDefaultPerspective(), actingCompanyId: null };
     }
   }
 
@@ -59,7 +92,9 @@
     });
   }
 
+  // Operator/dev "view-as" only — see the B4 note at the top of this file.
   function setPerspective(perspective) {
+    if (!isOperator()) return get();
     if (PERSPECTIVES.indexOf(perspective) === -1) return get();
     // actingCompanyId is only meaningful while acting as a company or partner
     // org (both resolve it against CompanyStore, each filtered to its own
@@ -73,16 +108,22 @@
     return get();
   }
 
+  // Operator/dev "view-as" only. Validated against CompanyStore when it's
+  // loaded — no longer accepts an arbitrary string. Still presentational:
+  // a valid id only changes what the UI shows, never what a store allows.
   function setActingCompanyId(id) {
-    // Unvalidated on purpose — presentation only. Not checked against a real
-    // company and never read as authorization; deeper use lands in a later batch.
-    state = { perspective: state.perspective, actingCompanyId: id ? String(id) : null };
+    if (!isOperator()) return get();
+    const next = id ? String(id) : null;
+    if (next && !isKnownCompanyId(next)) return get();
+    state = { perspective: state.perspective, actingCompanyId: next };
     persist();
     emit();
     return get();
   }
 
+  // Operator/dev "view-as" only — see the B4 note at the top of this file.
   function reset() {
+    if (!isOperator()) return get();
     state = { perspective: "admin", actingCompanyId: null };
     persist();
     emit();
