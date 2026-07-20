@@ -86,12 +86,12 @@
   }
 
   function readStoredCompanies() {
-    const parsed = window.EcosStorage.read(STORAGE_KEY, null);
+    const parsed = window.EcosLocalAdapter.readSync(STORAGE_KEY, null);
     return Array.isArray(parsed) ? parsed : null;
   }
 
   function writeStoredCompanies(companies) {
-    window.EcosStorage.write(STORAGE_KEY, companies);
+    window.EcosLocalAdapter.writeSync(STORAGE_KEY, companies);
   }
 
   function seedCompanies() {
@@ -132,7 +132,7 @@
   }
 
   function resetCompaniesToSeed() {
-    window.EcosStorage.remove(STORAGE_KEY);
+    window.EcosLocalAdapter.removeSync(STORAGE_KEY);
     const seeded = seedCompanies();
     window.COMPANIES = seeded;
     return seeded;

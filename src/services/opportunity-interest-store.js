@@ -34,13 +34,13 @@
   }
 
   function readInterests() {
-    const parsed = window.EcosStorage.read(STORAGE_KEY, []);
+    const parsed = window.EcosLocalAdapter.readSync(STORAGE_KEY, []);
     return Array.isArray(parsed) ? parsed : [];
   }
 
   function saveInterests(interests) {
     const normalized = asArray(interests).map((i) => normalizeInterest(i));
-    window.EcosStorage.write(STORAGE_KEY, normalized);
+    window.EcosLocalAdapter.writeSync(STORAGE_KEY, normalized);
     return normalized;
   }
 

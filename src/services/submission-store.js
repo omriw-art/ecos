@@ -64,13 +64,13 @@
   }
 
   function readSubmissions() {
-    const parsed = window.EcosStorage.read(STORAGE_KEY, []);
+    const parsed = window.EcosLocalAdapter.readSync(STORAGE_KEY, []);
     return Array.isArray(parsed) ? parsed : [];
   }
 
   function saveSubmissions(submissions) {
     const normalized = asArray(submissions).map((s) => normalizeSubmission(s));
-    window.EcosStorage.write(STORAGE_KEY, normalized);
+    window.EcosLocalAdapter.writeSync(STORAGE_KEY, normalized);
     return normalized;
   }
 

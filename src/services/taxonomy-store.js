@@ -59,12 +59,12 @@
   }
 
   function readAll() {
-    const parsed = window.EcosStorage.read(STORAGE_KEY, null);
+    const parsed = window.EcosLocalAdapter.readSync(STORAGE_KEY, null);
     return parsed && typeof parsed === "object" ? parsed : null;
   }
 
   function writeAll(all) {
-    window.EcosStorage.write(STORAGE_KEY, all);
+    window.EcosLocalAdapter.writeSync(STORAGE_KEY, all);
     return all;
   }
 

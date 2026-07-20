@@ -8,7 +8,7 @@
   const BACKUP_KEY = "ecosystemOS.lastResetBackup.v1";
 
   function hasBackup() {
-    return window.EcosStorage.read(BACKUP_KEY, null) !== null;
+    return window.EcosLocalAdapter.readSync(BACKUP_KEY, null) !== null;
   }
 
   function createBackup() {
@@ -23,7 +23,7 @@
       opportunityInterests: window.OpportunityInterestStore ? window.OpportunityInterestStore.getInterests() : [],
       backedUpAt: new Date().toISOString(),
     };
-    window.EcosStorage.write(BACKUP_KEY, backup);
+    window.EcosLocalAdapter.writeSync(BACKUP_KEY, backup);
     return backup;
   }
 
@@ -38,7 +38,7 @@
   }
 
   function restoreBackup() {
-    const backup = window.EcosStorage.read(BACKUP_KEY, null);
+    const backup = window.EcosLocalAdapter.readSync(BACKUP_KEY, null);
     if (!backup) return null;
     window.CompanyStore.saveCompanies(backup.companies || []);
     window.SubmissionStore.saveSubmissions(backup.submissions || []);

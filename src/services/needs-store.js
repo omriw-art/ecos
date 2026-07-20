@@ -52,13 +52,13 @@
   }
 
   function readNeeds() {
-    const parsed = window.EcosStorage.read(STORAGE_KEY, []);
+    const parsed = window.EcosLocalAdapter.readSync(STORAGE_KEY, []);
     return Array.isArray(parsed) ? parsed : [];
   }
 
   function saveNeeds(needs) {
     const normalized = asArray(needs).map((n) => normalizeNeed(n));
-    window.EcosStorage.write(STORAGE_KEY, normalized);
+    window.EcosLocalAdapter.writeSync(STORAGE_KEY, normalized);
     return normalized;
   }
 
