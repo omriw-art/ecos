@@ -94,8 +94,13 @@
     window.EcosLocalAdapter.writeSync(STORAGE_KEY, companies);
   }
 
+  // Captured once, before window.COMPANIES is overwritten below with stored/
+  // saved data — seedCompanies() must always read the original seed, never
+  // whatever window.COMPANIES currently holds.
+  const SEED_COMPANIES = clone(window.COMPANIES || []);
+
   function seedCompanies() {
-    return clone(window.COMPANIES || []).map((c) => normalizeCompany(c));
+    return clone(SEED_COMPANIES).map((c) => normalizeCompany(c));
   }
 
   function getCompanies() {
