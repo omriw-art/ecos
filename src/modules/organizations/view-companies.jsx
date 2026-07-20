@@ -2,6 +2,13 @@
 // List: searchable, filterable, grid view + table view toggle.
 // Profile: full deep-dive (tabs, score breakdown, connections, contacts, etc.)
 
+// Reads live directory data through CompanyStore's public API — same
+// window.CompanyStore ? ... : window.COMPANIES fallback used in app.jsx —
+// instead of touching the window.COMPANIES global directly at each site.
+function getDirectoryCompanies() {
+  return window.CompanyStore ? window.CompanyStore.getCompanies() : (window.COMPANIES || []);
+}
+
 // P15A — dual organization taxonomy display helpers.
 function orgTypeLabel(id) {
   const found = (window.ORGANIZATION_TYPES || []).find((t) => t.id === id);
@@ -266,7 +273,8 @@ function CompanyEditor({ company, title, submitLabel, onSave, onCancel }) {
 }
 
 function CompaniesView({ onOpenCompany, onCreateCompany }) {
-  const { COMPANIES, SECTORS } = window;
+  const { SECTORS } = window;
+  const COMPANIES = getDirectoryCompanies();
   const [activeSectors, setActiveSectors] = React.useState([]);
   const [stage,         setStage]         = React.useState("all");
   const [orgType,       setOrgType]       = React.useState("all");
@@ -452,12 +460,13 @@ function CoCard({ c, onClick }) {
 /* ────────────────────────── Profile ────────────────────────── */
 
 function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany }) {
-  const c = window.COMPANIES.find((x) => x.id === id);
+  const companies = getDirectoryCompanies();
+  const c = companies.find((x) => x.id === id);
   if (!c) return <div className="view"><div className="card">חברה לא נמצאה</div></div>;
   const [tab, setTab] = React.useState("overview");
   const [editing, setEditing] = React.useState(false);
 
-  const overlapCo = (c.overlap || []).map((id) => window.COMPANIES.find((x) => x.id === id)).filter(Boolean);
+  const overlapCo = (c.overlap || []).map((oid) => companies.find((x) => x.id === oid)).filter(Boolean);
   const capabilitiesCount = (c.capabilities && c.capabilities.length) ? c.capabilities.length : (c.tech || []).length;
   const needsCount = (c.needs || []).length;
   const offersCount = (c.offers || []).length;
@@ -656,7 +665,7 @@ function OverviewTab({ c, onNav, onEdit, linkedInUrl, openExternalLink }) {
   const offers = c.offers || [];
   const matchCount = React.useMemo(() => {
     if (!window.MatchEngine || typeof window.MatchEngine.generateMatchesForCompany !== "function") return null;
-    return window.MatchEngine.generateMatchesForCompany(c, window.COMPANIES || [], { limit: 5, minScore: 20 }).length;
+    return window.MatchEngine.generateMatchesForCompany(c, getDirectoryCompanies(), { limit: 5, minScore: 20 }).length;
   }, [c]);
 
   return (
@@ -851,7 +860,7 @@ function NeedsOffersTab({ c, onNav }) {
 function MatchesTab({ c, onOpenCompany }) {
   const matches = React.useMemo(() => {
     if (!window.MatchEngine || typeof window.MatchEngine.generateMatchesForCompany !== "function") return [];
-    return window.MatchEngine.generateMatchesForCompany(c, window.COMPANIES || [], { limit: 5, minScore: 20 });
+    return window.MatchEngine.generateMatchesForCompany(c, getDirectoryCompanies(), { limit: 5, minScore: 20 });
   }, [c]);
 
   return (
@@ -890,7 +899,7 @@ function ConnectionsTab({ c, overlapCo, onOpenCompany, linkedInUrl, openExternal
           <div className="col gap-8">
             {lines.map((ln, i) => {
               const otherId = ln.from === c.id ? ln.to : ln.from;
-              const other = window.COMPANIES.find((x) => x.id === otherId);
+              const other = getDirectoryCompanies().find((x) => x.id === otherId);
               if (!other) return null;
               return (
                 <div key={i} className="flex center gap-10" onClick={() => onOpenCompany(other.id)}
