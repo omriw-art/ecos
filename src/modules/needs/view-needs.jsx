@@ -84,11 +84,18 @@ function getAdminNeeds() {
 function buildBoardItems(companies, adminNeeds) {
   const items = [];
   companies.forEach((c) => {
+    // Content-derived, not positional — shared with NeedsStore.listNeeds()
+    // via organizationNeedId() so the Needs Board and the dashboard's need
+    // count never disagree about a given need's id.
+    const usedIds = new Set();
     (c.needs || []).forEach((rawNeed, idx) => {
       const t = needText(rawNeed).trim();
       if (!t) return;
+      const id = (window.NeedsStore && typeof window.NeedsStore.organizationNeedId === "function")
+        ? window.NeedsStore.organizationNeedId(c.id, t, usedIds)
+        : `${c.id}::${idx}`;
       items.push({
-        id: `${c.id}::${idx}`,
+        id,
         kind: "organization",
         title: t,
         description: "",

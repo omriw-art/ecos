@@ -17,7 +17,8 @@ function Copilot({ open, onClose }) {
       const ql = q.toLowerCase();
       // Local keyword search only — filters the actual local COMPANIES records.
       // No canned/invented replies: every response here is derived from local data.
-      const hits = (window.COMPANIES || []).filter((c) => {
+      const searchCompanies = window.CompanyStore ? window.CompanyStore.getCompanies() : (window.COMPANIES || []);
+      const hits = searchCompanies.filter((c) => {
         const hay = [c.name, c.blurb, ...(c.tech || []), ...(c.sectors || [])].join(" ").toLowerCase();
         return ql.split(/\s+/).some((w) => w.length > 2 && hay.includes(w));
       }).slice(0, 5);

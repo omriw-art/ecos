@@ -3,7 +3,7 @@
 
 const NAV = [
   { id: "dashboard",    label: "דשבורד",          icon: "Grid",     section: "מבט-על" },
-  { id: "companies",    label: "ארגונים",         icon: "Building", section: "מבט-על", count: () => (window.COMPANIES || []).length },
+  { id: "companies",    label: "ארגונים",         icon: "Building", section: "מבט-על", count: () => (window.CompanyStore ? window.CompanyStore.getCompanies() : (window.COMPANIES || [])).length },
   { id: "capabilities", label: "יכולות חלל",      icon: "Layers",   section: "מבט-על" },
   { id: "map",          label: "מפת אקוסיסטם",    icon: "Network",  section: "מבט-על" },
   { id: "needs",        label: "צרכים",           icon: "Compass",  section: "מבט-על" },
@@ -86,7 +86,8 @@ function SearchBox({ onOpenCompany }) {
   const inputRef = React.useRef(null);
   const dropRef  = React.useRef(null);
 
-  const results = q.trim().length === 0 ? [] : (window.COMPANIES || []).filter((c) => {
+  const searchCompanies = window.CompanyStore ? window.CompanyStore.getCompanies() : (window.COMPANIES || []);
+  const results = q.trim().length === 0 ? [] : searchCompanies.filter((c) => {
     const hay = [c.name, c.country, c.hq, c.blurb].concat(c.tech || []).concat(c.sectors || []).join(" ").toLowerCase();
     return hay.includes(q.toLowerCase());
   }).slice(0, 8);

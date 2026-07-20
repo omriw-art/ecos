@@ -584,7 +584,8 @@ function StepReview({ data }) {
         <div className="col gap-6" style={{ fontSize: 12 }}>
           {(() => {
             const sectorLabel = window.SECTORS.find((s) => s.id === data.sectors[0])?.label || "—";
-            const overlapCount = (window.COMPANIES || []).filter((c) =>
+            const overlapCompanies = window.CompanyStore ? window.CompanyStore.getCompanies() : (window.COMPANIES || []);
+            const overlapCount = overlapCompanies.filter((c) =>
               (c.sectors || []).includes(data.sectors[0]) ||
               (data.tech || []).filter(Boolean).some((t) =>
                 (c.tech || []).some((ct) => ct.toLowerCase().includes(t.toLowerCase()))

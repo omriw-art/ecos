@@ -13,9 +13,14 @@ function CapabilitiesView({ onOpenCompany, onNav }) {
   const [selected, setSelected] = React.useState(null);
   const [sortBy,   setSortBy]   = React.useState("count");
 
+  // Stable reference, not getCompanies() — the useMemo below keys off
+  // [COMPANIES] identity; a fresh array on every render would recompute the
+  // coverage scan every render.
+  const COMPANIES = window.CompanyStore ? window.CompanyStore.getCachedCompanies() : (window.COMPANIES || []);
+
   const coverage = React.useMemo(() => (
-    window.CapabilityRegistry.getCapabilityCoverage(window.COMPANIES || [])
-  ), [window.COMPANIES]);
+    window.CapabilityRegistry.getCapabilityCoverage(COMPANIES)
+  ), [COMPANIES]);
 
   const sorted = React.useMemo(() =>
     [...coverage].sort((a, b) => sortBy === "count" ? b.count - a.count : a.count - b.count),
@@ -27,7 +32,7 @@ function CapabilitiesView({ onOpenCompany, onNav }) {
   const gapCount     = coverage.filter((c) => c.level === "none" || c.level === "weak").length;
   const maxCount     = Math.max(...coverage.map((c) => c.count), 1);
   const nonVirtual   = coverage.filter((c) => !c.virtual && !c.custom);
-  const avgPerCap    = Math.round((window.COMPANIES || []).length / Math.max(nonVirtual.length, 1));
+  const avgPerCap    = Math.round(COMPANIES.length / Math.max(nonVirtual.length, 1));
 
   const selectedData = selected ? coverage.find((c) => c.id === selected) : null;
 

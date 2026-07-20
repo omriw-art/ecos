@@ -30,7 +30,7 @@ const STAGE_LABEL_HE = {
 };
 
 function MatchesView({ onOpenCompany }) {
-  const companies = window.COMPANIES || [];
+  const companies = window.CompanyStore ? window.CompanyStore.getCompanies() : (window.COMPANIES || []);
   const [picked, setPicked] = React.useState(() => companies[0]?.id || null);
 
   React.useEffect(() => {

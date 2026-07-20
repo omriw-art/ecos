@@ -2,7 +2,7 @@
 // Answers: what needs attention, what opportunities are active, and where ecosystem gaps exist.
 
 function Dashboard({ onOpenCompany, onNav, onChangePerspective }) {
-  const COMPANIES = asArray(window.COMPANIES);
+  const COMPANIES = asArray(window.CompanyStore ? window.CompanyStore.getCompanies() : window.COMPANIES);
   const OPPORTUNITIES = asArray(window.OPPORTUNITIES);
   const rawSubmissions = window.SubmissionStore ? window.SubmissionStore.getSubmissions() : [];
   const recentActivity = rawSubmissions

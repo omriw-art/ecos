@@ -34,6 +34,22 @@
     return id;
   }
 
+  // Content-derived id for an organization-need — the single source of this
+  // logic, shared by listNeeds() below and the Needs Board view (which used
+  // to carry its own independent, position-based copy), so the two can't
+  // drift back out of sync. usedIds is the caller's per-company Set, so a
+  // collision within one org's needs[] gets a numeric suffix.
+  function organizationNeedId(companyId, title, usedIds) {
+    let id = `${companyId}::${slugify(title)}`;
+    let suffix = 2;
+    while (usedIds.has(id)) {
+      id = `${companyId}::${slugify(title)}-${suffix}`;
+      suffix += 1;
+    }
+    usedIds.add(id);
+    return id;
+  }
+
   function normalizeNeed(input, existing) {
     const source = Object.assign({}, existing || {}, input || {});
     return Object.assign({}, source, {
@@ -115,21 +131,13 @@
     const companies = asArray(getLocalCompanies());
     companies.forEach((c) => {
       // Content-derived, not positional — reordering or removing an entry in
-      // c.needs no longer reassigns another need's id. Collision suffix
-      // covers two literally-identical titles on the same org.
+      // c.needs no longer reassigns another need's id.
       const usedIds = new Set();
       asArray(c.needs).forEach((rawNeed) => {
         const title = (typeof rawNeed === "string" ? rawNeed : text(rawNeed && rawNeed.text)).trim();
         if (!title) return;
-        let id = `${c.id}::${slugify(title)}`;
-        let suffix = 2;
-        while (usedIds.has(id)) {
-          id = `${c.id}::${slugify(title)}-${suffix}`;
-          suffix += 1;
-        }
-        usedIds.add(id);
         items.push({
-          id,
+          id: organizationNeedId(c.id, title, usedIds),
           kind: "organization",
           title,
           sourceLabel: "צורך של ארגון",
@@ -191,5 +199,6 @@
     normalizeNeed,
     listNeeds,
     getNeedStats,
+    organizationNeedId,
   };
 })();
