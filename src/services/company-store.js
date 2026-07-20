@@ -155,5 +155,21 @@
     findCompanyByName,
   };
 
+  // window.COMPANIES is a cached accessor, not a plain property: the getter
+  // always returns the same reference (no re-normalization per access, so a
+  // React dep array like [window.COMPANIES] doesn't churn every render) and
+  // the setter just swaps that reference — it mirrors the old plain-
+  // assignment semantics (e.g. app.jsx's state-mirror effect) and never
+  // persists on its own. saveCompanies (:109) and resetCompaniesToSeed (:142)
+  // already assign window.COMPANIES; those assignments now pass through this
+  // setter unchanged, since defineProperty runs before either can be called.
+  let companiesCache;
+  Object.defineProperty(window, "COMPANIES", {
+    configurable: true,
+    enumerable: true,
+    get() { return companiesCache; },
+    set(value) { companiesCache = asArray(value); },
+  });
+
   window.COMPANIES = getCompanies();
 })();
