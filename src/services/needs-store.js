@@ -114,11 +114,22 @@
     const items = [];
     const companies = asArray(getLocalCompanies());
     companies.forEach((c) => {
-      asArray(c.needs).forEach((rawNeed, idx) => {
+      // Content-derived, not positional — reordering or removing an entry in
+      // c.needs no longer reassigns another need's id. Collision suffix
+      // covers two literally-identical titles on the same org.
+      const usedIds = new Set();
+      asArray(c.needs).forEach((rawNeed) => {
         const title = (typeof rawNeed === "string" ? rawNeed : text(rawNeed && rawNeed.text)).trim();
         if (!title) return;
+        let id = `${c.id}::${slugify(title)}`;
+        let suffix = 2;
+        while (usedIds.has(id)) {
+          id = `${c.id}::${slugify(title)}-${suffix}`;
+          suffix += 1;
+        }
+        usedIds.add(id);
         items.push({
-          id: `${c.id}::${idx}`,
+          id,
           kind: "organization",
           title,
           sourceLabel: "צורך של ארגון",
