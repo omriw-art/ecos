@@ -30,6 +30,7 @@
       companyId: text(source.companyId),
       status: "interested",
       createdAt: text(source.createdAt) || new Date().toISOString(),
+      createdBy: text(source.createdBy) || null,
     });
   }
 
@@ -63,6 +64,7 @@
       opportunityId: oppId,
       companyId: compId,
       createdAt: new Date().toISOString(),
+      createdBy: window.EcosOwnership ? window.EcosOwnership.currentUserId() : null,
     });
     saveInterests([interest, ...interests]);
     return interest;

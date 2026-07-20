@@ -58,6 +58,8 @@
       description: text(source.description),
       sourceType: SOURCE_TYPES.includes(source.sourceType) ? source.sourceType : "internal",
       sourceOrganizationId: text(source.sourceOrganizationId) || null,
+      ownerOrgId: text(source.ownerOrgId) || null,
+      createdBy: text(source.createdBy) || null,
       spaceSegment: text(source.spaceSegment) || "other",
       needType: NEED_TYPES.includes(source.needType) ? source.needType : "other",
       priority: PRIORITIES.includes(source.priority) ? source.priority : "medium",
@@ -87,6 +89,8 @@
     const need = normalizeNeed(Object.assign({}, input, {
       id: uniqueId(input && input.title, needs),
       createdAt: new Date().toISOString(),
+      ownerOrgId: window.EcosOwnership ? window.EcosOwnership.currentOrgId() : null,
+      createdBy: window.EcosOwnership ? window.EcosOwnership.currentUserId() : null,
     }));
     saveNeeds([need, ...needs]);
     return need;
@@ -99,6 +103,8 @@
     const updated = normalizeNeed(Object.assign({}, patch, { updatedAt: new Date().toISOString() }), needs[index]);
     updated.id = needs[index].id;
     updated.createdAt = needs[index].createdAt;
+    updated.ownerOrgId = needs[index].ownerOrgId;
+    updated.createdBy = needs[index].createdBy;
     const next = needs.slice();
     next[index] = updated;
     saveNeeds(next);
