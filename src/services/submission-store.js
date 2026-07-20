@@ -35,6 +35,7 @@
       id: text(source.id),
       createdAt: text(source.createdAt) || new Date().toISOString(),
       reviewedAt: text(source.reviewedAt),
+      reviewedBy: text(source.reviewedBy) || null,
       status: ["pending", "approved", "rejected"].includes(source.status) ? source.status : "pending",
       companyName: text(source.companyName || source.name),
       name: text(source.companyName || source.name),
@@ -123,6 +124,7 @@
       status: "approved",
       reviewedAt: new Date().toISOString(),
       approvedCompanyId: companyId || "",
+      reviewedBy: window.EcosSession && window.EcosSession.getUser ? window.EcosSession.getUser().id : null,
     });
   }
 
@@ -130,6 +132,7 @@
     return updateSubmission(id, {
       status: "rejected",
       reviewedAt: new Date().toISOString(),
+      reviewedBy: window.EcosSession && window.EcosSession.getUser ? window.EcosSession.getUser().id : null,
     });
   }
 

@@ -27,7 +27,7 @@
     "website", "linkedin",
   ];
   const SUBMISSION_FIELDS = [
-    "id", "createdAt", "reviewedAt", "status", "companyName", "name",
+    "id", "createdAt", "reviewedAt", "reviewedBy", "status", "companyName", "name",
     "sector", "sectors", "blurb", "description", "location", "hq",
     "country", "website", "stage", "offers", "needs", "capabilities", "tags",
     "contactName", "contactRole", "email", "contact", "approvedCompanyId",
