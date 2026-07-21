@@ -92,6 +92,18 @@
     return listForOpportunity(opportunityId).length;
   }
 
+  // Aggregate-only read-model for partner-facing surfaces. Returns an
+  // aggregate because the partner UI has no use for identities — NOT
+  // because identities are hidden or access-controlled.
+  // getInterests()/listForOpportunity() still expose every interest record
+  // (including companyId) to anyone with DevTools; nothing here changes
+  // that. This is a UI-shaping convenience, not a security guarantee. Real
+  // privacy requires a server/backend that never sends the identity
+  // records to partner clients in the first place.
+  function partnerSignalFor(opportunityId) {
+    return { count: countForOpportunity(opportunityId) };
+  }
+
   function clearInterests() {
     return saveInterests([]);
   }
@@ -105,6 +117,7 @@
     listForOpportunity,
     listForCompany,
     countForOpportunity,
+    partnerSignalFor,
     clearInterests,
   };
 })();
