@@ -104,12 +104,17 @@ function OpportunityDetailView({ id, perspective, onNav }) {
         <div className="muted tiny">פורסם מקומית בדמו · לא הופץ מחוץ למערכת</div>
         {/* Partner Interest Signals v1 — aggregate count only, same signal
             shown in the Partner overview's published-opportunities list.
-            Never names/contacts/scores/status. */}
+            Never names/contacts/scores/status. Partner surfaces must read
+            this through partnerSignalFor, never through raw interest
+            records — see opportunity-interest-store.js for why. */}
         {perspective === "partner" && window.OpportunityInterestStore && (
           <div style={{ marginTop: 6 }}>
-            {window.OpportunityInterestStore.countForOpportunity(opportunity.id) > 0
-              ? <span className="pill violet">{`סומנו ${window.OpportunityInterestStore.countForOpportunity(opportunity.id)} התעניינויות בדמו`}</span>
-              : <span className="pill">עדיין לא סומנה התעניינות בדמו</span>}
+            {(() => {
+              const signal = window.OpportunityInterestStore.partnerSignalFor(opportunity.id);
+              return signal.count > 0
+                ? <span className="pill violet">{`סומנו ${signal.count} התעניינויות בדמו`}</span>
+                : <span className="pill">עדיין לא סומנה התעניינות בדמו</span>;
+            })()}
           </div>
         )}
       </div>

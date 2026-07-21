@@ -310,11 +310,16 @@ function PartnerOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
                     <div className="muted tiny" style={{ marginTop: 6 }}>{LOCAL_DEMO_NOTE}</div>
                     {/* Aggregate-only signal — count, never names/contacts/scores/status.
                         Rendered as a pill (not plain text) so it reads at a glance during
-                        a live demo walkthrough (Golden Path CTA Polish v1). */}
+                        a live demo walkthrough (Golden Path CTA Polish v1). Partner surfaces
+                        must read this through partnerSignalFor, never through raw interest
+                        records — see opportunity-interest-store.js for why. */}
                     <div style={{ marginTop: 6 }}>
-                      {window.OpportunityInterestStore && window.OpportunityInterestStore.countForOpportunity(o.id) > 0
-                        ? <span className="pill violet">{`סומנו ${window.OpportunityInterestStore.countForOpportunity(o.id)} התעניינויות בדמו`}</span>
-                        : <span className="pill">עדיין לא סומנה התעניינות בדמו</span>}
+                      {(() => {
+                        const signal = window.OpportunityInterestStore ? window.OpportunityInterestStore.partnerSignalFor(o.id) : { count: 0 };
+                        return signal.count > 0
+                          ? <span className="pill violet">{`סומנו ${signal.count} התעניינויות בדמו`}</span>
+                          : <span className="pill">עדיין לא סומנה התעניינות בדמו</span>;
+                      })()}
                     </div>
                     <div className="flex center gap-8 wrap" style={{ marginTop: 6 }}>
                       <button type="button" className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => onOpenOpportunity && onOpenOpportunity(o.id)}>
