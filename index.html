@@ -448,6 +448,9 @@ footer{border-top:1px solid var(--brd);margin-top:30px;padding:46px 0 30px;backg
 <div id="toast"></div>
 
 <script src="src/data/data.js?v=4"></script>
+<script src="src/services/storage.js?v=1"></script>
+<script src="src/services/local-adapter.js?v=1"></script>
+<script src="src/services/submission-store.js?v=4"></script>
 <script>
 /* ============ Partner logos ============ */
 const PARTNERS=[
@@ -841,12 +844,32 @@ function collectData(){
   });
   return data;
 }
-function doRegister(data){ const db=getDB(); db.push(data); saveDB(db); unlockGrowth(); renderDirectory(); updateStat(); }
+function toPendingSubmission(data){
+  const list=(value)=>Array.isArray(value)?value.filter(Boolean):String(value||'').split(/[\n;,|]/).map(v=>v.trim()).filter(Boolean);
+  return {
+    companyName:data.companyName,
+    name:data.companyName,
+    country:'ישראל',
+    hq:data.location,
+    website:data.website,
+    linkedin:data.linkedin,
+    logoUrl:data.logo,
+    stage:data.stage,
+    founded:data.founded,
+    size:data.employees,
+    sectors:list(data.sector),
+    capabilities:[...new Set([...list(data.coreTech),...list(data.techTags)])],
+    offers:list(data.offers),
+    needs:[...list(data.seeking),...list(data.immediateNeeds)],
+    customers:list(data.customers),
+    blurb:data.summary,
+    contactName:data.primaryContact,
+    contactRole:data.primaryRole,
+    email:data.primaryEmail,
+  };
+}
+function doRegister(data){ const submission=window.SubmissionStore.createSubmission(toPendingSubmission(data)); unlockGrowth(); renderDirectory(); updateStat(); return submission; }
 function submitForm(){ if(!validateStep(current)) return; const d=collectData(); doRegister(d); toast('✓ '+(d.companyName||'החברה')+' — ההגשה נשמרה','ok'); setTimeout(()=>{ showView('growth'); },600); }
-
-/* ============ Storage ============ */
-function getDB(){ try{return JSON.parse(localStorage.getItem('ecos_companies')||'[]')}catch(e){return []} }
-function saveDB(d){ localStorage.setItem('ecos_companies',JSON.stringify(d)); }
 
 /* ============ Success ============ */
 function renderSuccess(data){
@@ -928,7 +951,6 @@ function initStars(){
 }
 
 /* ============ Init ============ */
-localStorage.removeItem('ecos_companies');
 renderPartners();
 renderGrowth();
 REG_CARD_TEMPLATE=document.querySelector('.reg-card').innerHTML;

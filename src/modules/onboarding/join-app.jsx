@@ -90,7 +90,6 @@ function JoinApp() {
       stage: data.stage,
       offers: data.offers,
       needs: data.needs,
-      capabilities: data.offers,
       contactName: data.contactName,
       contactRole: data.contactRole,
       email: data.email,
