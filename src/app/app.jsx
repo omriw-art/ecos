@@ -137,6 +137,18 @@ function App() {
   const refreshCompanies = () => {
     setCompanies(window.CompanyStore.getCompanies());
   };
+  // Admin Organization Intake / Company Accounts MVP — the smallest existing
+  // session boundary is EcosPerspective's operator-gated "view-as" (see its
+  // file-level note); a CompanyAccount login only needs to resolve to a
+  // companyId and then enter that same acting-company lens, never a second
+  // parallel session concept. Used both by CompanyAccountCard's admin "test
+  // login" shortcut (already has companyId) and SettingsView's
+  // username/password sign-in panel (resolves companyId via
+  // CompanyAccountStore.authenticate first).
+  const onCompanyLogin = (companyId) => {
+    if (window.EcosPerspective) window.EcosPerspective.setActingCompanyId(companyId);
+    changePerspective("company");
+  };
 
   const head = VIEW_TITLES[view] || { title: "ecos", crumb: "" };
 
@@ -152,14 +164,14 @@ function App() {
         {view === "partner-overview" && <PartnerOverviewView onOpenCompany={goCompany} onNav={goNav} onOpenOpportunity={goOpportunity} />}
         {view === "opportunity" && <OpportunityDetailView id={opportunityId} perspective={perspective} onNav={goNav} />}
         {view === "companies"    && <CompaniesView onOpenCompany={goCompany} onCreateCompany={createCompany} />}
-        {view === "company"      && <CompanyProfile id={companyId} onBack={() => setView(companyProfileBackTarget)} onNav={goNav} onOpenCompany={goCompany} onUpdateCompany={updateCompany} perspective={perspective} />}
+        {view === "company"      && <CompanyProfile id={companyId} onBack={() => setView(companyProfileBackTarget)} onNav={goNav} onOpenCompany={goCompany} onUpdateCompany={updateCompany} perspective={perspective} onCompaniesChanged={refreshCompanies} onCompanyLogin={onCompanyLogin} />}
         {view === "capabilities" && <CapabilitiesView onOpenCompany={goCompany} onNav={goNav} />}
         {view === "map"          && <MapView onOpenCompany={goCompany} />}
         {view === "needs"     && <NeedsView onOpenCompany={goCompany} />}
         {view === "matches"   && <MatchesView onOpenCompany={goCompany} />}
         {view === "people"    && <PeopleView onNav={goNav} />}
         {view === "onboard"   && <OnboardView onCompaniesChanged={refreshCompanies} onOpenCompany={goCompany} />}
-        {view === "settings"  && <SettingsView />}
+        {view === "settings"  && <SettingsView onCompanyLogin={onCompanyLogin} />}
       </main>
 
       <Copilot open={copilotOpen} onClose={() => setCopilotOpen(false)} />

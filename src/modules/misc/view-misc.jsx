@@ -124,7 +124,49 @@ function PeopleView({ onNav }) {
 
 /* ────────────────────────── Settings (minimal) ────────────────────────── */
 
-function SettingsView() {
+// Admin Organization Intake / Company Accounts MVP — the one real "login
+// screen" in the product: username + credential -> CompanyAccountStore ->
+// companyId -> onCompanyLogin (app.jsx) enters that company's existing
+// canonical profile through the same acting-company lens Admin's own
+// "view-as" already uses. Never touches CompanyStore directly and never
+// sees a credentialHash — CompanyAccountStore.authenticate is the only
+// thing this component calls.
+function CompanySignInPanel({ onCompanyLogin }) {
+  const [username, setUsername] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [error, setError] = React.useState("");
+
+  const submit = (e) => {
+    e.preventDefault();
+    const result = window.CompanyAccountStore ? window.CompanyAccountStore.authenticate(username, password) : null;
+    if (!result) {
+      setError("שם משתמש או סיסמה שגויים");
+      return;
+    }
+    setError("");
+    setUsername("");
+    setPassword("");
+    if (onCompanyLogin) onCompanyLogin(result.companyId);
+    window.toast("מחובר בתור החברה", "ok");
+  };
+
+  return (
+    <div className="card">
+      <div className="card-hd"><div className="card-title"><span className="dot" /> כניסת חברה (דמו מקומי)</div></div>
+      <div className="muted tiny" style={{ marginBottom: 10 }}>
+        אימות מול חשבונות שנוצרו בעמוד "ארגונים" · מקומי בלבד, לא אימות אמיתי.
+      </div>
+      <form className="col gap-10" onSubmit={submit}>
+        <input className="input" placeholder="שם משתמש" value={username} onChange={(e) => setUsername(e.target.value)} dir="ltr" />
+        <input className="input" type="password" placeholder="סיסמה" value={password} onChange={(e) => setPassword(e.target.value)} dir="ltr" />
+        {error && <div style={{ color: "var(--rose)", fontSize: 13 }}>{error}</div>}
+        <button type="submit" className="btn btn-primary" style={{ alignSelf: "flex-start" }}>כניסה</button>
+      </form>
+    </div>
+  );
+}
+
+function SettingsView({ onCompanyLogin }) {
   return (
     <div className="view">
       <div className="view-head">
@@ -135,6 +177,7 @@ function SettingsView() {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        <CompanySignInPanel onCompanyLogin={onCompanyLogin} />
         <div className="card">
           <div className="card-hd"><div className="card-title"><span className="dot" /> אינטגרציות</div></div>
           <div className="col gap-10">

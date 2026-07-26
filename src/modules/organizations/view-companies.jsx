@@ -24,6 +24,34 @@ function spaceSegmentShortLabel(id) {
   return parts.length > 1 ? parts[1] : full;
 }
 
+// Admin Organization Intake — read-only helpers for the directory/account
+// columns. Never touches CompanyAccountStore's credentialHash; that field
+// never leaves company-account-store.js.
+function getCompanyAccount(companyId) {
+  return window.CompanyAccountStore ? window.CompanyAccountStore.getByCompanyId(companyId) : null;
+}
+
+// Simple, deterministic "is this profile filled in" signal for Admin triage
+// — not a data-quality score, just a count of the fields an Admin would
+// otherwise have to open the profile to check.
+function completenessInfo(c) {
+  const checks = [
+    !!(c && c.website),
+    !!(c && c.blurb),
+    !!(c && c.hq),
+    !!(c && c.capabilities && c.capabilities.length),
+    !!(c && ((c.offers && c.offers.length) || (c.needs && c.needs.length))),
+  ];
+  const filled = checks.filter(Boolean).length;
+  return { filled, total: checks.length };
+}
+function completenessLabel(c) {
+  const { filled, total } = completenessInfo(c);
+  if (filled === total) return "פרופיל מלא";
+  if (filled === 0) return "פרופיל בסיסי בלבד";
+  return `פרופיל חלקי (${filled}/${total})`;
+}
+
 // Display-only Hebrew labels for the readiness/stage fields' raw English
 // values (c.readiness / c.stage in data.js stay untouched — filtering and
 // comparisons throughout the app compare against the raw values).
@@ -384,12 +412,18 @@ function CompaniesView({ onOpenCompany, onCreateCompany }) {
                 <th>שלב</th>
                 <th>גודל</th>
                 <th>מוכנות</th>
+                <th>הצטרפות</th>
+                <th>שם משתמש</th>
+                <th>שלמות פרופיל</th>
                 <th style={{ width: 80 }}>ציון</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((c) => (
+              {filtered.map((c) => {
+                const account = getCompanyAccount(c.id);
+                const claimed = window.CompanyStore ? window.CompanyStore.isClaimed(c) : c.membershipStatus === "claimed";
+                return (
                 <tr key={c.id} onClick={() => onOpenCompany(c.id)} style={{ cursor: "default" }}>
                   <td><CoLogo company={c} size={28} /></td>
                   <td>
@@ -405,10 +439,14 @@ function CompaniesView({ onOpenCompany, onCreateCompany }) {
                       {READINESS_LABEL_HE[c.readiness] || c.readiness}
                     </span>
                   </td>
+                  <td><span className={"pill " + (claimed ? "green" : "")}>{claimed ? "claimed" : "unclaimed"}</span></td>
+                  <td className="mono tiny" style={{ color: "var(--text-3)" }}>{account ? account.username : "—"}</td>
+                  <td className="mono tiny" style={{ color: "var(--text-3)" }}>{completenessLabel(c)}</td>
                   <td><ScoreRing value={c.score} size={32} stroke={2.5} /></td>
                   <td><window.I.ArrowLeft size={14} style={{ color: "var(--text-3)" }} /></td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -468,7 +506,7 @@ function CoCard({ c, onClick }) {
 // keep every tab, byte-identical to before).
 const COMPANY_PROFILE_CROSS_ORG_TABS = new Set(["matches", "connections"]);
 
-function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany, perspective }) {
+function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany, perspective, onCompaniesChanged, onCompanyLogin }) {
   const companies = getDirectoryCompanies();
   const c = companies.find((x) => x.id === id);
   if (!c) return <div className="view"><div className="card">חברה לא נמצאה</div></div>;
@@ -620,7 +658,7 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany, per
       {tab === "tech" && <TechTab c={c} />}
       {tab === "needs" && <NeedsOffersTab c={c} onNav={onNav} />}
       {tab === "matches" && !restrictToOwnOrg && <MatchesTab c={c} onOpenCompany={onOpenCompany} />}
-      {tab === "details" && <OrgDetailsTab c={c} />}
+      {tab === "details" && <OrgDetailsTab c={c} perspective={perspective} onCompaniesChanged={onCompaniesChanged} onCompanyLogin={onCompanyLogin} />}
       {tab === "connections" && !restrictToOwnOrg && <ConnectionsTab c={c} overlapCo={overlapCo} onOpenCompany={onOpenCompany} linkedInUrl={linkedInUrl} openExternalLink={openExternalLink} onEdit={() => setEditing(true)} />}
     </div>
   );
@@ -758,13 +796,110 @@ function OverviewTab({ c, onNav, onEdit, linkedInUrl, openExternalLink }) {
   );
 }
 
+// Admin-only (perspective === "admin", enforced by the caller) — creates/
+// resets the CompanyAccount that lets a company later log in as itself.
+// Never reads or displays credentialHash; the temporary password shown here
+// exists only in this component's local state, for this one reveal, and is
+// never persisted or refetched afterwards (see company-account-store.js).
+function CompanyAccountCard({ company, onCompaniesChanged, onCompanyLogin }) {
+  const [account, setAccount] = React.useState(() => getCompanyAccount(company.id));
+  const [reveal, setReveal] = React.useState(null); // { username, temporaryCredential } | null
+  const claimed = window.CompanyStore ? window.CompanyStore.isClaimed(company) : company.membershipStatus === "claimed";
+
+  const createAccount = () => {
+    if (!window.CompanyAccountStore) return;
+    const result = window.CompanyAccountStore.createForCompany(company);
+    if (!result) return;
+    setAccount(result.account);
+    if (result.temporaryCredential) setReveal({ username: result.account.username, temporaryCredential: result.temporaryCredential });
+    if (onCompaniesChanged) onCompaniesChanged();
+    window.toast(`נוצר חשבון עבור ${company.name}`, "ok");
+  };
+
+  const resetCredential = () => {
+    if (!window.CompanyAccountStore) return;
+    const result = window.CompanyAccountStore.resetCredential(company.id);
+    if (!result) return;
+    setAccount(result.account);
+    setReveal({ username: result.account.username, temporaryCredential: result.temporaryCredential });
+    window.toast(`הסיסמה של ${company.name} אופסה`, "ok");
+  };
+
+  const copy = (value) => {
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(value);
+    window.toast("הועתק ללוח", "ok");
+  };
+
+  return (
+    <div className="card">
+      <div className="card-hd"><div className="card-title"><span className="dot" /> חשבון חברה</div></div>
+      {!claimed && !account && (
+        <div className="col gap-10">
+          <div className="muted" style={{ padding: "4px 0" }}>לחברה זו אין עדיין חשבון התחברות — הארגון מופיע במאגר כ"unclaimed".</div>
+          <button className="btn btn-primary" style={{ alignSelf: "flex-start" }} onClick={createAccount}>
+            <window.I.Plus size={13} /> יצירת חשבון לחברה
+          </button>
+        </div>
+      )}
+      {claimed && account && (
+        <div className="col gap-10">
+          <KV k="שם משתמש" v={account.username} />
+          <KV k="סטטוס" v="claimed" />
+          <div className="flex gap-8 wrap">
+            <button className="btn" onClick={resetCredential}><window.I.Settings size={13} /> איפוס סיסמה</button>
+            {onCompanyLogin && (
+              <button className="btn" onClick={() => onCompanyLogin(company.id)}><window.I.Rocket size={13} /> כניסה כחברה (בדיקה)</button>
+            )}
+          </div>
+        </div>
+      )}
+      {claimed && !account && (
+        // Companies claimed via an approved public submission (SubmissionStore.
+        // toCompanyInput) get membershipStatus:"claimed" directly, without ever
+        // going through this store — a pre-existing gap, not introduced here.
+        // Admin can close it the same way as any other unclaimed company.
+        <div className="col gap-10">
+          <div className="muted" style={{ padding: "4px 0" }}>החברה מסומנת כ"claimed" (הצטרפות דרך טופס ציבורי) אך עדיין אין לה חשבון התחברות.</div>
+          <button className="btn btn-primary" style={{ alignSelf: "flex-start" }} onClick={createAccount}>
+            <window.I.Plus size={13} /> יצירת חשבון לחברה
+          </button>
+        </div>
+      )}
+      {reveal && (
+        <>
+          <div className="divider" />
+          <div className="col gap-8" style={{ padding: 12, background: "var(--bg-2)", border: "1px solid var(--line-2)", borderRadius: 10 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-1)" }}>החשבון נוצר/עודכן בהצלחה</div>
+            <div className="flex center between">
+              <div>
+                <div className="mono tiny" style={{ color: "var(--text-3)" }}>שם משתמש</div>
+                <div className="mono" style={{ fontSize: 15 }}>{reveal.username}</div>
+              </div>
+              <button className="btn" onClick={() => copy(reveal.username)}><window.I.Check size={12} /> העתק</button>
+            </div>
+            <div className="flex center between">
+              <div>
+                <div className="mono tiny" style={{ color: "var(--text-3)" }}>סיסמה זמנית</div>
+                <div className="mono" style={{ fontSize: 15 }}>{reveal.temporaryCredential}</div>
+              </div>
+              <button className="btn" onClick={() => copy(reveal.temporaryCredential)}><window.I.Check size={12} /> העתק</button>
+            </div>
+            <div className="mono tiny" style={{ color: "var(--text-4)" }}>הסיסמה מוצגת פעם אחת בלבד ולא ניתן יהיה לשחזר אותה — רק לאפס.</div>
+            <button className="btn" style={{ alignSelf: "flex-start" }} onClick={() => setReveal(null)}>סגור</button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 // Pilot consumer for the OrganizationProfile projection (B5d) — this tab's
 // two cards already split cleanly along the same identity/profile line the
 // projection draws, so org.* holds the identity fields and profile.* holds
 // everything else. Falls back to the flat record c itself if the service
 // isn't loaded, since Organization/Profile field names are a strict subset
 // of it.
-function OrgDetailsTab({ c }) {
+function OrgDetailsTab({ c, perspective, onCompaniesChanged, onCompanyLogin }) {
   const org = window.OrganizationProfile ? window.OrganizationProfile.toOrganization(c) : c;
   const profile = window.OrganizationProfile ? window.OrganizationProfile.toOrganizationProfile(c) : c;
   return (
@@ -808,6 +943,9 @@ function OrgDetailsTab({ c }) {
             </div>
           )}
         </div>
+        {perspective === "admin" && (
+          <CompanyAccountCard company={c} onCompaniesChanged={onCompaniesChanged} onCompanyLogin={onCompanyLogin} />
+        )}
       </div>
     </div>
   );
