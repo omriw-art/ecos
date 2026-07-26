@@ -119,16 +119,27 @@ function CompanyOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
         </div>
       </div>
 
-      {window.DemoFlowStrip && <window.DemoFlowStrip active="company" />}
-
-      {window.ActingOrgSelector && (
-        <window.ActingOrgSelector
-          label="חברה בתצוגה"
-          options={companyOptions.map((c) => ({ id: c.id, name: c.name }))}
-          value={company.id}
-          onChange={handleSelectCompany}
-          emptyText="אין חברות זמינות במאגר המקומי כרגע."
-        />
+      {/* Demo/explainer controls — kept fully functional, laid out side-by-side
+          (instead of two stacked full-width cards) so they take up less
+          vertical space ahead of the actual product content below. Both are
+          shared components (also used by Admin dashboard / Partner overview)
+          and are intentionally left unmodified — only this view's local
+          layout wrapper changed. */}
+      {(window.DemoFlowStrip || window.ActingOrgSelector) && (
+        <div className="flex gap-14 wrap" style={{ alignItems: "flex-start" }}>
+          {window.DemoFlowStrip && <div style={{ flex: "2 1 360px" }}><window.DemoFlowStrip active="company" /></div>}
+          {window.ActingOrgSelector && (
+            <div style={{ flex: "1 1 280px" }}>
+              <window.ActingOrgSelector
+                label="חברה בתצוגה"
+                options={companyOptions.map((c) => ({ id: c.id, name: c.name }))}
+                value={company.id}
+                onChange={handleSelectCompany}
+                emptyText="אין חברות זמינות במאגר המקומי כרגע."
+              />
+            </div>
+          )}
+        </div>
       )}
 
       {/* Context strip — company identity, unchanged from the prior layout */}
@@ -156,11 +167,21 @@ function CompanyOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 14 }}>
-        {/* Main column — Company Feed. Widened relative to the side rail, and
-            cards read like opportunity posts (type badge, source, title,
-            real description, reasons, real score), so the feed reads as the
-            dominant surface rather than one card among equals. */}
+      {/* Company Feed v2 workspace layout: dominant center feed column plus a
+          narrower left context column ("מה חשוב עכשיו" — reuses the same
+          cards previously called the "side rail", unchanged internally,
+          just consolidated under one column heading). The app's own
+          navigation sidebar (shell.jsx) stays where it already was, on the
+          right — untouched by this grid. Grid track order is unchanged from
+          before: track 1 (feed) sits at the grid's inline-start, which in
+          this RTL layout is the side adjacent to the app sidebar — i.e.
+          visually central once flanked by both the app sidebar (right) and
+          this new left column. */}
+      <div style={{ display: "grid", gridTemplateColumns: "2.3fr 1fr", gap: 14 }}>
+        {/* Center column — Company Feed. Cards read like opportunity posts
+            (type badge, source, title, real description, reasons, real
+            score), so the feed reads as the dominant surface rather than
+            one card among equals. */}
         <div className="col gap-14">
           <div className="card">
             <div className="card-hd">
@@ -238,8 +259,11 @@ function CompanyOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
           </div>
         </div>
 
-        {/* Side rail — stable, non-discovery items */}
+        {/* Left column — "מה חשוב עכשיו": stable, non-discovery items. Same
+            three cards as before (unchanged internally), now framed under
+            one column heading instead of an unlabeled "side rail". */}
         <div className="col gap-14">
+          <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", letterSpacing: "0.02em", padding: "0 2px" }}>מה חשוב עכשיו</div>
           <div className="card">
             <div className="card-hd"><div className="card-title"><span className="dot" /> הפרופיל שלנו</div></div>
             <div className="muted tiny" style={{ marginBottom: 10 }}>עריכת פרטי הארגון מתבצעת בפרופיל המלא הקיים — אין כפילות נתונים.</div>
