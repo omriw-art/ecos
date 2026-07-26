@@ -459,10 +459,20 @@ function CoCard({ c, onClick }) {
 
 /* ────────────────────────── Profile ────────────────────────── */
 
-function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany }) {
+// Company perspective reaches this same admin profile view via "הארגון שלי"
+// (own org only, never the directory — see app.jsx's resolveActingCompanyForNav
+// and companyProfileBackTarget). "matches" and "connections" are the only two
+// tabs that browse to OTHER companies (match targets / "ארגונים דומים" overlap)
+// — exactly the org-overlap/similar-companies exposure this project's product
+// boundary forbids showing a company. Admin and Partner are unaffected (both
+// keep every tab, byte-identical to before).
+const COMPANY_PROFILE_CROSS_ORG_TABS = new Set(["matches", "connections"]);
+
+function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany, perspective }) {
   const companies = getDirectoryCompanies();
   const c = companies.find((x) => x.id === id);
   if (!c) return <div className="view"><div className="card">חברה לא נמצאה</div></div>;
+  const restrictToOwnOrg = perspective === "company";
   const [tab, setTab] = React.useState("overview");
   const [editing, setEditing] = React.useState(false);
 
@@ -484,6 +494,10 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany }) {
     if (!linkedInUrl) return;
     window.open(linkedInUrl.startsWith("http") ? linkedInUrl : `https://${linkedInUrl}`, "_blank", "noopener");
   };
+  // Breadcrumb label must match where onBack actually lands (see app.jsx's
+  // companyProfileBackTarget) — Admin returns to the companies directory,
+  // Company/Partner return to their own landing feed, not a directory.
+  const backLabel = perspective === "company" ? "פיד הזדמנויות" : perspective === "partner" ? "סביבת שותף" : "ארגונים";
 
   return (
     <div className="view company-profile-view">
@@ -498,7 +512,7 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany }) {
         }
       `}</style>
       <div className="flex center gap-8" style={{ fontSize: 12, color: "var(--text-3)" }}>
-        <span style={{ cursor: "default" }} onClick={onBack}>ארגונים</span>
+        <span style={{ cursor: "default" }} onClick={onBack}>{backLabel}</span>
         <window.I.ArrowLeft size={11} />
         <span style={{ color: "var(--text-1)" }}>{c.name}</span>
       </div>
@@ -584,7 +598,7 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany }) {
             ["matches", "התאמות"],
             ["details", "פרטי ארגון"],
             ["connections", "המשך טיפול"],
-          ].map(([id, lbl]) => (
+          ].filter(([id]) => !restrictToOwnOrg || !COMPANY_PROFILE_CROSS_ORG_TABS.has(id)).map(([id, lbl]) => (
             <div key={id} className={"step" + (tab === id ? " active" : "")} onClick={() => setTab(id)} style={{ cursor: "default" }}>
               {lbl}
             </div>
@@ -595,9 +609,9 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany }) {
       {tab === "overview" && <OverviewTab c={c} onNav={onNav} onEdit={() => setEditing(true)} linkedInUrl={linkedInUrl} openExternalLink={openExternalLink} />}
       {tab === "tech" && <TechTab c={c} />}
       {tab === "needs" && <NeedsOffersTab c={c} onNav={onNav} />}
-      {tab === "matches" && <MatchesTab c={c} onOpenCompany={onOpenCompany} />}
+      {tab === "matches" && !restrictToOwnOrg && <MatchesTab c={c} onOpenCompany={onOpenCompany} />}
       {tab === "details" && <OrgDetailsTab c={c} />}
-      {tab === "connections" && <ConnectionsTab c={c} overlapCo={overlapCo} onOpenCompany={onOpenCompany} linkedInUrl={linkedInUrl} openExternalLink={openExternalLink} onEdit={() => setEditing(true)} />}
+      {tab === "connections" && !restrictToOwnOrg && <ConnectionsTab c={c} overlapCo={overlapCo} onOpenCompany={onOpenCompany} linkedInUrl={linkedInUrl} openExternalLink={openExternalLink} onEdit={() => setEditing(true)} />}
     </div>
   );
 }

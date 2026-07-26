@@ -17,21 +17,25 @@ const NAV = [
 ];
 
 // Perspective-aware navigation. Admin sees the full nav, byte-identical to
-// before. Company nav is deliberately minimal — just its feed landing plus
-// the shared growth-tools catalog, not the admin entity-browsing nav
-// (dashboard/companies/capabilities/map/needs/matches/copilot/people). A
-// company reaches the relevant slice of that through feed cards/actions
-// (e.g. "open opportunity", "add a need") instead of a standalone nav item —
-// still reachable via onNav, just not primary navigation. Partner keeps its
-// existing (broader) nav unchanged. This is a presentational lens, never an
-// access-control boundary.
+// before. Company nav is deliberately minimal — feed landing, its own
+// organization's profile, and the shared growth-tools catalog — not the
+// admin entity-browsing nav (dashboard/companies-directory/capabilities/map/
+// needs/matches/copilot/people). "הארגון שלי" opens only the acting
+// company's own profile (App.goNav special-cases this id to resolve and open
+// the acting company directly) — it is not the admin companies directory,
+// and a company can never browse other organizations through it. The rest
+// of the admin nav is still reachable via onNav from within the feed (e.g.
+// "open opportunity", "add a need"), just not primary navigation. Partner
+// keeps its existing (broader) nav unchanged. This is a presentational lens,
+// never an access-control boundary.
 const PERSPECTIVE_ADMIN_ONLY = new Set(["onboard", "settings"]);
 const COMPANY_OVERVIEW_ITEM = { id: "company-overview", label: "פיד הזדמנויות", icon: "Satellite", section: "מבט-על" };
+const MY_ORGANIZATION_ITEM = { id: "my-organization", label: "הארגון שלי", icon: "Building", section: "מבט-על" };
 const PARTNER_OVERVIEW_ITEM = { id: "partner-overview", label: "סביבת שותף", icon: "Users", section: "מבט-על" };
 const GROWTH_TOOLS_ITEM = { id: "growth-tools", label: "הזדמנויות צמיחה", icon: "Trend", section: "מבט-על" };
 function navForPerspective(perspective) {
   if (perspective === "company") {
-    return [COMPANY_OVERVIEW_ITEM, GROWTH_TOOLS_ITEM];
+    return [COMPANY_OVERVIEW_ITEM, MY_ORGANIZATION_ITEM, GROWTH_TOOLS_ITEM];
   }
   if (perspective === "partner") {
     // Growth Tools is shared read-only reference between Company and Partner

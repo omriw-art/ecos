@@ -25,6 +25,18 @@ const VIEW_TITLES = {
   settings:     { title: "הגדרות",           crumb: "ACTIONS · SETTINGS"             },
 };
 
+// Same partner organizationType set duplicated per-file elsewhere (see
+// view-company-overview.jsx's CO_PARTNER_ORG_TYPES) — used only so
+// "הארגון שלי" opens the same acting company the Company Feed page itself
+// shows, never to gate data access.
+const APP_PARTNER_ORG_TYPES = new Set(["investor", "accelerator", "academic", "research", "government", "service-provider", "nonprofit"]);
+function resolveActingCompanyForNav(companies) {
+  const eligible = companies.filter((c) => !c.organizationType || !APP_PARTNER_ORG_TYPES.has(c.organizationType));
+  const actingId = window.EcosPerspective ? window.EcosPerspective.get().actingCompanyId : null;
+  const acting = actingId ? eligible.find((c) => c.id === actingId) : null;
+  return acting || eligible[0] || companies[0] || null;
+}
+
 function App() {
   const [t, setTweak] = window.useTweaks(TWEAK_DEFAULTS);
   const [companies, setCompanies] = React.useState(() => window.CompanyStore ? window.CompanyStore.getCompanies() : (window.COMPANIES || []));
@@ -71,6 +83,14 @@ function App() {
   const goOpportunity = (id) => { setOpportunityId(id); setView("opportunity"); };
   const goNav = (id) => {
     if (id === "copilot") { setCopilotOpen(true); return; }
+    // "הארגון שלי" (Company nav only) — opens only the acting company's own
+    // profile, never the admin companies directory. Smallest-safe reuse of
+    // the existing company-profile view/route; no new view added.
+    if (id === "my-organization") {
+      const acting = resolveActingCompanyForNav(companies);
+      if (acting) goCompany(acting.id);
+      return;
+    }
     setView(id);
   };
   // Each non-admin perspective's dedicated landing — entering it always lands
@@ -78,6 +98,12 @@ function App() {
   // "dashboard" would otherwise still count as valid nav in both and never
   // trigger the generic fallback below.
   const PERSPECTIVE_LANDING = { company: "company-overview", partner: "partner-overview" };
+  // CompanyProfile's breadcrumb ("ארגונים") always calls onBack — for
+  // Company/Partner that must never land on the full companies directory
+  // (Company especially: "הארגון שלי" opens this same view for the acting
+  // company only, and the directory must stay unreachable from it). Admin
+  // keeps its existing "back to companies" behavior unchanged.
+  const companyProfileBackTarget = perspective === "admin" ? "companies" : (PERSPECTIVE_LANDING[perspective] || "dashboard");
   const changePerspective = (next) => {
     const previous = perspective;
     const applied = window.EcosPerspective ? window.EcosPerspective.setPerspective(next).perspective : next;
@@ -110,7 +136,7 @@ function App() {
 
   return (
     <div className="shell" data-screen-label={view}>
-      <Sidebar active={view === "company" ? "companies" : view} onChange={goNav} perspective={perspective} />
+      <Sidebar active={view === "company" ? (perspective === "company" ? "my-organization" : "companies") : view} onChange={goNav} perspective={perspective} />
       <main className="main">
         <Topbar title={head.title} crumb={head.crumb} onOpenCopilot={() => setCopilotOpen(true)} onOpenCompany={goCompany}
                 perspective={perspective} onChangePerspective={changePerspective} showPerspectiveSwitcher={showPerspectiveSwitcher} />
@@ -120,7 +146,7 @@ function App() {
         {view === "partner-overview" && <PartnerOverviewView onOpenCompany={goCompany} onNav={goNav} onOpenOpportunity={goOpportunity} />}
         {view === "opportunity" && <OpportunityDetailView id={opportunityId} perspective={perspective} onNav={goNav} />}
         {view === "companies"    && <CompaniesView onOpenCompany={goCompany} onCreateCompany={createCompany} />}
-        {view === "company"      && <CompanyProfile id={companyId} onBack={() => setView("companies")} onNav={goNav} onOpenCompany={goCompany} onUpdateCompany={updateCompany} />}
+        {view === "company"      && <CompanyProfile id={companyId} onBack={() => setView(companyProfileBackTarget)} onNav={goNav} onOpenCompany={goCompany} onUpdateCompany={updateCompany} perspective={perspective} />}
         {view === "capabilities" && <CapabilitiesView onOpenCompany={goCompany} onNav={goNav} />}
         {view === "map"          && <MapView onOpenCompany={goCompany} />}
         {view === "needs"     && <NeedsView onOpenCompany={goCompany} />}
