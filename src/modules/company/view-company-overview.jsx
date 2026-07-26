@@ -86,8 +86,6 @@ function CompanyOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
     );
   }
 
-  const capabilities = (company.capabilities && company.capabilities.length) ? company.capabilities : (company.tech || []);
-  const sectors = Array.isArray(company.sectors) ? company.sectors : [];
   // Company Feed (F2) — one ranked local stream from CompanyFeed.listCompanyFeed,
   // replacing the previous separate relevant-needs / ecosystem-opportunities /
   // growth-tools cards. Deterministic, recomputed per acting company; no fetch,
@@ -99,7 +97,6 @@ function CompanyOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
     [company.id]
   );
   const rankedFeedItems = feedItems.filter((item) => item.type !== "growth-tool");
-  const growthFeedItems = feedItems.filter((item) => item.type === "growth-tool").slice(0, 3);
   // Compact feed filter — reuses the existing item.type values already used
   // for each card's badge (need/opportunity); no new category system, no
   // fetched data. Counts are real, derived from rankedFeedItems above.
@@ -154,7 +151,7 @@ function CompanyOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
           the right, outside this grid. Below ~920px the left column stacks
           above the feed instead of narrowing it further. */}
       <style>{`
-        .co-feed-grid { display: grid; grid-template-columns: 1fr 260px; gap: 14px; align-items: start; }
+        .co-feed-grid { display: grid; grid-template-columns: 1fr 260px; gap: 22px; align-items: start; }
         @media (max-width: 920px) {
           .co-feed-grid { grid-template-columns: 1fr; }
           .co-feed-grid > .co-context-col { order: -1; }
@@ -162,136 +159,113 @@ function CompanyOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
       `}</style>
       <div className="co-feed-grid">
         {/* Center — dominant, flexible: the feed is the primary, continuous
-            page content. Cards read like opportunity posts (type badge,
-            source, title, real description, reasons, real score). */}
-        <div className="col gap-14">
-          <div className="card">
-            <div className="card-hd">
-              <div className="card-title"><span className="dot violet" /> פיד הזדמנויות</div>
+            page content, rendered directly in the workspace flow (not wrapped
+            in one large dashboard-style .card). Each feed item is its own
+            flat, bordered row — that's the only per-item container. */}
+        <div className="col gap-10">
+          <div>
+            <div className="flex center gap-8" style={{ marginBottom: 2 }}>
+              <span className="dot violet" />
+              <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-1)" }}>פיד הזדמנויות</div>
               {!!rankedFeedItems.length && <span className="pill">{rankedFeedItems.length}</span>}
             </div>
-            <div className="muted tiny" style={{ marginBottom: 10 }}>מבוסס על התאמה דטרמיניסטית · ללא AI · לא עדכון חי</div>
-            {/* Compact filter row — existing item.type values only
-                (need/opportunity), real counts from rankedFeedItems above;
-                no new category system, no fetched/fabricated data. */}
-            {!!rankedFeedItems.length && (
-              <div className="flex gap-6 wrap" style={{ marginBottom: 12 }}>
-                <button type="button" className={"chip" + (feedFilter === "all" ? " active" : "")} onClick={() => setFeedFilter("all")}>הכל · {rankedFeedItems.length}</button>
-                {!!opportunityCount && <button type="button" className={"chip" + (feedFilter === "opportunity" ? " active" : "")} onClick={() => setFeedFilter("opportunity")}>הזדמנויות · {opportunityCount}</button>}
-                {!!needCount && <button type="button" className={"chip" + (feedFilter === "need" ? " active" : "")} onClick={() => setFeedFilter("need")}>צרכים · {needCount}</button>}
-              </div>
-            )}
-            {!rankedFeedItems.length ? (
-              <div className="col gap-6" style={{ padding: "10px 0" }}>
-                <div className="muted">אין פריטים בפיד כרגע.</div>
-                <div className="muted tiny">פרסמו הזדמנות בתצוגת שותף כדי לראות אותה בפיד החברה.</div>
-              </div>
-            ) : (
-              <div className="col gap-10">
-                {filteredFeedItems.map((item) => {
-                  const isOpportunity = item.type === "opportunity";
-                  const description = item.raw && item.raw.description;
-                  return (
-                    <div key={item.id} style={{ padding: 14, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderInlineStart: `3px solid var(--${isOpportunity ? "amber" : "violet"})`, borderRadius: 10 }}>
-                      <div className="flex center between" style={{ gap: 8 }}>
-                        <div className="flex center gap-8" style={{ minWidth: 0 }}>
-                          <span className={"pill " + (isOpportunity ? "amber" : "violet")} style={{ fontSize: 10.5, flex: "none" }}>{isOpportunity ? "הזדמנות" : "צורך"}</span>
-                          <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-1)" }}>{item.title}</div>
-                        </div>
-                        {item.ranked && typeof item.score === "number" && (
-                          <span className="mono tabnum" style={{ fontSize: 14, fontWeight: 700, color: "var(--blue)", flex: "none" }}>{item.score}%</span>
-                        )}
-                      </div>
-                      <div className="mono tiny" style={{ color: "var(--text-4)", marginTop: 4 }}>{item.sourceLabel}</div>
-                      {!!description && <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 6, lineHeight: 1.5 }}>{description}</div>}
-                      {item.ranked && item.confidence && (
-                        <div style={{ marginTop: 6 }}><span className="pill" style={{ fontSize: 10.5 }}>{confidenceLabel(item.confidence)}</span></div>
-                      )}
-                      {!!item.reasons.length && <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 6 }}>{item.reasons.join(" · ")}</div>}
-                      {isOpportunity && (
-                        <button type="button" className="btn btn-primary" style={{ fontSize: 12.5, marginTop: 10 }} onClick={() => onOpenOpportunity && onOpenOpportunity(item.raw.id)}>
-                          פתח הזדמנות ←
-                        </button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            <div className="muted tiny">מבוסס על התאמה דטרמיניסטית · ללא AI · לא עדכון חי</div>
           </div>
 
-          {/* Growth tools — visually distinct, unranked reference catalog.
-              Never interleaved with the ranked feed above. */}
-          <div className="card">
-            <div className="card-hd">
-              <div className="card-title"><span className="dot amber" /> כלי צמיחה</div>
-              <button type="button" className="btn btn-ghost" style={{ fontSize: 12.5 }} onClick={() => onNav && onNav("growth-tools")}>
-                לכל ההזדמנויות ←
-              </button>
+          {/* Compact filter row — existing item.type values only
+              (need/opportunity), real counts from rankedFeedItems above; no
+              new category system, no fetched/fabricated data. */}
+          {!!rankedFeedItems.length && (
+            <div className="flex gap-6 wrap">
+              <button type="button" className={"chip" + (feedFilter === "all" ? " active" : "")} onClick={() => setFeedFilter("all")}>הכל · {rankedFeedItems.length}</button>
+              {!!opportunityCount && <button type="button" className={"chip" + (feedFilter === "opportunity" ? " active" : "")} onClick={() => setFeedFilter("opportunity")}>הזדמנויות · {opportunityCount}</button>}
+              {!!needCount && <button type="button" className={"chip" + (feedFilter === "need" ? " active" : "")} onClick={() => setFeedFilter("need")}>צרכים · {needCount}</button>}
             </div>
-            <div className="flex center gap-6 wrap" style={{ marginBottom: 8 }}>
-              {window.DemoTag && <window.DemoTag>קטלוג אוצר קבוע</window.DemoTag>}
-              {window.DemoTag && <window.DemoTag>לא בדיקת זכאות</window.DemoTag>}
+          )}
+
+          {!rankedFeedItems.length ? (
+            <div className="col gap-6" style={{ padding: "10px 0" }}>
+              <div className="muted">אין פריטים בפיד כרגע.</div>
+              <div className="muted tiny">פרסמו הזדמנות בתצוגת שותף כדי לראות אותה בפיד החברה.</div>
             </div>
-            <div className="muted tiny" style={{ marginBottom: 10 }}>
-              קטלוג אחיד לכולם, ללא דירוג אישי. {window.GROWTH_DISCLAIMER || "מאגר הפניות אוצר לצורכי הדגמה · אינו בדיקת זכאות ואינו מחובר למערכות חיצוניות. אמתו מול הגוף הרלוונטי."}
-            </div>
-            {!growthFeedItems.length ? (
-              <div className="muted" style={{ padding: "6px 0" }}>אין כלי צמיחה כרגע.</div>
-            ) : (
-              <div className="col gap-8">
-                {growthFeedItems.map((item) => (
-                  <div key={item.id} style={{ padding: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)" }}>{item.title}</div>
-                    {item.subtitle && <div className="mono tiny" style={{ color: "var(--text-4)", marginTop: 2 }}>{item.subtitle}</div>}
+          ) : (
+            <div className="col gap-8">
+              {filteredFeedItems.map((item) => {
+                const isOpportunity = item.type === "opportunity";
+                const description = item.raw && item.raw.description;
+                return (
+                  <div key={item.id} style={{ padding: "12px 14px", background: "var(--bg-2)", border: "1px solid var(--line-1)", borderInlineStart: `3px solid var(--${isOpportunity ? "amber" : "violet"})`, borderRadius: 8 }}>
+                    <div className="flex center between" style={{ gap: 8 }}>
+                      <div className="flex center gap-8" style={{ minWidth: 0 }}>
+                        <span className={"pill " + (isOpportunity ? "amber" : "violet")} style={{ fontSize: 10.5, flex: "none" }}>{isOpportunity ? "הזדמנות" : "צורך"}</span>
+                        <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-1)" }}>{item.title}</div>
+                      </div>
+                      {item.ranked && typeof item.score === "number" && (
+                        <span className="mono tabnum" style={{ fontSize: 14, fontWeight: 700, color: "var(--blue)", flex: "none" }}>{item.score}%</span>
+                      )}
+                    </div>
+                    <div className="mono tiny" style={{ color: "var(--text-4)", marginTop: 4 }}>{item.sourceLabel}</div>
+                    {!!description && <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 6, lineHeight: 1.5 }}>{description}</div>}
+                    {item.ranked && item.confidence && (
+                      <div style={{ marginTop: 6 }}><span className="pill" style={{ fontSize: 10.5 }}>{confidenceLabel(item.confidence)}</span></div>
+                    )}
+                    {!!item.reasons.length && <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 6 }}>{item.reasons.join(" · ")}</div>}
+                    {isOpportunity && (
+                      <button type="button" className="btn btn-primary" style={{ fontSize: 12.5, marginTop: 10 }} onClick={() => onOpenOpportunity && onOpenOpportunity(item.raw.id)}>
+                        פתח הזדמנות ←
+                      </button>
+                    )}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Growth tools — no longer a competing catalog card in the primary
+              flow; still fully reachable via the existing growth-tools view
+              (window.GrowthToolsStore / GrowthToolsView are untouched). */}
+          <button
+            type="button"
+            className="btn btn-ghost"
+            style={{ alignSelf: "flex-start", fontSize: 12.5, color: "var(--text-3)", marginTop: 4 }}
+            onClick={() => onNav && onNav("growth-tools")}
+          >
+            <window.I.Trend size={13} /> כלי צמיחה — קטלוג אוצר מקומי ←
+          </button>
         </div>
 
         {/* Left — "מה חשוב עכשיו", fixed ~260px. Same underlying data/actions
-            as the previous "side rail" (unchanged stores/handlers), rendered
-            as compact stacked cards to fit the narrower column. */}
-        <div className="col gap-14 co-context-col">
-          <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", letterSpacing: "0.02em", padding: "0 2px" }}>מה חשוב עכשיו</div>
+            as before (unchanged stores/handlers); rendered as a compact
+            information rail (spacing + subtle dividers) rather than stacked
+            dashboard cards. Company identity itself already lives in the
+            page header/company selector above — not repeated here. */}
+        <div className="col co-context-col" style={{ gap: 16 }}>
+          <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", letterSpacing: "0.02em" }}>מה חשוב עכשיו</div>
 
-          {/* Compact identity + profile shortcut — merges the old full-width
-              identity card with the old "הפרופיל שלנו" card. Real fields
-              only (logo/name/stage/readiness + the real feed count already
-              shown above); no invented completeness score or status. */}
-          <div className="card">
-            <div className="flex gap-10" style={{ alignItems: "center", marginBottom: 8 }}>
-              <window.CoLogo company={company} size={36} />
-              <div className="col" style={{ minWidth: 0, gap: 3 }}>
-                <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--text-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{company.name}</div>
-                <div className="flex gap-4 wrap">
-                  {company.readiness && <span className="pill" style={{ fontSize: 9.5 }}>{CO_READINESS_LABEL_HE[company.readiness] || company.readiness}</span>}
-                  {company.stage && <span className="pill" style={{ fontSize: 9.5 }}>{CO_STAGE_LABEL_HE[company.stage] || company.stage}</span>}
-                </div>
-              </div>
-            </div>
-            <div className="muted tiny" style={{ marginBottom: 8 }}>{rankedFeedItems.length} פריטים בפיד כרגע · עריכה בפרופיל המלא</div>
-            <button className="btn btn-primary" style={{ fontSize: 12.5 }} onClick={() => onOpenCompany && onOpenCompany(company.id)}>
-              <window.I.Building size={13} /> פתח את הפרופיל המלא
-            </button>
+          {/* Real feed count — same number already shown next to the feed
+              heading. No destination beyond this page, so kept as plain text
+              rather than a fake link. */}
+          <div>
+            <div style={{ fontSize: 13, color: "var(--text-1)" }}>{rankedFeedItems.length} פריטים רלוונטיים</div>
+            <div className="muted tiny">בפיד החברה כרגע</div>
           </div>
+
+          <div style={{ borderTop: "1px solid var(--line-1)" }} />
 
           {/* הזדמנויות שסומנו — locally marked interest (Company Interest v1),
               joined from OpportunityInterestStore + NeedsStore. Local to this
               company's view; no partner-side visibility, no contact sent.
-              Compacted to a title-only list (capped at 3, real overflow
-              count) — same underlying data and onOpenOpportunity action as
-              before, full detail still reachable by opening an item. */}
-          <div className="card">
-            <div className="card-hd">
-              <div className="card-title"><span className="dot violet" /> הזדמנויות שסומנו</div>
-              {!!markedOpportunities.length && <span className="pill">{markedOpportunities.length}</span>}
+              Title-only list (capped at 3, real overflow count) — same
+              underlying data and onOpenOpportunity action as before, full
+              detail still reachable by opening an item. */}
+          <div>
+            <div className="flex center between" style={{ marginBottom: 4 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-1)" }}>הזדמנויות שסומנו</div>
+              {!!markedOpportunities.length && <span className="pill" style={{ fontSize: 10 }}>{markedOpportunities.length}</span>}
             </div>
-            <div className="muted tiny" style={{ marginBottom: 8 }}>נתוני דמו מקומיים · לא נשלחה פנייה לשותף</div>
+            <div className="muted tiny" style={{ marginBottom: 6 }}>נתוני דמו מקומיים · לא נשלחה פנייה לשותף</div>
             {!markedOpportunities.length ? (
-              <div className="muted tiny" style={{ padding: "4px 0" }}>עדיין לא סומנו הזדמנויות.</div>
+              <div className="muted tiny">עדיין לא סומנו הזדמנויות.</div>
             ) : (
               <div className="col gap-4">
                 {markedOpportunities.slice(0, 3).map((o) => (
@@ -299,7 +273,7 @@ function CompanyOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
                     key={o.id}
                     type="button"
                     className="btn btn-ghost"
-                    style={{ justifyContent: "flex-start", fontSize: 12, padding: "5px 8px", overflow: "hidden" }}
+                    style={{ justifyContent: "flex-start", fontSize: 12, padding: "3px 0", overflow: "hidden" }}
                     onClick={() => onOpenOpportunity && onOpenOpportunity(o.id)}
                     title={o.title}
                   >
@@ -307,20 +281,38 @@ function CompanyOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
                   </button>
                 ))}
                 {markedOpportunities.length > 3 && (
-                  <div className="muted tiny" style={{ padding: "2px 8px" }}>+{markedOpportunities.length - 3} נוספות</div>
+                  <div className="muted tiny">+{markedOpportunities.length - 3} נוספות</div>
                 )}
               </div>
             )}
           </div>
 
-          <div className="card">
-            <div className="card-hd"><div className="card-title"><span className="dot" /> הצעדים הבאים</div></div>
+          <div style={{ borderTop: "1px solid var(--line-1)" }} />
+
+          {/* Profile — compact context action, not a repeated identity card
+              (name/logo already in the page header). readiness/stage shown
+              only when the company actually has them. */}
+          {(company.readiness || company.stage) && (
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-1)", marginBottom: 6 }}>פרופיל החברה</div>
+              <div className="flex gap-4 wrap">
+                {company.readiness && <span className="pill" style={{ fontSize: 9.5 }}>{CO_READINESS_LABEL_HE[company.readiness] || company.readiness}</span>}
+                {company.stage && <span className="pill" style={{ fontSize: 9.5 }}>{CO_STAGE_LABEL_HE[company.stage] || company.stage}</span>}
+              </div>
+            </div>
+          )}
+
+          {(company.readiness || company.stage) && <div style={{ borderTop: "1px solid var(--line-1)" }} />}
+
+          {/* Shortcuts — same handlers as before. */}
+          <div>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", marginBottom: 8 }}>קיצורי דרך</div>
             <div className="col gap-6">
               <button type="button" className="btn" style={{ justifyContent: "flex-start", fontSize: 12.5 }} onClick={() => onOpenCompany && onOpenCompany(company.id)}>
-                <window.I.Settings size={13} /> עדכנו את פרופיל החברה
+                <window.I.Settings size={13} /> עדכון פרופיל
               </button>
               <button type="button" className="btn" style={{ justifyContent: "flex-start", fontSize: 12.5 }} onClick={() => onNav && onNav("needs")}>
-                <window.I.Plus size={13} /> הוסיפו צורך חדש
+                <window.I.Plus size={13} /> הוספת צורך
               </button>
             </div>
           </div>
