@@ -9,7 +9,7 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
 
 const VIEW_TITLES = {
   dashboard:    { title: "לוח ניהול",         crumb: "דשבורד"                        },
-  "company-overview": { title: "סקירת חברה", crumb: "תצוגת חברה · דמו"               },
+  "company-overview": { title: "פיד הזדמנויות", crumb: "תצוגת חברה · דמו"             },
   "partner-overview": { title: "סביבת שותף", crumb: "תצוגת שותף · דמו"               },
   "growth-tools": { title: "הזדמנויות צמיחה", crumb: "תצוגת דמו"                      },
   opportunity:  { title: "הזדמנות",          crumb: "תצוגת דמו"                      },

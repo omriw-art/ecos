@@ -140,40 +140,53 @@ function CompanyOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 14 }}>
-        {/* Main column — Company Feed */}
+      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 14 }}>
+        {/* Main column — Company Feed. Widened relative to the side rail, and
+            cards read like opportunity posts (type badge, source, title,
+            real description, reasons, real score), so the feed reads as the
+            dominant surface rather than one card among equals. */}
         <div className="col gap-14">
           <div className="card">
             <div className="card-hd">
               <div className="card-title"><span className="dot violet" /> פיד הזדמנויות</div>
               {!!rankedFeedItems.length && <span className="pill">{rankedFeedItems.length}</span>}
             </div>
-            <div className="muted tiny" style={{ marginBottom: 10 }}>מבוסס על התאמה מקומית · ללא AI</div>
+            <div className="muted tiny" style={{ marginBottom: 10 }}>מבוסס על התאמה דטרמיניסטית · ללא AI · לא עדכון חי</div>
             {!rankedFeedItems.length ? (
-              <div className="muted" style={{ padding: "8px 0" }}>אין פריטים להצגה כרגע.</div>
+              <div className="col gap-6" style={{ padding: "10px 0" }}>
+                <div className="muted">אין פריטים בפיד כרגע.</div>
+                <div className="muted tiny">פרסמו הזדמנות בתצוגת שותף כדי לראות אותה בפיד החברה.</div>
+              </div>
             ) : (
-              <div className="col gap-8">
-                {rankedFeedItems.map((item) => (
-                  <div key={item.id} style={{ padding: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8 }}>
-                    <div className="flex center between" style={{ gap: 8 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)" }}>{item.title}</div>
-                      {item.ranked && typeof item.score === "number" && (
-                        <span className="mono tabnum" style={{ fontSize: 13, fontWeight: 700, color: "var(--blue)", flex: "none" }}>{item.score}%</span>
+              <div className="col gap-10">
+                {rankedFeedItems.map((item) => {
+                  const isOpportunity = item.type === "opportunity";
+                  const description = item.raw && item.raw.description;
+                  return (
+                    <div key={item.id} style={{ padding: 14, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderInlineStart: `3px solid var(--${isOpportunity ? "amber" : "violet"})`, borderRadius: 10 }}>
+                      <div className="flex center between" style={{ gap: 8 }}>
+                        <div className="flex center gap-8" style={{ minWidth: 0 }}>
+                          <span className={"pill " + (isOpportunity ? "amber" : "violet")} style={{ fontSize: 10.5, flex: "none" }}>{isOpportunity ? "הזדמנות" : "צורך"}</span>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-1)" }}>{item.title}</div>
+                        </div>
+                        {item.ranked && typeof item.score === "number" && (
+                          <span className="mono tabnum" style={{ fontSize: 14, fontWeight: 700, color: "var(--blue)", flex: "none" }}>{item.score}%</span>
+                        )}
+                      </div>
+                      <div className="mono tiny" style={{ color: "var(--text-4)", marginTop: 4 }}>{item.sourceLabel}</div>
+                      {!!description && <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 6, lineHeight: 1.5 }}>{description}</div>}
+                      {item.ranked && item.confidence && (
+                        <div style={{ marginTop: 6 }}><span className="pill" style={{ fontSize: 10.5 }}>{confidenceLabel(item.confidence)}</span></div>
+                      )}
+                      {!!item.reasons.length && <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 6 }}>{item.reasons.join(" · ")}</div>}
+                      {isOpportunity && (
+                        <button type="button" className="btn btn-primary" style={{ fontSize: 12.5, marginTop: 10 }} onClick={() => onOpenOpportunity && onOpenOpportunity(item.raw.id)}>
+                          פתח הזדמנות ←
+                        </button>
                       )}
                     </div>
-                    <div className="flex center gap-6 wrap" style={{ marginTop: 4 }}>
-                      <span className="pill" style={{ fontSize: 10.5 }}>{item.type === "opportunity" ? "הזדמנות" : "צורך"}</span>
-                      {item.ranked && item.confidence && <span className="pill" style={{ fontSize: 10.5 }}>{confidenceLabel(item.confidence)}</span>}
-                      <span className="mono tiny" style={{ color: "var(--text-4)" }}>{item.sourceLabel}</span>
-                    </div>
-                    {!!item.reasons.length && <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 4 }}>{item.reasons.join(" · ")}</div>}
-                    {item.type === "opportunity" && (
-                      <button type="button" className="btn btn-ghost" style={{ fontSize: 12, marginTop: 8 }} onClick={() => onOpenOpportunity && onOpenOpportunity(item.raw.id)}>
-                        פתח הזדמנות ←
-                      </button>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
