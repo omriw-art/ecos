@@ -8,6 +8,12 @@
 // application, no live sync. Official-source links are plain reference
 // links, never a "you qualify"/apply action, unless a record's own
 // applicationUrl is truthfully populated (none are, in this dataset).
+//
+// G2 adds a "מומלץ עבורכם" section for the company perspective, backed by
+// GrowthToolsStore.getRecommendedGrowthTools — deterministic ranking with
+// human-readable reasons, no AI, no fabricated eligibility. See that
+// function for the scoring model. The full catalog/search/filters below are
+// unchanged and remain available regardless of any recommendation.
 
 const GROWTH_DISCLAIMER = "מאגר מקורות רשמי שנאסף ונאמת ידנית · אינו בדיקת זכאות ואינו מחובר בזמן אמת למערכות חיצוניות. יש לאמת פרטים, תנאים ומועדים מול הגוף הרלוונטי.";
 
@@ -24,6 +30,33 @@ const GT_STAGE_LABEL_HE = {
   Mature: "בשל",
   Public: "ציבורי",
 };
+
+// Acting-company resolution — same pattern already duplicated per-file in
+// app.jsx/view-company-overview.jsx/view-opportunity-detail.jsx (same
+// PREFERRED_DEFAULT_COMPANY_IDS list, kept in sync so every "acting company"
+// resolver agrees); GT_-prefixed here to avoid colliding with those files'
+// same-named top-level consts, since every <script> shares one page scope.
+const GT_PARTNER_ORG_TYPES = new Set(["investor", "accelerator", "academic", "research", "government", "service-provider", "nonprofit"]);
+const GT_PREFERRED_DEFAULT_COMPANY_IDS = ["ramon-space", "spacepharma", "spaceil"];
+function gtPreferredDefaultCompany(eligible) {
+  for (const id of GT_PREFERRED_DEFAULT_COMPANY_IDS) {
+    const found = eligible.find((c) => c.id === id);
+    if (found) return found;
+  }
+  return null;
+}
+function resolveActingCompanyForGrowthTools(companies, actingCompanyId) {
+  const eligible = companies.filter((c) => !c.organizationType || !GT_PARTNER_ORG_TYPES.has(c.organizationType));
+  const acting = actingCompanyId ? eligible.find((c) => c.id === actingCompanyId) : null;
+  return acting || gtPreferredDefaultCompany(eligible) || eligible[0] || companies[0] || null;
+}
+
+// Sparse-profile check for the recommendation nudge — recommendations are
+// still shown (broad/space-focused signals don't need a stage), but the UI
+// says so honestly rather than pretending the ranking is fully personalized.
+function hasSufficientProfileForRecommendations(company) {
+  return !!(company && company.stage && company.stage !== "Unknown");
+}
 
 function matchesQuery(tool, q) {
   if (!q) return true;
@@ -84,11 +117,61 @@ function GrowthToolCard({ item }) {
   );
 }
 
+// Lighter recommendation card — provider/name/type/reasons/CTA only, per G2
+// spec ("do not duplicate too much information" from the full catalog card).
+function RecommendedToolCard({ rec }) {
+  const { tool, reasons } = rec;
+  return (
+    <div className="card" style={{ padding: 14 }}>
+      <div className="mono tiny" style={{ color: "var(--text-4)" }}>{tool.provider}</div>
+      <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-1)", marginTop: 2 }}>{tool.title}</div>
+      <div className="flex gap-6 wrap" style={{ margin: "6px 0 8px" }}>
+        <span className="pill blue" style={{ fontSize: 10.5 }}>{tool.category}</span>
+      </div>
+      {!!reasons.length && (
+        <div className="col gap-4" style={{ marginBottom: 10 }}>
+          {reasons.map((r) => (
+            <div key={r} className="flex center gap-6" style={{ fontSize: 12, color: "var(--text-3)" }}>
+              <window.I.Check size={11} style={{ color: "var(--green)", flex: "none" }} /> {r}
+            </div>
+          ))}
+        </div>
+      )}
+      {tool.url && (
+        <a className="btn btn-ghost" href={tool.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, display: "inline-flex" }}>
+          <window.I.Link size={11} /> לפרטים באתר הרשמי
+        </a>
+      )}
+    </div>
+  );
+}
+
 function GrowthToolsView() {
   const allItems = React.useMemo(
     () => (window.GrowthToolsStore ? window.GrowthToolsStore.getGrowthTools() : []),
     []
   );
+
+  // Recommendations are company-perspective-only (a partner/admin viewer has
+  // no single "my company" to personalize against) — everyone else just gets
+  // the general catalog below, unchanged.
+  const perspective = window.EcosPerspective ? window.EcosPerspective.get().perspective : null;
+  const companies = perspective === "company" && window.CompanyStore ? window.CompanyStore.getCompanies() : [];
+  const [actingCompanyId, setActingCompanyId] = React.useState(
+    () => (window.EcosPerspective ? window.EcosPerspective.get().actingCompanyId : null)
+  );
+  React.useEffect(() => {
+    if (!window.EcosPerspective || !window.EcosPerspective.subscribe) return;
+    return window.EcosPerspective.subscribe(() => setActingCompanyId(window.EcosPerspective.get().actingCompanyId));
+  }, []);
+  const company = perspective === "company"
+    ? resolveActingCompanyForGrowthTools(companies, actingCompanyId)
+    : null;
+  const recommendations = React.useMemo(
+    () => (company && window.GrowthToolsStore ? window.GrowthToolsStore.getRecommendedGrowthTools(company, { limit: 5 }) : []),
+    [company && company.id]
+  );
+  const showProfileNudge = !!company && !hasSufficientProfileForRecommendations(company);
 
   const [q, setQ] = React.useState("");
   const [typeFilter, setTypeFilter] = React.useState("all");
@@ -142,18 +225,32 @@ function GrowthToolsView() {
         </div>
       </div>
 
-      {/* G2 insertion point — no matching/scoring exists yet; kept small and
-          honest on purpose so it never implies a recommendation that hasn't
-          been computed. */}
-      <div className="card" style={{ padding: 14 }}>
-        <div className="flex center gap-8">
-          <window.I.Sparkles size={13} style={{ color: "var(--text-4)", flex: "none" }} />
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>מומלץ עבורכם</div>
-            <div className="muted tiny">המלצות מותאמות לפי פרופיל החברה יופיעו כאן בהמשך.</div>
+      {/* G2 — deterministic recommendations, company perspective only. No
+          active company (partner/admin viewers, or an empty CompanyStore)
+          means no personalization claim at all: the general catalog below
+          is shown with no recommendation section, per spec. */}
+      {!!company && (
+        <div className="card">
+          <div className="card-hd">
+            <div className="card-title"><span className="dot violet" /> מומלץ עבורכם</div>
           </div>
+          <div className="muted tiny" style={{ marginBottom: showProfileNudge ? 6 : 10 }}>
+            ההתאמה מבוססת על פרופיל החברה ואינה מהווה אישור זכאות.
+          </div>
+          {showProfileNudge && (
+            <div className="muted tiny" style={{ marginBottom: 10 }}>
+              השלמת פרטי החברה תאפשר התאמה טובה יותר של כלי צמיחה.
+            </div>
+          )}
+          {!recommendations.length ? (
+            <div className="muted" style={{ padding: "6px 0" }}>אין כרגע המלצות להצגה.</div>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 12 }}>
+              {recommendations.map((rec) => <RecommendedToolCard key={rec.tool.id} rec={rec} />)}
+            </div>
+          )}
         </div>
-      </div>
+      )}
 
       {!!allItems.length && (
         <div className="card" style={{ padding: 14 }}>

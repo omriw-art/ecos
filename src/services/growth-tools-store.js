@@ -1,13 +1,18 @@
 // ecos — curated local reference catalog of ecosystem growth tools
 // (מענקים, פיילוטים, תוכניות האצה, תשתיות, יצוא, גישה לחלל וכו').
-// This is a static demo reference list, NOT a live feed: no eligibility
+// This is a static local reference catalog, NOT a live feed: no eligibility
 // checks, no scraping, no external API/LinkedIn integration, no automatic
 // application, no network requests. Deliberately separate from NeedsStore —
 // these are programs/resources a company can receive, not needs/gaps an
-// ecosystem actor is looking to fill, and are not matched against company
-// data by any algorithm in v1.
+// ecosystem actor is looking to fill.
 // localStorage-only convention reserved for a future local overlay; v1 is
 // read-only seed data (nothing is written yet).
+//
+// G2 — getRecommendedGrowthTools(company) adds deterministic, explainable
+// ranking on top of the same static catalog (see that function below for the
+// scoring model). It is a read-only, in-memory computation: no new storage,
+// no AI/embeddings, no fabricated eligibility. Recommendation = relevance,
+// never an eligibility determination.
 //
 // Data model (G1A): each canonical record separates fields Ecosystem OS
 // curates/owns (type, purposes, stages, domains, description) from fields
@@ -398,10 +403,109 @@
     return Array.from(new Set(NORMALIZED.map((item) => item.category)));
   }
 
+  // --- G2: deterministic, explainable recommendations ------------------
+  //
+  // Audited inputs (see G1B/G2 batch notes): company.stage is the only
+  // company field reliable enough to match against today — company.needs is
+  // empty on every seeded company and company.sectors has no counterpart in
+  // this dataset yet (every tool.domains is still [], a real data gap, not a
+  // bug: G1A curated real programs but none had a documented sector
+  // restriction, so domain overlap below is wired for when that data exists
+  // but is inert — 0 points — until then). company.readiness is likewise
+  // too sparse/inconsistent across seed companies to score against.
+  //
+  // Scoring is additive across independent signals, capped at 3 reasons.
+  // Numeric score is for ranking only — never rendered to the user.
+  const GT_SCORE = {
+    stageDirect: 40,   // company.stage is literally in tool.stages
+    stageDivision: 20, // tool has no stage list, but its Innovation Authority
+                       // division ("חטיבת הזנק" / "חטיבת צמיחה") implies an
+                       // early- or growth-stage family that fits the company
+    domainOverlap: 25, // tool.domains ∩ company.sectors (inert today, see above)
+    spaceFocus: 15,    // tool's own curated text explicitly names the space
+                       // industry as its target — true of every company in
+                       // this space-only ecosystem, so this rewards tools
+                       // that are unusually on-topic rather than personalizing
+    broadDefault: 5,   // no stage restriction at all — plausibly useful to
+                       // any company; keeps "unknown ≠ incompatible" honest
+                       // instead of scoring such tools at 0
+  };
+
+  // Small, explicit, defensible mapping (not a full ontology): the
+  // Innovation Authority's own division names double as a coarse stage
+  // family when a specific track lists no stages of its own.
+  const GT_EARLY_STAGE_FAMILY = new Set(["Concept", "Seed"]);
+  const GT_GROWTH_STAGE_FAMILY = new Set(["Series A", "Series B", "Series C", "Growth"]);
+
+  const GT_SPACE_KEYWORD = "חלל";
+  function isSpaceFocused(tool) {
+    const text = [tool.description].concat(tool.purposes || []).filter(Boolean).join(" ");
+    return text.indexOf(GT_SPACE_KEYWORD) !== -1;
+  }
+
+  // Stage-fit is a single dimension — only one of direct / division-family /
+  // broad-default applies, so they're not stacked into false precision.
+  function stageSignal(tool, company) {
+    const stage = company && company.stage;
+    if (tool.stages && tool.stages.length) {
+      if (stage && tool.stages.indexOf(stage) !== -1) {
+        return { points: GT_SCORE.stageDirect, reason: `מתאים לשלב החברה (${stage})` };
+      }
+      return { points: 0, reason: null };
+    }
+    if (stage && tool.division === "חטיבת הזנק" && GT_EARLY_STAGE_FAMILY.has(stage)) {
+      return { points: GT_SCORE.stageDivision, reason: "מתאים לשלבים מוקדמים (חטיבת הזנק)" };
+    }
+    if (stage && tool.division === "חטיבת צמיחה" && GT_GROWTH_STAGE_FAMILY.has(stage)) {
+      return { points: GT_SCORE.stageDivision, reason: "מתאים לשלבי צמיחה מתקדמים יותר (חטיבת צמיחה)" };
+    }
+    return { points: GT_SCORE.broadDefault, reason: "מסלול רחב שיכול להתאים למספר שלבי צמיחה" };
+  }
+
+  function domainSignal(tool, company) {
+    const sectors = (company && Array.isArray(company.sectors)) ? company.sectors : [];
+    const domains = tool.domains || [];
+    if (!sectors.length || !domains.length) return { points: 0, reason: null };
+    const overlap = domains.some((d) => sectors.indexOf(d) !== -1);
+    if (!overlap) return { points: 0, reason: null };
+    return { points: GT_SCORE.domainOverlap, reason: "רלוונטי לתחום הפעילות של החברה" };
+  }
+
+  function spaceSignal(tool) {
+    if (!isSpaceFocused(tool)) return { points: 0, reason: null };
+    return { points: GT_SCORE.spaceFocus, reason: "רלוונטי לחברות בתחום החלל" };
+  }
+
+  function scoreTool(tool, company) {
+    const stage = stageSignal(tool, company);
+    const domain = domainSignal(tool, company);
+    const space = spaceSignal(tool);
+    return {
+      score: stage.points + domain.points + space.points,
+      reasons: [stage.reason, domain.reason, space.reason].filter(Boolean).slice(0, 3),
+    };
+  }
+
+  // Deterministic: same company + same catalog always yields the same
+  // ordering (ties broken by stable tool id, never by insertion/random
+  // order). No LLM, no external calls, no randomness.
+  function getRecommendedGrowthTools(company, options) {
+    const opts = Object.assign({ limit: 5 }, options || {});
+    if (!company) return [];
+    return NORMALIZED
+      .map((tool) => {
+        const scored = scoreTool(tool, company);
+        return { tool, score: scored.score, reasons: scored.reasons };
+      })
+      .sort((a, b) => (b.score - a.score) || a.tool.id.localeCompare(b.tool.id))
+      .slice(0, opts.limit);
+  }
+
   window.GrowthToolsStore = {
     key: STORAGE_KEY,
     getGrowthTools,
     getGrowthToolsByCategory,
+    getRecommendedGrowthTools,
     getCategories,
   };
 })();
