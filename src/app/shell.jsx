@@ -32,7 +32,7 @@ const PERSPECTIVE_ADMIN_ONLY = new Set(["onboard", "settings"]);
 const COMPANY_OVERVIEW_ITEM = { id: "company-overview", label: "פיד הזדמנויות", icon: "Satellite", section: "מבט-על" };
 const MY_ORGANIZATION_ITEM = { id: "my-organization", label: "הארגון שלי", icon: "Building", section: "מבט-על" };
 const PARTNER_OVERVIEW_ITEM = { id: "partner-overview", label: "סביבת שותף", icon: "Users", section: "מבט-על" };
-const GROWTH_TOOLS_ITEM = { id: "growth-tools", label: "הזדמנויות צמיחה", icon: "Trend", section: "מבט-על" };
+const GROWTH_TOOLS_ITEM = { id: "growth-tools", label: "כלי צמיחה", icon: "Trend", section: "מבט-על" };
 function navForPerspective(perspective) {
   if (perspective === "company") {
     return [COMPANY_OVERVIEW_ITEM, MY_ORGANIZATION_ITEM, GROWTH_TOOLS_ITEM];

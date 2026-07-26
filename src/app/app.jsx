@@ -11,7 +11,7 @@ const VIEW_TITLES = {
   dashboard:    { title: "לוח ניהול",         crumb: "דשבורד"                        },
   "company-overview": { title: "פיד הזדמנויות", crumb: "תצוגת חברה · דמו"             },
   "partner-overview": { title: "סביבת שותף", crumb: "תצוגת שותף · דמו"               },
-  "growth-tools": { title: "הזדמנויות צמיחה", crumb: "תצוגת דמו"                      },
+  "growth-tools": { title: "כלי צמיחה",       crumb: "מאגר מקומי"                    },
   opportunity:  { title: "הזדמנות",          crumb: "תצוגת דמו"                      },
   companies:    { title: "ארגונים",           crumb: "ECOSYSTEM · COMPANIES"          },
   company:      { title: "פרופיל ארגון",     crumb: "ECOSYSTEM · COMPANIES · PROFILE" },

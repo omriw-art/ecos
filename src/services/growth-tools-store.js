@@ -32,16 +32,17 @@
   // Back-compat category label shown as the card's pill (view-growth-tools.jsx)
   // — one label per `type`, not a duplicate vocabulary.
   const TYPE_LABELS = {
-    funding: "מענקים ומימון",
+    funding: "מימון",
     accelerator: "האצה ותוכניות צמיחה",
     pilot: "פיילוטים",
     infrastructure: "תשתיות",
-    international: "שיתופי פעולה בינלאומיים",
-    "market-access": "יצוא וכניסה לשווקים",
+    international: "פעילות בינלאומית",
+    "market-access": "חדירה לשוק",
     "space-access": "גישה לחלל",
-    "research-development": "מו״פ ומחקר",
-    support: "ליווי ותמיכה",
-    events: "אירועים ותערוכות",
+    "research-development": "מחקר ופיתוח",
+    support: "תמיכה / שירות",
+    directory: "מאגר מסלולים",
+    events: "אירועים",
   };
 
   const PROVIDERS = {
@@ -307,7 +308,7 @@
       name: "מסלולי סיוע — הרשות להשקעות (מדריך מסלולים)",
       provider: PROVIDERS.investmentAuthority,
       division: null,
-      type: "support",
+      type: "directory",
       purposes: ["מדריך למסלולי סיוע"],
       stages: [],
       domains: [],
