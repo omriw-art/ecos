@@ -1,7 +1,8 @@
 # Current Status — Ecosystem OS
 
 Last updated: 2026-07-26
-Current HEAD: `57b5df1` — feat(company): reorient overview into a ranked opportunity feed
+Current HEAD: `aa59d49` — fix(company): focus company perspective on opportunity feed
+(plus this session's in-progress nav/profile/growth-catalog work, not yet committed as of this edit)
 
 This file is the single current-status entry point. Prefer this over anything
 under `docs/archive/` when the two disagree — the archive reflects an earlier
@@ -66,18 +67,30 @@ Introduced as forward-looking interfaces, not yet a real backend:
 
 ## Current next task
 
-F2/F3 — Company Feed UI (`view-company-overview.jsx`): reorient the Company
-overview into the ranked feed layout (context strip, feed column, side rail,
-distinct growth-tools footer) with honest copy/empty-states/reasons.
-**F2 shipped in `57b5df1`; ecos-ui-guard audited the same diff against the F3
-requirements and it passed clean, so no separate F3 commit was needed.**
+Company Feed UI is done through F2/F3 (shipped `57b5df1`) and the nav/profile
+correction pass (this session): Company nav is now `[פיד הזדמנויות, הארגון
+שלי, הזדמנויות צמיחה]`, own-profile reuse is leak-gated (see boundaries
+above), and growth-tool categories are aligned to the 8-category taxonomy.
+See `docs/active/COMPANY_FEED_PLAN.md` for the full plan and the deferred
+next batches (source-backed growth ingestion, "הזדמנויות שסומנו" as its own
+nav destination if it outgrows a side-rail card).
 
 ## Hard product boundaries
 
 - No fake AI / live / scraping / eligibility / activity claims anywhere in the UI.
 - No "recommended partners" / "similar companies" / org-overlap feed items —
   competitive-intelligence boundary, permanent product exclusion, not a scope cut.
-- No partner identity exposure to companies — partner-side signal is
-  aggregate-only.
+  Applies to Company perspective's own-profile view too: its shared
+  `CompanyProfile`'s "matches"/"connections" tabs (which browse to *other*
+  companies) are hidden when `perspective === "company"` — see
+  `docs/active/COMPANY_FEED_PLAN.md`.
+- Interest-signal visibility is one-directional: a **partner** never sees
+  which company marked interest — aggregate count only, never per-company
+  identity. This does not restrict a **partner publishing an opportunity**
+  from being named as its source to companies (`sourceOrgName`) — that
+  identity exposure is intentional, the point of publishing.
+- Company perspective must never be able to browse the full companies
+  directory, from any entry point (nav, in-page buttons, or a shared view's
+  internal back-navigation/breadcrumbs).
 - Perspective (Company/Partner/Admin) is a UI lens only — never a permission
   or data-access boundary.

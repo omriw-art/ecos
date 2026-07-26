@@ -7,6 +7,13 @@
 // data by any algorithm in v1.
 // localStorage-only convention reserved for a future local overlay; v1 is
 // read-only seed data (nothing is written yet).
+//
+// `category` values are aligned to the 8-category taxonomy defined in
+// docs/active/COMPANY_FEED_PLAN.md (מענקים וקולות קוראים / פיילוטים ולקוחות
+// עוגן / האצה ותוכניות צמיחה / שיתופי פעולה בינלאומיים / רגולציה-Sandbox /
+// השקעות ודמו דיי / אקדמיה ומעבדות / יצוא וכניסה לשווקים) — naming/category
+// cleanup only, no schema change; a future source-backed item would use the
+// same field.
 
 (function () {
   if (window.GrowthToolsStore) return;
@@ -18,7 +25,7 @@
       id: "gt-innovation-authority-calls",
       title: "רשות החדשנות — קולות קוראים",
       provider: "רשות החדשנות",
-      category: "קולות קוראים",
+      category: "מענקים וקולות קוראים",
       type: "call",
       description: "קולות קוראים תקופתיים למענקי מו״פ ותמיכה בחברות טכנולוגיה, כולל מסלולים ייעודיים לתעשיות חלל ובטחוניות.",
       stageFit: "כל השלבים",
@@ -31,7 +38,7 @@
       id: "gt-rnd-grants",
       title: "מענקי מו״פ",
       provider: "רשות החדשנות",
-      category: "מענקים",
+      category: "מענקים וקולות קוראים",
       type: "grant",
       description: "מענקים לא-דיליוטיביים למחקר ופיתוח טכנולוגי, בדרך כלל בשיעור מימון חלקי מתקציב הפרויקט.",
       stageFit: "Seed ואילך",
@@ -44,7 +51,7 @@
       id: "gt-seed-tracks",
       title: "מסלולי הזנק",
       provider: "רשות החדשנות",
-      category: "מימון מוקדם",
+      category: "מענקים וקולות קוראים",
       type: "grant",
       description: "מסלולי תמיכה לחברות בשלב מוקדם מאוד, לרוב לפני גיוס משמעותי, לצורך הוכחת היתכנות טכנולוגית.",
       stageFit: "רעיון / Seed מוקדם",
@@ -57,7 +64,7 @@
       id: "gt-gov-pilots",
       title: "פיילוטים בחברות ממשלתיות",
       provider: "גופים ממשלתיים",
-      category: "פיילוטים",
+      category: "פיילוטים ולקוחות עוגן",
       type: "pilot",
       description: "מסגרות פיילוט מול חברות וגופים ממשלתיים, לבחינת פתרון בסביבת לקוח אמיתית לפני רכש מלא.",
       stageFit: "לאחר Seed",
@@ -70,7 +77,7 @@
       id: "gt-intl-collab",
       title: "שיתופי פעולה בינלאומיים",
       provider: "גופים בינלאומיים",
-      category: "שת״פ בינלאומי",
+      category: "שיתופי פעולה בינלאומיים",
       type: "network",
       description: "תוכניות שת״פ מחקר ופיתוח משותפות עם גופים וסוכנויות חלל בחו״ל, כולל מימון משותף לפרויקטים דו-לאומיים.",
       stageFit: "כל השלבים",
@@ -83,7 +90,7 @@
       id: "gt-regulatory-sandbox",
       title: "Regulatory Sandbox",
       provider: "רגולטורים ענפיים",
-      category: "רגולציה",
+      category: "רגולציה / Sandbox",
       type: "regulatory",
       description: "מסגרת בקרה מוגבלת בזמן לבדיקת טכנולוגיה או שירות חדש בסביבה רגולטורית מפוקחת, לפני עמידה מלאה בדרישות.",
       stageFit: "לאחר הוכחת היתכנות",
@@ -96,7 +103,7 @@
       id: "gt-snc-finder",
       title: "Startup Nation Central / Finder",
       provider: "Startup Nation Central",
-      category: "חיבורי אקוסיסטם",
+      category: "האצה ותוכניות צמיחה",
       type: "network",
       description: "מאגר וכלי חיפוש להיכרות עם אקוסיסטם ההייטק הישראלי, לרוב משמש גופים בחו״ל לאיתור חברות ישראליות.",
       stageFit: "כל השלבים",
@@ -109,7 +116,7 @@
       id: "gt-export-institute",
       title: "מכון היצוא",
       provider: "מכון היצוא הישראלי",
-      category: "יצוא",
+      category: "יצוא וכניסה לשווקים",
       type: "market",
       description: "ליווי חברות בתהליכי חדירה לשווקים בינלאומיים, כולל משלחות, תערוכות ומידע על שווקי יעד.",
       stageFit: "מוצר בשל ליצוא",
@@ -122,7 +129,7 @@
       id: "gt-academia",
       title: "שיתופי פעולה עם אקדמיה",
       provider: "מוסדות אקדמיים",
-      category: "אקדמיה",
+      category: "אקדמיה ומעבדות",
       type: "network",
       description: "שיתופי מחקר, גישה לציוד מעבדתי ולכוח אדם מחקרי, ולעיתים גם למסגרות תמריצים למחקר משותף.",
       stageFit: "כל השלבים",
@@ -135,7 +142,7 @@
       id: "gt-open-labs",
       title: "מעבדות פתוחות",
       provider: "מרכזי חדשנות",
-      category: "תשתיות",
+      category: "אקדמיה ומעבדות",
       type: "infrastructure",
       description: "גישה לתשתית בדיקות וייצור משותפת (Fab-lab, מעבדות בדיקה סביבתית וכד׳) ללא צורך בהשקעת הון עצמי.",
       stageFit: "כל השלבים",
@@ -148,7 +155,7 @@
       id: "gt-accelerators",
       title: "תוכניות האצה",
       provider: "מאיצים פרטיים וממשלתיים",
-      category: "האצה",
+      category: "האצה ותוכניות צמיחה",
       type: "accelerator",
       description: "תוכניות מובנות בנות מספר חודשים הכוללות ליווי, חיבורי רשת ולעיתים מימון ראשוני תמורת נתח מניות.",
       stageFit: "Seed – Series A",
@@ -161,7 +168,7 @@
       id: "gt-anchor-customers",
       title: "לקוחות עוגן",
       provider: "גופי תעשייה ובטחון",
-      category: "לקוחות",
+      category: "פיילוטים ולקוחות עוגן",
       type: "customer",
       description: "מסגרות היכרות עם לקוחות עוגן פוטנציאליים בתעשיית החלל והבטחון, כבסיס להתקשרות מסחרית ראשונה.",
       stageFit: "מוצר קיים",
@@ -174,7 +181,7 @@
       id: "gt-investors-demo-day",
       title: "משקיעים / דמו דיי",
       provider: "קרנות הון סיכון ומאיצים",
-      category: "השקעות",
+      category: "השקעות ודמו דיי",
       type: "investment",
       description: "אירועי הצגה בפני משקיעים ורשתות הון סיכון פעילות בתחום החלל, לרוב כחלק מתוכנית האצה או כנס ענפי.",
       stageFit: "Seed ואילך",
@@ -187,7 +194,7 @@
       id: "gt-market-entry",
       title: "יצוא / כניסה לשווקים",
       provider: "גופי סחר וסוכנויות",
-      category: "כניסה לשווקים",
+      category: "יצוא וכניסה לשווקים",
       type: "market",
       description: "תמיכה בכניסה ראשונית לשוק יעד — מידע רגולטורי, קשרי סחר ולעיתים ליווי משפטי/עסקי מקומי.",
       stageFit: "מוצר בשל ליצוא",
