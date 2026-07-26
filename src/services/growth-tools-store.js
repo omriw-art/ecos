@@ -28,6 +28,19 @@
 // program name and official source URL. Status/deadline/applicationUrl/
 // eligibility/benefit are left null when not reliably known — an honest
 // partial record beats a plausible invented one.
+//
+// G3B — runtime record = managed SEED below + generated source-owned data
+// (window.GrowthToolsSourceData, src/data/generated/growth-tools-source-data.js,
+// loaded before this file). That file is a plain writable overlay a Node
+// script (scripts/sync-growth-tools.js) updates automatically through the
+// validate → diff → applyMerge pipeline in growth-tools-sync-service.js —
+// never by hand, never by this file. This file only reads it; it never
+// writes it and never depends on growth-tools-sync-service.js or
+// growth-tools-adapters.js being loaded (both are Node/CLI-only in G3B, not
+// wired into the browser). If the overlay is missing/incomplete for a tool,
+// normalize() below falls back to that tool's own SEED-curated
+// source.url/externalId and null/"never" defaults — byte-identical to the
+// pre-G3B behavior.
 
 (function () {
   if (window.GrowthToolsStore) return;
@@ -411,23 +424,57 @@
     },
   ];
 
-  // Adds synced/source-layer fields (all null/never until a sync layer
-  // exists) and back-compat fields the current UI/company-feed still read
-  // directly (title, category, provider-as-string, stageFit, sectorFit,
-  // tags, url) so this reshape doesn't require a UI or consumer change.
+  // G3B — the generated writable overlay (see file header). Kept as a tiny
+  // inline vocabulary rather than reading window.GrowthToolsSyncService's
+  // SYNC_STATUS_VALUES, so this file has no load-order dependency on that
+  // (Node/CLI-only, not loaded in the browser) file.
+  const SYNC_STATUS_VALUES = ["never", "ok", "stale", "error"];
+
+  function isPresent(value) {
+    return value !== null && value !== undefined;
+  }
+
+  // Looks up this tool's generated overlay entry, if any, and fills in the
+  // same defaults normalize() always used pre-G3B for anything the overlay
+  // doesn't (yet) have — so a missing/incomplete overlay entry is never a
+  // crash, just the same honest "unknown" as before this batch.
+  function sourceOverlayFor(tool) {
+    const table = window.GrowthToolsSourceData || {};
+    const entry = table[tool.id] || {};
+    return {
+      officialName: isPresent(entry.officialName) ? entry.officialName : null,
+      status: isPresent(entry.status) ? entry.status : null,
+      deadline: isPresent(entry.deadline) ? entry.deadline : null,
+      applicationUrl: isPresent(entry.applicationUrl) ? entry.applicationUrl : null,
+      sourceUrl: isPresent(entry.sourceUrl) ? entry.sourceUrl : (tool.source ? tool.source.url : null),
+      externalId: isPresent(entry.externalId) ? entry.externalId : (tool.source ? tool.source.externalId : null),
+      lastSyncedAt: isPresent(entry.lastSyncedAt) ? entry.lastSyncedAt : null,
+      syncStatus: SYNC_STATUS_VALUES.indexOf(entry.syncStatus) !== -1 ? entry.syncStatus : "never",
+    };
+  }
+
+  // Adds synced/source-layer fields (from the generated overlay above) and
+  // back-compat fields the current UI/company-feed still read directly
+  // (title, category, provider-as-string, stageFit, sectorFit, tags, url)
+  // so this reshape doesn't require a UI or consumer change. `tool.source`
+  // (the original SEED-curated {type,url,externalId}) is left untouched by
+  // this override object and still reflects the original curation record;
+  // the flattened `url`/`externalId` below are the CURRENT (possibly
+  // sync-updated) values a consumer should actually use.
   function normalize(tool) {
+    const overlay = sourceOverlayFor(tool);
     return Object.assign({}, tool, {
-      status: null,
-      deadline: null,
-      applicationUrl: null,
-      // G3A — source-owned per the managed/source-owned boundary (see
+      status: overlay.status,
+      deadline: overlay.deadline,
+      applicationUrl: overlay.applicationUrl,
+      // G3A/G3B — source-owned per the managed/source-owned boundary (see
       // growth-tools-sync-service.js): the provider's own display name for
       // the program, kept deliberately separate from the curated `name`
       // above so an automatic sync can never silently rename a card.
-      officialName: null,
+      officialName: overlay.officialName,
       lastVerifiedAt: CURATED_AT,
-      lastSyncedAt: null,
-      syncStatus: "never",
+      lastSyncedAt: overlay.lastSyncedAt,
+      syncStatus: overlay.syncStatus,
       // back-compat surface (view-growth-tools.jsx, company-feed.js)
       title: tool.name,
       category: TYPE_LABELS[tool.type] || tool.type,
@@ -440,7 +487,8 @@
       stageFit: tool.stages && tool.stages.length ? tool.stages.join(" / ") : null,
       sectorFit: tool.domains && tool.domains.length ? tool.domains.join(" / ") : null,
       tags: (tool.purposes || []).map((p) => PURPOSE_LABELS[p] || p),
-      url: tool.source ? tool.source.url : null,
+      url: overlay.sourceUrl,
+      externalId: overlay.externalId,
     });
   }
 

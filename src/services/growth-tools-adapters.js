@@ -93,11 +93,119 @@
     },
   };
 
+  // --- Innovation Authority — the G3B pilot provider, sourceType "web" ---
+  //
+  // Discovery (documented here, not re-derived at runtime): the site
+  // (innovationisrael.org.il) is a WordPress install (robots.txt references
+  // Yoast SEO sitemaps) but returns HTTP 403 to every automated request
+  // tried during this batch — including its own /wp-json/ REST root and
+  // sitemap_index.xml, from both the WebFetch tool and a plain `curl` from
+  // this environment. No official API/JSON/RSS endpoint was reachable, and
+  // no third-party aggregator was used (out of scope regardless). A search
+  // of data.gov.il (Israel's official open-data portal) turned up no
+  // Innovation Authority program dataset. This adapter is therefore a
+  // "web" adapter with a real (currently blocked) fetch, plus a minimal
+  // JSON-LD extraction fallback for the day access is available — it does
+  // NOT do CSS-selector/DOM HTML scraping, and does not guess a status.
+  //
+  // The id→URL mapping is NOT duplicated here: the runner passes in the
+  // already-canonical GrowthTool records for this provider (each already
+  // carries its own curated `source.url`, established in G1A), so there is
+  // exactly one place that mapping lives, never two copies that can drift.
+  const IIA_FETCH_TIMEOUT_MS = 10000;
+
+  function fetchOne(tool) {
+    const url = tool.source && tool.source.url;
+    const fetchedAt = new Date().toISOString();
+    if (!url || typeof fetch !== "function") {
+      return Promise.resolve({ toolId: tool.id, sourceUrl: url || null, ok: false, html: null, error: "no fetch() available or no source URL", fetchedAt });
+    }
+    const controller = (typeof AbortController !== "undefined") ? new AbortController() : null;
+    const timer = controller ? setTimeout(() => controller.abort(), IIA_FETCH_TIMEOUT_MS) : null;
+    return fetch(url, controller ? { signal: controller.signal } : undefined)
+      .then((res) => {
+        if (timer) clearTimeout(timer);
+        if (!res.ok) return { toolId: tool.id, sourceUrl: url, ok: false, html: null, error: `HTTP ${res.status}`, fetchedAt };
+        return res.text().then((html) => ({ toolId: tool.id, sourceUrl: url, ok: true, html, error: null, fetchedAt }));
+      })
+      .catch((err) => {
+        if (timer) clearTimeout(timer);
+        return { toolId: tool.id, sourceUrl: url, ok: false, html: null, error: String(err && err.message || err), fetchedAt };
+      });
+  }
+
+  // Pure, independently-testable extraction: looks for a JSON-LD
+  // (`<script type="application/ld+json">`) block and pulls out only the
+  // two fields trustworthy enough to use without guessing —
+  // `name` -> officialName, and a `validThrough`/`endDate` that is (or
+  // starts with) a strict YYYY-MM-DD date -> deadline. Everything else
+  // (status, applicationUrl) is left null from this path: schema.org has no
+  // reliable generic "is this program open" field, and guessing a
+  // submission URL from structured data would be exactly the kind of
+  // invented value this pipeline must not produce.
+  const JSON_LD_RE = /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/i;
+  const ISO_DATE_PREFIX_RE = /^(\d{4}-\d{2}-\d{2})/;
+  function extractJsonLdFields(html) {
+    const result = { officialName: null, deadline: null };
+    if (!html) return result;
+    const match = JSON_LD_RE.exec(html);
+    if (!match) return result;
+    let data;
+    try {
+      data = JSON.parse(match[1]);
+    } catch (err) {
+      return result;
+    }
+    const node = Array.isArray(data) ? data[0] : data;
+    if (!node || typeof node !== "object") return result;
+    if (typeof node.name === "string" && node.name.trim()) result.officialName = node.name.trim();
+    const rawDate = node.validThrough || node.endDate || null;
+    if (typeof rawDate === "string") {
+      const dateMatch = ISO_DATE_PREFIX_RE.exec(rawDate);
+      if (dateMatch) result.deadline = dateMatch[1];
+    }
+    return result;
+  }
+
+  const innovationAuthorityWebAdapter = {
+    id: "innovation-authority-web",
+    providerId: "innovation-authority",
+    sourceType: "web",
+    // context.tools — the canonical (already provider-filtered) GrowthTool
+    // records to check, supplied by the caller (scripts/sync-growth-tools.js
+    // filters GrowthToolsStore.getGrowthTools() by providerId before
+    // calling this). No network call happens anywhere else in this file.
+    fetch(context) {
+      const tools = (context && context.tools) || [];
+      return Promise.all(tools.map(fetchOne));
+    },
+    normalize(rawResults) {
+      return (rawResults || []).map((row) => {
+        const fields = row.ok ? extractJsonLdFields(row.html) : { officialName: null, deadline: null };
+        return {
+          toolId: row.toolId,
+          providerId: "innovation-authority",
+          externalId: null,
+          officialName: fields.officialName,
+          status: null, // never guessed from this path — see extractJsonLdFields doc
+          deadline: fields.deadline,
+          applicationUrl: null, // never guessed from this path — see extractJsonLdFields doc
+          sourceUrl: row.sourceUrl,
+          fetchedAt: row.fetchedAt,
+        };
+      });
+    },
+  };
+
   window.GrowthToolsAdapters = {
     register,
     get,
     list,
     byProvider,
+    // Exposed for direct, network-free unit testing of the extraction
+    // logic (scripts/test-growth-tools-sync.js) — not part of the adapter
+    // contract itself.
+    _extractJsonLdFields: extractJsonLdFields,
   };
 
   // Registered eagerly so it's available the moment this file loads, same
@@ -105,4 +213,5 @@
   // "growth-administration-json", "rakia-rss") register themselves the
   // same way from their own adapter file, once G3B builds them.
   register(manualFixtureAdapter);
+  register(innovationAuthorityWebAdapter);
 })();
