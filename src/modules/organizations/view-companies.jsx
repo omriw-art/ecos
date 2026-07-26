@@ -524,8 +524,8 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany, per
           <div className="col gap-8" style={{ alignItems: "center", flex: "none" }}>
             <CoLogo company={c} size={72} />
             <button
-              className="btn btn-ghost"
-              style={{ fontSize: 11.5, padding: "4px 8px" }}
+              className="btn"
+              style={{ fontSize: 12, padding: "5px 10px", color: "var(--blue)" }}
               onClick={linkedInUrl ? openExternalLink : undefined}
               disabled={!linkedInUrl}
               title={linkedInUrl ? undefined : "אין קישור מוגדר לחברה זו"}
