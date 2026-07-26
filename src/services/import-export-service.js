@@ -24,12 +24,13 @@
     "fundingM", "score", "strategic", "readiness", "organizationType",
     "spaceSegment", "sectors", "tech", "capabilities", "tags", "solutions",
     "offers", "needs", "customers", "partners", "overlap", "blurb",
-    "website", "linkedin",
+    "website", "linkedin", "logoUrl", "logoSource", "logoSourcePage",
   ];
   const SUBMISSION_FIELDS = [
     "id", "createdAt", "reviewedAt", "reviewedBy", "status", "companyName", "name",
     "sector", "sectors", "blurb", "description", "location", "hq",
-    "country", "website", "stage", "offers", "needs", "capabilities", "tags",
+    "country", "website", "linkedin", "logoUrl", "stage", "founded", "size",
+    "readiness", "offers", "needs", "capabilities", "tech", "tags", "customers",
     "contactName", "contactRole", "email", "contact", "approvedCompanyId",
   ];
 
@@ -57,10 +58,12 @@
     const used = new Set();
     return asArray(companies).map((c) => {
       const picked = pickFields(c, COMPANY_FIELDS);
-      if (text(picked.id)) used.add(picked.id);
-      return picked;
-    }).map((picked) => {
-      if (!text(picked.id)) picked.id = uniqueId(idSuffix, picked.name, used);
+      const id = text(picked.id);
+      if (!id || used.has(id)) picked.id = uniqueId(idSuffix, picked.name, used);
+      else {
+        picked.id = id;
+        used.add(id);
+      }
       return picked;
     });
   }

@@ -3,10 +3,12 @@
 
 (function () {
   const STORAGE_KEY = "ecosystemOS.companies.v1";
+  const LEGACY_STORAGE_KEY = "ecos_companies";
 
   const clone = (value) => JSON.parse(JSON.stringify(value || []));
   const asArray = (value) => Array.isArray(value) ? value : [];
   const text = (value) => typeof value === "string" ? value.trim() : "";
+  const hasOwn = (value, key) => !!value && Object.prototype.hasOwnProperty.call(value, key);
 
   function sectorFallback(input) {
     const sectors = asArray(input.sectors).filter(Boolean);
@@ -48,21 +50,24 @@
   function normalizeCompany(input, existing) {
     const source = Object.assign({}, existing || {}, input || {});
     const sectors = sectorFallback(source);
-    const tech = asArray(source.tech);
     const offers = asArray(source.offers);
     const needs = asArray(source.needs);
     const tags = asArray(source.tags);
-    const capabilities = asArray(source.capabilities || source.solutions || source.tags).filter(Boolean);
-    const fallbackTech = tags.length ? tags : tech;
+    let capabilitySource;
+    if (hasOwn(input, "capabilities")) capabilitySource = input.capabilities;
+    else if (hasOwn(input, "tech")) capabilitySource = input.tech;
+    else if (hasOwn(source, "capabilities")) capabilitySource = source.capabilities;
+    else capabilitySource = source.tech || source.solutions || source.tags;
+    const capabilities = asArray(capabilitySource).filter(Boolean);
 
     return Object.assign({}, source, {
       id: text(source.id),
-      name: text(source.name),
+      name: text(source.name || source.companyName),
       country: text(source.country) || "Israel",
       flag: text(source.flag) || "🇮🇱",
       hq: text(source.hq || source.location) || "ישראל",
       stage: text(source.stage) || "Seed",
-      size: text(source.size) || "1-10",
+      size: text(source.size || source.employees) || "1-10",
       founded: Number(source.founded) || new Date().getFullYear(),
       fundingM: Number(source.fundingM) || 0,
       score: Number(source.score) || 50,
@@ -71,7 +76,7 @@
       organizationType: text(source.organizationType) || "other",
       spaceSegment: text(source.spaceSegment) || "other",
       sectors,
-      tech: fallbackTech,
+      tech: capabilities.slice(),
       capabilities,
       tags,
       solutions: asArray(source.solutions),
@@ -80,18 +85,28 @@
       customers: asArray(source.customers),
       partners: asArray(source.partners),
       overlap: asArray(source.overlap),
-      blurb: text(source.blurb || source.description),
+      blurb: text(source.blurb || source.description || source.summary),
       website: text(source.website),
+      logoUrl: text(source.logoUrl || source.logo),
     });
   }
 
   function readStoredCompanies() {
     const parsed = window.EcosLocalAdapter.readSync(STORAGE_KEY, null);
-    return Array.isArray(parsed) ? parsed : null;
+    if (Array.isArray(parsed)) return parsed;
+
+    const legacy = window.EcosLocalAdapter.readSync(LEGACY_STORAGE_KEY, null);
+    if (!Array.isArray(legacy)) return null;
+
+    const migrated = legacy.map((company) => normalizeCompany(company));
+    writeStoredCompanies(migrated);
+    return migrated;
   }
 
   function writeStoredCompanies(companies) {
-    window.EcosLocalAdapter.writeSync(STORAGE_KEY, companies);
+    if (!window.EcosLocalAdapter.writeSync(STORAGE_KEY, companies)) {
+      throw new Error("CompanyStore: failed to persist companies");
+    }
   }
 
   // Captured once, before window.COMPANIES is overwritten below with stored/

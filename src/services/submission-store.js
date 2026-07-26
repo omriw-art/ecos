@@ -30,6 +30,7 @@
     const sectors = asArray(source.sectors).filter(Boolean);
     const sector = text(source.sector) || sectors[0] || "earth-obs";
     const contact = source.contact || {};
+    const capabilities = asArray(source.capabilities || source.tech || source.tags).filter(Boolean);
 
     return Object.assign({}, source, {
       id: text(source.id),
@@ -47,11 +48,18 @@
       hq: text(source.hq || source.location),
       country: text(source.country) || "ישראל",
       website: text(source.website),
+      linkedin: text(source.linkedin),
+      logoUrl: text(source.logoUrl || source.logo),
       stage: text(source.stage) || "Seed",
+      founded: Number(source.founded) || 0,
+      size: text(source.size),
+      readiness: text(source.readiness),
       offers: asArray(source.offers).filter(Boolean),
       needs: asArray(source.needs).filter(Boolean),
-      capabilities: asArray(source.capabilities || source.tech || source.tags).filter(Boolean),
+      capabilities,
+      tech: capabilities.slice(),
       tags: asArray(source.tags || source.capabilities || source.tech).filter(Boolean),
+      customers: asArray(source.customers).filter(Boolean),
       contactName: text(source.contactName || contact.name),
       contactRole: text(source.contactRole || contact.role),
       email: text(source.email || contact.email),
@@ -147,6 +155,8 @@
       country: s.country,
       hq: s.location || s.hq,
       stage: s.stage,
+      founded: s.founded,
+      size: s.size,
       sectors: s.sectors,
       tech: s.capabilities,
       capabilities: s.capabilities,
@@ -155,8 +165,10 @@
       needs: s.needs,
       blurb: s.blurb,
       website: s.website,
-      readiness: "Mapped",
-      customers: [],
+      linkedin: s.linkedin,
+      logoUrl: s.logoUrl,
+      readiness: s.readiness || "Mapped",
+      customers: s.customers,
       partners: [],
       overlap: [],
     };
