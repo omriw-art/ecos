@@ -79,9 +79,9 @@ function Sidebar({ active, onChange, perspective }) {
       ))}
 
       <div className="sidebar-foot">
-        <div className="sidebar-avatar">RA</div>
+        <div className="sidebar-avatar">עו</div>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 12.5, fontWeight: 500 }}>רון אבני</div>
+          <div style={{ fontSize: 12.5, fontWeight: 500 }}>עמרי ויצמן</div>
           <div className="mono" style={{ fontSize: 10, color: "var(--text-4)" }}>VP Innovation</div>
         </div>
       </div>

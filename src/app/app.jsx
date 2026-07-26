@@ -30,11 +30,17 @@ const VIEW_TITLES = {
 // "הארגון שלי" opens the same acting company the Company Feed page itself
 // shows, never to gate data access.
 const APP_PARTNER_ORG_TYPES = new Set(["investor", "accelerator", "academic", "research", "government", "service-provider", "nonprofit"]);
+// Same preferred-default list as view-company-overview.jsx's
+// PREFERRED_DEFAULT_COMPANY_IDS — kept in sync so "הארגון שלי" always opens
+// the same company the feed page defaults to. Falls through safely if none
+// of these ids exist.
+const APP_PREFERRED_DEFAULT_COMPANY_IDS = ["ramon-space", "spacepharma", "spaceil"];
 function resolveActingCompanyForNav(companies) {
   const eligible = companies.filter((c) => !c.organizationType || !APP_PARTNER_ORG_TYPES.has(c.organizationType));
   const actingId = window.EcosPerspective ? window.EcosPerspective.get().actingCompanyId : null;
   const acting = actingId ? eligible.find((c) => c.id === actingId) : null;
-  return acting || eligible[0] || companies[0] || null;
+  const preferred = !acting ? APP_PREFERRED_DEFAULT_COMPANY_IDS.map((id) => eligible.find((c) => c.id === id)).find(Boolean) : null;
+  return acting || preferred || eligible[0] || companies[0] || null;
 }
 
 function App() {

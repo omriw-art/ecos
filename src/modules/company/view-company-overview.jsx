@@ -32,11 +32,27 @@ const CO_STAGE_LABEL_HE = {
 // gate data access.
 const CO_PARTNER_ORG_TYPES = new Set(["investor", "accelerator", "academic", "research", "government", "service-provider", "nonprofit"]);
 
+// Preferred demo default when no acting company is chosen yet — a deliberate
+// pick of a clearly-Israeli space company, not whichever happens to be first
+// in the seed array (that was previously "tomorrow-io" by accident of seed
+// order, not a real choice). Same list duplicated in app.jsx's
+// resolveActingCompanyForNav and view-opportunity-detail.jsx's
+// resolveActingCompanyForInterest so all three "acting company" resolvers
+// agree — falls through safely (to eligible[0]) if none of these ids exist.
+const PREFERRED_DEFAULT_COMPANY_IDS = ["ramon-space", "spacepharma", "spaceil"];
+function preferredDefaultCompany(eligible) {
+  for (const id of PREFERRED_DEFAULT_COMPANY_IDS) {
+    const found = eligible.find((c) => c.id === id);
+    if (found) return found;
+  }
+  return null;
+}
+
 function resolveActingCompany(companies, actingCompanyId) {
   const eligible = companies.filter((c) => !c.organizationType || !CO_PARTNER_ORG_TYPES.has(c.organizationType));
   const acting = actingCompanyId ? eligible.find((c) => c.id === actingCompanyId) : null;
   // Safe seeded default — deterministic, not a real "logged in" identity.
-  return acting || eligible[0] || companies[0] || null;
+  return acting || preferredDefaultCompany(eligible) || eligible[0] || companies[0] || null;
 }
 
 function CompanyOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {

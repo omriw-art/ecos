@@ -11,6 +11,11 @@
 // acting-company resolution consistent with the Company overview's own
 // exclusion of partner-like orgs, never to gate data access.
 const OD_PARTNER_ORG_TYPES = new Set(["investor", "accelerator", "academic", "research", "government", "service-provider", "nonprofit"]);
+// Same preferred-default list as view-company-overview.jsx's
+// PREFERRED_DEFAULT_COMPANY_IDS — kept in sync so mark-interest always
+// resolves to the same acting company the feed page defaults to. Falls
+// through safely if none of these ids exist.
+const OD_PREFERRED_DEFAULT_COMPANY_IDS = ["ramon-space", "spacepharma", "spaceil"];
 
 function resolveActingCompanyForInterest() {
   if (!window.EcosPerspective || !window.CompanyStore) return null;
@@ -18,7 +23,8 @@ function resolveActingCompanyForInterest() {
   const companies = window.CompanyStore.getCompanies();
   const eligible = companies.filter((c) => !c.organizationType || !OD_PARTNER_ORG_TYPES.has(c.organizationType));
   const acting = actingId ? eligible.find((c) => c.id === actingId) : null;
-  return acting || eligible[0] || companies[0] || null;
+  const preferred = !acting ? OD_PREFERRED_DEFAULT_COMPANY_IDS.map((id) => eligible.find((c) => c.id === id)).find(Boolean) : null;
+  return acting || preferred || eligible[0] || companies[0] || null;
 }
 
 function OpportunityDetailView({ id, perspective, onNav }) {
