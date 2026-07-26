@@ -1,0 +1,111 @@
+# ecos — Growth Tools scheduled sync (G3C).
+#
+# Runs the Israel Innovation Authority pilot sync (scripts/sync-growth-tools.js)
+# on a schedule and on manual dispatch, then commits ONLY the two generated
+# artifacts (src/data/generated/growth-tools-source-data.js and
+# growth-tools-sync-log.json) — and only when a real, valid source-owned
+# field actually changed. No Admin approval step: this is the deliberate
+# automatic-apply product decision made for G3B/G3C.
+#
+# This workflow does not build or deploy anything itself. It only pushes a
+# data commit to the default branch; whatever GitHub Pages deployment
+# mechanism is already configured for this repository (this repo currently
+# has no other Actions workflow, so Pages most likely deploys via classic
+# branch-based publishing from `main`) reacts to that push exactly like any
+# other commit — unchanged, undisrupted.
+#
+# G3C decision: a fully-blocked provider (e.g. HTTP 403, as already observed
+# locally against Innovation Authority) completes this workflow WITH A
+# WARNING, not a failure. A blocked external site is an expected, already-
+# documented condition — it is not a bug in this pipeline, and treating it
+# as a red/failed run would create daily false-alarm noise indistinguishable
+# from an actual CI break. scripts/sync-growth-tools.js prints a
+# `::warning::` GitHub Actions annotation whenever any/all sources fail, so
+# the condition is always clearly visible in the run's own log without
+# failing it. Any OTHER unexpected error (e.g. the script throwing) still
+# fails the job normally via its non-zero exit code.
+#
+# First run: this workflow has never executed on a GitHub-hosted runner.
+# Innovation Authority blocked every request from this development
+# environment (HTTP 403 on all 12 sources, confirmed locally). Whether
+# GitHub's own runners are also blocked is unknown until the first
+# workflow_dispatch run — see the G3B/G3C report for how to interpret it.
+
+name: Growth Tools Sync
+
+on:
+  schedule:
+    # Once daily, off-peak UTC minute (avoids the top-of-hour congestion
+    # most scheduled Actions pile onto). Not more frequent than needed.
+    - cron: "17 4 * * *"
+  workflow_dispatch: {}
+
+# Only the two generated Growth Tools files are ever written/committed by
+# this workflow — no broader repo write access is requested.
+permissions:
+  contents: write
+
+# Prevents two sync runs (a schedule tick overlapping a manual dispatch, or
+# two manual dispatches) from writing the generated artifacts concurrently.
+# Queues rather than cancels, so an in-flight run is never killed mid-write.
+concurrency:
+  group: growth-tools-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Deterministic, network-free — must pass before any live provider
+      # call is attempted. No test framework: these are the project's own
+      # plain-Node fixture scripts (see scripts/test-growth-tools-sync*.js).
+      - name: Run deterministic sync tests
+        run: |
+          node scripts/test-growth-tools-sync.js
+          node scripts/test-growth-tools-sync-g3b.js
+
+      # The only network call in this whole workflow — one real fetch per
+      # canonical Innovation Authority Growth Tool, gated inside the
+      # provider adapter (src/services/growth-tools-adapters.js). Exits 0
+      # even when every source is blocked (see the file header above) —
+      # only an unexpected script error fails this step.
+      - name: Sync Innovation Authority
+        run: node scripts/sync-growth-tools.js --provider=innovation-authority
+
+      # Detects a real change without relying on timestamps: the generated
+      # source-data file only differs from HEAD when a source-owned field
+      # actually changed (G3B's byte-identical no-op guarantee) — a run
+      # that only updates internal bookkeeping without a real field change
+      # never touches the file at all, so this diff is exact, not a proxy.
+      - name: Check for real data changes
+        id: diff
+        run: |
+          if git diff --quiet -- src/data/generated/growth-tools-source-data.js src/data/generated/growth-tools-sync-log.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No Growth Tools data changed this run — nothing to commit."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "Growth Tools data changed — committing."
+          fi
+
+      # Stages ONLY the two generated files, never anything else in the
+      # working tree (there should be nothing else changed by the steps
+      # above, but this is explicit rather than relying on that).
+      - name: Commit and push generated data changes
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/data/generated/growth-tools-source-data.js src/data/generated/growth-tools-sync-log.json
+          git commit -m "data(growth-tools): sync official sources"
+          git push

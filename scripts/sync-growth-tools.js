@@ -284,6 +284,18 @@ function main() {
     if (result.warnings.length) {
       result.warnings.forEach((w) => console.log("  - " + w));
     }
+    // G3C — GitHub Actions annotation (harmless plain text outside CI):
+    // a fully-blocked provider is a known, expected external condition
+    // (e.g. Innovation Authority's 403), not a bug in this pipeline — the
+    // run still completes/exits 0 (see G3C decision doc in the workflow
+    // file) so a blocked provider never shows as a broken CI run, but it
+    // must still be clearly visible in the Action's own log, not silently
+    // swallowed.
+    if (result.toolsRequested > 0 && result.toolsFetched === 0 && result.sourceFailures === result.toolsRequested) {
+      console.log(`::warning::${label} sync: provider fully unreachable this run (${result.sourceFailures}/${result.toolsRequested} source failures) — existing generated data left untouched.`);
+    } else if (result.sourceFailures > 0) {
+      console.log(`::warning::${label} sync: ${result.sourceFailures}/${result.toolsRequested} sources failed this run — their existing data was left untouched.`);
+    }
     process.exit(0);
   }).catch((err) => {
     console.error("sync-growth-tools: unexpected failure —", err && err.stack || err);
