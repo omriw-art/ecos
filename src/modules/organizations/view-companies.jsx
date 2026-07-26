@@ -521,7 +521,18 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany, per
       <div className="card" style={{ position: "relative", overflow: "hidden" }}>
         <div className="scan-line" />
         <div className="flex gap-20" style={{ alignItems: "flex-start" }}>
-          <CoLogo company={c} size={72} />
+          <div className="col gap-8" style={{ alignItems: "center", flex: "none" }}>
+            <CoLogo company={c} size={72} />
+            <button
+              className="btn btn-ghost"
+              style={{ fontSize: 11.5, padding: "4px 8px" }}
+              onClick={linkedInUrl ? openExternalLink : undefined}
+              disabled={!linkedInUrl}
+              title={linkedInUrl ? undefined : "אין קישור מוגדר לחברה זו"}
+            >
+              <window.I.Linkedin size={12} /> {c.linkedin ? "LinkedIn" : "אתר"}
+            </button>
+          </div>
           <div className="col grow" style={{ minWidth: 0 }}>
             <div className="flex center gap-8" style={{ marginBottom: 4 }}>
               <h2 style={{ margin: 0, fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em" }}>
@@ -557,7 +568,6 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany, per
         <div className="flex gap-10 center" style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid var(--line-1)" }}>
           <button className="btn btn-primary" disabled title="תהליך intro אינו מוגדר עדיין"><window.I.Mail size={13} /> בקש introduction</button>
           <button className="btn" onClick={toggleStrategic}><window.I.Pin size={13} /> {c.strategic ? "הסר סימון אסטרטגי" : "סמן כאסטרטגי"}</button>
-          <button className="btn btn-ghost" onClick={linkedInUrl ? openExternalLink : undefined} disabled={!linkedInUrl} title={linkedInUrl ? undefined : "אין קישור מוגדר לחברה זו"}><window.I.Linkedin size={13} /> {c.linkedin ? "LinkedIn" : "אתר"}</button>
           <button className="btn" onClick={() => setEditing((v) => !v)}><window.I.Settings size={13} /> ערוך פרטים</button>
           {onNav && <button className="btn" onClick={() => onNav("needs")}><window.I.Compass size={13} /> פתח בלוח צרכים</button>}
           <div className="grow" />
