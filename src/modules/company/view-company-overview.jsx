@@ -63,6 +63,11 @@ function CompanyOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
   const [actingCompanyId, setActingCompanyId] = React.useState(
     () => (window.EcosPerspective ? window.EcosPerspective.get().actingCompanyId : null)
   );
+  // Compact feed filter (see filteredFeedItems below) — declared here,
+  // unconditionally, alongside actingCompanyId so it always runs before the
+  // early "no company" return (Rules of Hooks: hook order must not depend on
+  // company being present).
+  const [feedFilter, setFeedFilter] = React.useState("all");
   const company = React.useMemo(() => resolveActingCompany(companies, actingCompanyId), [companies, actingCompanyId]);
   const companyOptions = React.useMemo(
     () => companies.filter((c) => !c.organizationType || !CO_PARTNER_ORG_TYPES.has(c.organizationType)),
@@ -95,6 +100,12 @@ function CompanyOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
   );
   const rankedFeedItems = feedItems.filter((item) => item.type !== "growth-tool");
   const growthFeedItems = feedItems.filter((item) => item.type === "growth-tool").slice(0, 3);
+  // Compact feed filter — reuses the existing item.type values already used
+  // for each card's badge (need/opportunity); no new category system, no
+  // fetched data. Counts are real, derived from rankedFeedItems above.
+  const opportunityCount = rankedFeedItems.filter((item) => item.type === "opportunity").length;
+  const needCount = rankedFeedItems.filter((item) => item.type === "need").length;
+  const filteredFeedItems = feedFilter === "all" ? rankedFeedItems : rankedFeedItems.filter((item) => item.type === feedFilter);
   // Locally marked interest (Company Interest v1) — a separate, additive
   // record store, joined here against the same opportunity records above.
   // No partner-side visibility, no contact sent; this is the company's own
@@ -115,73 +126,44 @@ function CompanyOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
       <div className="view-head">
         <div>
           <h2>פיד הזדמנויות</h2>
-          <div className="sub">תצוגת דמו · {company.name} · לא כניסת משתמש</div>
+          <div className="sub">{company.name} · תצוגת דמו · לא כניסת משתמש</div>
         </div>
-      </div>
-
-      {/* Demo/explainer controls — kept fully functional, laid out side-by-side
-          (instead of two stacked full-width cards) so they take up less
-          vertical space ahead of the actual product content below. Both are
-          shared components (also used by Admin dashboard / Partner overview)
-          and are intentionally left unmodified — only this view's local
-          layout wrapper changed. */}
-      {(window.DemoFlowStrip || window.ActingOrgSelector) && (
-        <div className="flex gap-14 wrap" style={{ alignItems: "flex-start" }}>
-          {window.DemoFlowStrip && <div style={{ flex: "2 1 360px" }}><window.DemoFlowStrip active="company" /></div>}
-          {window.ActingOrgSelector && (
-            <div style={{ flex: "1 1 280px" }}>
-              <window.ActingOrgSelector
-                label="חברה בתצוגה"
-                options={companyOptions.map((c) => ({ id: c.id, name: c.name }))}
-                value={company.id}
-                onChange={handleSelectCompany}
-                emptyText="אין חברות זמינות במאגר המקומי כרגע."
-              />
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Context strip — company identity, unchanged from the prior layout */}
-      <div className="card">
-        <div className="flex gap-14" style={{ alignItems: "flex-start" }}>
-          <window.CoLogo company={company} size={48} />
-          <div className="col grow" style={{ minWidth: 0, gap: 6 }}>
-            <div className="flex center gap-8 wrap">
-              <div style={{ fontSize: 18, fontWeight: 700, color: "var(--text-1)" }}>{company.name}</div>
-              {company.readiness && <span className="pill">{CO_READINESS_LABEL_HE[company.readiness] || company.readiness}</span>}
-              {company.stage && <span className="pill">{CO_STAGE_LABEL_HE[company.stage] || company.stage}</span>}
-            </div>
-            {!!sectors.length && (
-              <div className="flex gap-6 wrap">
-                {sectors.slice(0, 4).map((s) => <window.SectorPill key={s} id={s} />)}
-              </div>
-            )}
-            {!!company.blurb && <div style={{ fontSize: 13.5, color: "var(--text-2)", lineHeight: 1.55 }}>{company.blurb}</div>}
-            {!!capabilities.length && (
-              <div className="flex gap-6 wrap" style={{ marginTop: 4 }}>
-                {capabilities.slice(0, 8).map((t, i) => <span key={i} className="pill" style={{ fontSize: 10.5 }}>{t}</span>)}
-              </div>
-            )}
+        {/* Acting-company switch — relocated here (compact, inline in the
+            page header) from the old full-width ActingOrgSelector card, so
+            it no longer occupies the primary center area. Same underlying
+            behavior (EcosPerspective.setActingCompanyId via
+            handleSelectCompany) — just a plain compact select. */}
+        {companyOptions.length > 1 && (
+          <div className="ops">
+            <select
+              className="select"
+              style={{ fontSize: 12.5, maxWidth: 220 }}
+              value={company.id}
+              onChange={(e) => handleSelectCompany(e.target.value)}
+              title="חברה בתצוגה · בחירת תצוגת דמו בלבד · לא כניסת משתמש"
+            >
+              {companyOptions.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Company Feed v2 workspace layout: dominant center feed column plus a
-          narrower left context column ("מה חשוב עכשיו" — reuses the same
-          cards previously called the "side rail", unchanged internally,
-          just consolidated under one column heading). The app's own
-          navigation sidebar (shell.jsx) stays where it already was, on the
-          right — untouched by this grid. Grid track order is unchanged from
-          before: track 1 (feed) sits at the grid's inline-start, which in
-          this RTL layout is the side adjacent to the app sidebar — i.e.
-          visually central once flanked by both the app sidebar (right) and
-          this new left column. */}
-      <div style={{ display: "grid", gridTemplateColumns: "2.3fr 1fr", gap: 14 }}>
-        {/* Center column — Company Feed. Cards read like opportunity posts
-            (type badge, source, title, real description, reasons, real
-            score), so the feed reads as the dominant surface rather than
-            one card among equals. */}
+      {/* Feed-first workspace grid: center column is flexible/dominant, left
+          column is a fixed narrow ~260px "מה חשוב עכשיו" context rail. The
+          app's own navigation sidebar (shell.jsx) is untouched and stays on
+          the right, outside this grid. Below ~920px the left column stacks
+          above the feed instead of narrowing it further. */}
+      <style>{`
+        .co-feed-grid { display: grid; grid-template-columns: 1fr 260px; gap: 14px; align-items: start; }
+        @media (max-width: 920px) {
+          .co-feed-grid { grid-template-columns: 1fr; }
+          .co-feed-grid > .co-context-col { order: -1; }
+        }
+      `}</style>
+      <div className="co-feed-grid">
+        {/* Center — dominant, flexible: the feed is the primary, continuous
+            page content. Cards read like opportunity posts (type badge,
+            source, title, real description, reasons, real score). */}
         <div className="col gap-14">
           <div className="card">
             <div className="card-hd">
@@ -189,6 +171,16 @@ function CompanyOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
               {!!rankedFeedItems.length && <span className="pill">{rankedFeedItems.length}</span>}
             </div>
             <div className="muted tiny" style={{ marginBottom: 10 }}>מבוסס על התאמה דטרמיניסטית · ללא AI · לא עדכון חי</div>
+            {/* Compact filter row — existing item.type values only
+                (need/opportunity), real counts from rankedFeedItems above;
+                no new category system, no fetched/fabricated data. */}
+            {!!rankedFeedItems.length && (
+              <div className="flex gap-6 wrap" style={{ marginBottom: 12 }}>
+                <button type="button" className={"chip" + (feedFilter === "all" ? " active" : "")} onClick={() => setFeedFilter("all")}>הכל · {rankedFeedItems.length}</button>
+                {!!opportunityCount && <button type="button" className={"chip" + (feedFilter === "opportunity" ? " active" : "")} onClick={() => setFeedFilter("opportunity")}>הזדמנויות · {opportunityCount}</button>}
+                {!!needCount && <button type="button" className={"chip" + (feedFilter === "need" ? " active" : "")} onClick={() => setFeedFilter("need")}>צרכים · {needCount}</button>}
+              </div>
+            )}
             {!rankedFeedItems.length ? (
               <div className="col gap-6" style={{ padding: "10px 0" }}>
                 <div className="muted">אין פריטים בפיד כרגע.</div>
@@ -196,7 +188,7 @@ function CompanyOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
               </div>
             ) : (
               <div className="col gap-10">
-                {rankedFeedItems.map((item) => {
+                {filteredFeedItems.map((item) => {
                   const isOpportunity = item.type === "opportunity";
                   const description = item.raw && item.raw.description;
                   return (
@@ -259,76 +251,87 @@ function CompanyOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
           </div>
         </div>
 
-        {/* Left column — "מה חשוב עכשיו": stable, non-discovery items. Same
-            three cards as before (unchanged internally), now framed under
-            one column heading instead of an unlabeled "side rail". */}
-        <div className="col gap-14">
+        {/* Left — "מה חשוב עכשיו", fixed ~260px. Same underlying data/actions
+            as the previous "side rail" (unchanged stores/handlers), rendered
+            as compact stacked cards to fit the narrower column. */}
+        <div className="col gap-14 co-context-col">
           <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", letterSpacing: "0.02em", padding: "0 2px" }}>מה חשוב עכשיו</div>
+
+          {/* Compact identity + profile shortcut — merges the old full-width
+              identity card with the old "הפרופיל שלנו" card. Real fields
+              only (logo/name/stage/readiness + the real feed count already
+              shown above); no invented completeness score or status. */}
           <div className="card">
-            <div className="card-hd"><div className="card-title"><span className="dot" /> הפרופיל שלנו</div></div>
-            <div className="muted tiny" style={{ marginBottom: 10 }}>עריכת פרטי הארגון מתבצעת בפרופיל המלא הקיים — אין כפילות נתונים.</div>
-            <button className="btn btn-primary" onClick={() => onOpenCompany && onOpenCompany(company.id)}>
+            <div className="flex gap-10" style={{ alignItems: "center", marginBottom: 8 }}>
+              <window.CoLogo company={company} size={36} />
+              <div className="col" style={{ minWidth: 0, gap: 3 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--text-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{company.name}</div>
+                <div className="flex gap-4 wrap">
+                  {company.readiness && <span className="pill" style={{ fontSize: 9.5 }}>{CO_READINESS_LABEL_HE[company.readiness] || company.readiness}</span>}
+                  {company.stage && <span className="pill" style={{ fontSize: 9.5 }}>{CO_STAGE_LABEL_HE[company.stage] || company.stage}</span>}
+                </div>
+              </div>
+            </div>
+            <div className="muted tiny" style={{ marginBottom: 8 }}>{rankedFeedItems.length} פריטים בפיד כרגע · עריכה בפרופיל המלא</div>
+            <button className="btn btn-primary" style={{ fontSize: 12.5 }} onClick={() => onOpenCompany && onOpenCompany(company.id)}>
               <window.I.Building size={13} /> פתח את הפרופיל המלא
             </button>
           </div>
 
           {/* הזדמנויות שסומנו — locally marked interest (Company Interest v1),
               joined from OpportunityInterestStore + NeedsStore. Local to this
-              company's view; no partner-side visibility, no contact sent. */}
+              company's view; no partner-side visibility, no contact sent.
+              Compacted to a title-only list (capped at 3, real overflow
+              count) — same underlying data and onOpenOpportunity action as
+              before, full detail still reachable by opening an item. */}
           <div className="card">
             <div className="card-hd">
               <div className="card-title"><span className="dot violet" /> הזדמנויות שסומנו</div>
               {!!markedOpportunities.length && <span className="pill">{markedOpportunities.length}</span>}
             </div>
-            <div className="flex center gap-6 wrap" style={{ marginBottom: 8 }}>
-              {window.DemoTag && <window.DemoTag>נתוני דמו מקומיים</window.DemoTag>}
-              {window.DemoTag && <window.DemoTag>לא נשלחה פנייה</window.DemoTag>}
-            </div>
-            <div className="muted tiny" style={{ marginBottom: 10 }}>
-              הסימון נשמר עבור החברה שנבחרה בתצוגת הדמו · לא נשלחה פנייה לשותף
-            </div>
+            <div className="muted tiny" style={{ marginBottom: 8 }}>נתוני דמו מקומיים · לא נשלחה פנייה לשותף</div>
             {!markedOpportunities.length ? (
-              <div className="muted" style={{ padding: "8px 0" }}>
-                עדיין לא סומנו הזדמנויות עבור החברה בתצוגת הדמו.
-              </div>
+              <div className="muted tiny" style={{ padding: "4px 0" }}>עדיין לא סומנו הזדמנויות.</div>
             ) : (
-              <div className="col gap-8">
-                {markedOpportunities.map((o) => (
-                  <div key={o.id} style={{ padding: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8 }}>
-                    <div className="flex center between" style={{ gap: 8 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)" }}>{o.title}</div>
-                      {o.needType && <span className="pill" style={{ fontSize: 10.5, flex: "none" }}>{window.TaxonomyStore ? window.TaxonomyStore.labelFor("needType", o.needType) : o.needType}</span>}
-                    </div>
-                    {!!o.description && <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>{o.description}</div>}
-                    {o.sourceOrgName && <div className="mono tiny" style={{ color: "var(--text-4)", marginTop: 4 }}>{o.sourceOrgName}</div>}
-                    <div className="flex center gap-6 wrap" style={{ marginTop: 6 }}>
-                      {window.DemoTag && <window.DemoTag>סומן מקומית בדמו</window.DemoTag>}
-                    </div>
-                    <button type="button" className="btn btn-ghost" style={{ fontSize: 12, marginTop: 8 }} onClick={() => onOpenOpportunity && onOpenOpportunity(o.id)}>
-                      פתח הזדמנות ←
-                    </button>
-                  </div>
+              <div className="col gap-4">
+                {markedOpportunities.slice(0, 3).map((o) => (
+                  <button
+                    key={o.id}
+                    type="button"
+                    className="btn btn-ghost"
+                    style={{ justifyContent: "flex-start", fontSize: 12, padding: "5px 8px", overflow: "hidden" }}
+                    onClick={() => onOpenOpportunity && onOpenOpportunity(o.id)}
+                    title={o.title}
+                  >
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{o.title}</span>
+                  </button>
                 ))}
+                {markedOpportunities.length > 3 && (
+                  <div className="muted tiny" style={{ padding: "2px 8px" }}>+{markedOpportunities.length - 3} נוספות</div>
+                )}
               </div>
             )}
           </div>
 
           <div className="card">
             <div className="card-hd"><div className="card-title"><span className="dot" /> הצעדים הבאים</div></div>
-            <div className="col gap-8">
-              <button type="button" className="btn" style={{ justifyContent: "flex-start" }} onClick={() => onOpenCompany && onOpenCompany(company.id)}>
+            <div className="col gap-6">
+              <button type="button" className="btn" style={{ justifyContent: "flex-start", fontSize: 12.5 }} onClick={() => onOpenCompany && onOpenCompany(company.id)}>
                 <window.I.Settings size={13} /> עדכנו את פרופיל החברה
               </button>
-              <button type="button" className="btn" style={{ justifyContent: "flex-start" }} onClick={() => onNav && onNav("needs")}>
+              <button type="button" className="btn" style={{ justifyContent: "flex-start", fontSize: 12.5 }} onClick={() => onNav && onNav("needs")}>
                 <window.I.Plus size={13} /> הוסיפו צורך חדש
               </button>
-              <div className="flex center gap-8" style={{ padding: "6px 2px", color: "var(--text-3)", fontSize: 13 }}>
-                <window.I.Compass size={13} /> עברו לפיד למעלה כדי לבדוק הזדמנויות רלוונטיות
-              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Demo-only controls — kept fully functional (same shared component,
+          also used by Admin dashboard / Partner overview, unmodified
+          internally) but relocated to the bottom of the page so they no
+          longer occupy the primary center area above the feed. */}
+      {window.DemoFlowStrip && <window.DemoFlowStrip active="company" />}
     </div>
   );
 }
