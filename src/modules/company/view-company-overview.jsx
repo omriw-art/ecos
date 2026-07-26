@@ -161,32 +161,34 @@ function CompanyOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
         {/* Center — dominant, flexible: the feed is the primary, continuous
             page content, rendered directly in the workspace flow (not wrapped
             in one large dashboard-style .card). Each feed item is its own
-            flat, bordered row — that's the only per-item container. */}
+            flat, bordered row — that's the only per-item container. The page
+            title itself lives once, in the view-head above (h2) — no second
+            "פיד הזדמנויות" heading repeated here. */}
         <div className="col gap-10">
-          <div>
-            <div className="flex center gap-8" style={{ marginBottom: 2 }}>
-              <span className="dot violet" />
-              <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-1)" }}>פיד הזדמנויות</div>
-              {!!rankedFeedItems.length && <span className="pill">{rankedFeedItems.length}</span>}
-            </div>
-            <div className="muted tiny">מבוסס על התאמה דטרמיניסטית · ללא AI · לא עדכון חי</div>
+          <div className="muted tiny">מבוסס על התאמה דטרמיניסטית · ללא AI · לא עדכון חי</div>
+
+          {/* Compact filter row — always visible (even at zero items, so the
+              feed shell never collapses to nothing), existing item.type
+              values only (need/opportunity), real counts from
+              rankedFeedItems above; no new category system, no
+              fetched/fabricated data. Zero counts are shown honestly, not
+              hidden. */}
+          <div className="flex gap-6 wrap">
+            <button type="button" className={"chip" + (feedFilter === "all" ? " active" : "")} onClick={() => setFeedFilter("all")}>הכל · {rankedFeedItems.length}</button>
+            <button type="button" className={"chip" + (feedFilter === "opportunity" ? " active" : "")} onClick={() => setFeedFilter("opportunity")}>הזדמנויות · {opportunityCount}</button>
+            <button type="button" className={"chip" + (feedFilter === "need" ? " active" : "")} onClick={() => setFeedFilter("need")}>צרכים · {needCount}</button>
           </div>
 
-          {/* Compact filter row — existing item.type values only
-              (need/opportunity), real counts from rankedFeedItems above; no
-              new category system, no fetched/fabricated data. */}
-          {!!rankedFeedItems.length && (
-            <div className="flex gap-6 wrap">
-              <button type="button" className={"chip" + (feedFilter === "all" ? " active" : "")} onClick={() => setFeedFilter("all")}>הכל · {rankedFeedItems.length}</button>
-              {!!opportunityCount && <button type="button" className={"chip" + (feedFilter === "opportunity" ? " active" : "")} onClick={() => setFeedFilter("opportunity")}>הזדמנויות · {opportunityCount}</button>}
-              {!!needCount && <button type="button" className={"chip" + (feedFilter === "need" ? " active" : "")} onClick={() => setFeedFilter("need")}>צרכים · {needCount}</button>}
-            </div>
-          )}
-
-          {!rankedFeedItems.length ? (
-            <div className="col gap-6" style={{ padding: "10px 0" }}>
-              <div className="muted">אין פריטים בפיד כרגע.</div>
-              <div className="muted tiny">פרסמו הזדמנות בתצוגת שותף כדי לראות אותה בפיד החברה.</div>
+          {!filteredFeedItems.length ? (
+            <div className="col gap-4" style={{ padding: "14px", background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8 }}>
+              <div className="muted">
+                {!rankedFeedItems.length ? "אין פריטים בפיד כרגע." : "אין פריטים בקטגוריה זו כרגע."}
+              </div>
+              <div className="muted tiny">
+                {!rankedFeedItems.length
+                  ? "פרסמו הזדמנות בתצוגת שותף כדי לראות אותה בפיד החברה."
+                  : "נסו את \"הכל\" כדי לראות את שאר הפריטים בפיד."}
+              </div>
             </div>
           ) : (
             <div className="col gap-8">
