@@ -89,9 +89,28 @@ function OnboardView({ onCompaniesChanged, onOpenCompany }) {
   const approveSubmission = (submission) => {
     const duplicate = window.CompanyStore.findCompanyByName(submission.companyName);
     if (duplicate) {
-      const message = `${submission.companyName} כבר קיימת במאגר כחברה: ${duplicate.name}. ההגשה נשארה Pending.`;
-      setSubmissionNotice(message);
-      window.toast(message, "err");
+      // Directory/Membership v1 — an existing directory-only (unclaimed)
+      // company with the same exact name is claimed instead of blocked, so
+      // approval doesn't force a duplicate record. Deterministic exact-name
+      // match only (the same one this duplicate check already used before
+      // this change) — no fuzzy matching. Status-only claim: does not merge/
+      // overwrite the existing directory profile's fields with the
+      // submission's (which of the two field sets should win is a real
+      // product decision, deferred). Already-claimed duplicates still block,
+      // same as before — claiming an already-claimed company would be wrong.
+      if (window.CompanyStore.isClaimed(duplicate)) {
+        const message = `${submission.companyName} כבר קיימת במאגר כחברה שהצטרפה: ${duplicate.name}. ההגשה נשארה Pending.`;
+        setSubmissionNotice(message);
+        window.toast(message, "err");
+        return;
+      }
+      const claimed = window.CompanyStore.claimCompany(duplicate.id);
+      window.SubmissionStore.approveSubmission(submission.id, claimed.id);
+      refreshSubmissions();
+      setSubmissionNotice("");
+      onCompaniesChanged && onCompaniesChanged();
+      window.toast(`${claimed.name} כבר הייתה רשומה במאגר — עודכן סטטוס ההצטרפות`, "ok");
+      onOpenCompany && onOpenCompany(claimed.id);
       return;
     }
     const company = window.CompanyStore.createCompany(window.SubmissionStore.toCompanyInput(submission));

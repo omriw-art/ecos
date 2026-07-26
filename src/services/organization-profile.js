@@ -14,8 +14,12 @@
 (function () {
   if (window.OrganizationProfile) return;
 
+  // membershipStatus classified as Organization, not OrganizationProfile —
+  // it's "who this organization is to the platform" (directory-only vs
+  // joined/claimed, Directory/Membership v1), the same tenancy category as
+  // id, not segmentation/profile content like sectors or capabilities.
   const ORGANIZATION_FIELDS = [
-    "id", "name", "country", "flag", "hq", "website", "organizationType", "founded",
+    "id", "name", "country", "flag", "hq", "website", "organizationType", "founded", "membershipStatus",
   ];
 
   const PROFILE_FIELDS = [

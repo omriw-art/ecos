@@ -73,6 +73,17 @@
       score: Number(source.score) || 50,
       strategic: source.strategic === true,
       readiness: text(source.readiness) || "Mapped",
+      // Directory presence vs platform membership (Directory/Membership v1).
+      // Independent of readiness/stage on purpose — readiness describes
+      // ecosystem/profile state (a curation judgment), not whether an actual
+      // company-side account has joined. Every record defaults to
+      // "unclaimed" (directory-only: known/mapped, no active ownership)
+      // unless explicitly created as "claimed" (today, only
+      // SubmissionStore.toCompanyInput does this — an approved public
+      // submission is the one real "join" event in this local demo).
+      // Self-asserted client-local metadata like EcosOwnership's fields —
+      // never a security/auth signal, never wired into EcosAuthz.
+      membershipStatus: source.membershipStatus === "claimed" ? "claimed" : "unclaimed",
       organizationType: text(source.organizationType) || "other",
       spaceSegment: text(source.spaceSegment) || "other",
       sectors,
@@ -151,6 +162,22 @@
     return updated;
   }
 
+  // Directory/Membership v1 — status-only claim: flips an existing
+  // directory-only company to "claimed" without touching any other field.
+  // Used when a public join submission matches an existing directory
+  // company by exact name (see SubmissionStore/OnboardView) instead of
+  // creating a duplicate record. Deliberately does NOT merge/overwrite the
+  // directory profile's fields with the submission's — which of the two
+  // field sets should win is a real product decision, left for a later
+  // batch (see commit notes); this only changes membershipStatus.
+  function claimCompany(id) {
+    return updateCompany(id, { membershipStatus: "claimed" });
+  }
+
+  function isClaimed(company) {
+    return !!(company && company.membershipStatus === "claimed");
+  }
+
   function resetCompaniesToSeed() {
     window.EcosLocalAdapter.removeSync(STORAGE_KEY);
     const seeded = seedCompanies();
@@ -164,6 +191,8 @@
     saveCompanies,
     createCompany,
     updateCompany,
+    claimCompany,
+    isClaimed,
     resetCompaniesToSeed,
     normalizeCompany,
     normalizeName,

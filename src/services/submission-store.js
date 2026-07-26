@@ -171,6 +171,11 @@
       customers: s.customers,
       partners: [],
       overlap: [],
+      // Directory/Membership v1 — an approved public join submission is the
+      // one real "join" event in this local demo, so the company record it
+      // creates starts claimed (not directory-only). Distinct from
+      // readiness/stage on purpose. See company-store.js's normalizeCompany.
+      membershipStatus: "claimed",
     };
   }
 

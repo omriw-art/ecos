@@ -780,6 +780,11 @@ function OrgDetailsTab({ c }) {
           <KV k="מועסקים" v={profile.size} />
           <KV k="סטטוס" v={READINESS_LABEL_HE[profile.readiness] || profile.readiness} />
           {profile.fundingM > 0 && <KV k="גיוס מצטבר" v={`$${profile.fundingM}M`} />}
+          {/* Directory/Membership v1 — independent of "סטטוס" (readiness)
+              above. "טרם הצטרפו" is the true default for seeded/admin-added
+              directory companies; only an approved public submission (or an
+              admin claiming a duplicate on approval) sets this to הצטרפו. */}
+          <KV k="הצטרפות לפלטפורמה" v={org.membershipStatus === "claimed" ? "הצטרפו" : "טרם הצטרפו (רישום במאגר בלבד)"} />
           <KV k="מזהה פנימי" v={org.id} />
         </div>
       </div>
