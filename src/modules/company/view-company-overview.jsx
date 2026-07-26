@@ -67,18 +67,22 @@ function CompanyOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
 
   const capabilities = (company.capabilities && company.capabilities.length) ? company.capabilities : (company.tech || []);
   const sectors = Array.isArray(company.sectors) ? company.sectors : [];
-  const relevantNeeds = window.getRelevantNeedsForCompany ? window.getRelevantNeedsForCompany(company).slice(0, 5) : [];
-  const ourNeeds = window.NeedsStore ? window.NeedsStore.listNeeds().filter((n) => n.sourceOrgId === company.id) : [];
-  // Locally published partner opportunities (Partner Opportunity Publishing v1)
-  // — same NeedsStore records, not a separate feed. Not personalized/matched,
-  // just the raw local list, same honesty stance as the Growth Tools preview.
-  const ecosystemOpportunities = window.NeedsStore
-    ? window.NeedsStore.listNeeds().filter((n) => n.sourceType === "opportunity").slice(0, 5)
-    : [];
+  // Company Feed (F2) — one ranked local stream from CompanyFeed.listCompanyFeed,
+  // replacing the previous separate relevant-needs / ecosystem-opportunities /
+  // growth-tools cards. Deterministic, recomputed per acting company; no fetch,
+  // no live update, no AI. Growth tools are the selector's unranked partition —
+  // split out here so they render as a visually distinct catalog footer, never
+  // interleaved with ranked matches.
+  const feedItems = React.useMemo(
+    () => (window.CompanyFeed ? window.CompanyFeed.listCompanyFeed(company) : []),
+    [company.id]
+  );
+  const rankedFeedItems = feedItems.filter((item) => item.type !== "growth-tool");
+  const growthFeedItems = feedItems.filter((item) => item.type === "growth-tool").slice(0, 3);
   // Locally marked interest (Company Interest v1) — a separate, additive
   // record store, joined here against the same opportunity records above.
   // No partner-side visibility, no contact sent; this is the company's own
-  // private local list of what it marked.
+  // local list of what it marked in this demo view.
   const markedOpportunities = React.useMemo(() => {
     if (!window.OpportunityInterestStore || !window.NeedsStore) return [];
     const interests = window.OpportunityInterestStore.listForCompany(company.id);
@@ -89,14 +93,12 @@ function CompanyOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
       .filter(Boolean);
   }, [company.id]);
   const confidenceLabel = (c) => c === "high" ? "התאמה גבוהה" : c === "medium" ? "התאמה בינונית" : "התאמה נמוכה";
-  // Real preview, not personalized — same catalog everyone sees, no eligibility claim.
-  const growthPreview = window.GrowthToolsStore ? window.GrowthToolsStore.getGrowthTools().slice(0, 3) : [];
 
   return (
     <div className="view">
       <div className="view-head">
         <div>
-          <h2>סקירת חברה</h2>
+          <h2>פיד הזדמנויות</h2>
           <div className="sub">תצוגת דמו · {company.name} · לא כניסת משתמש</div>
         </div>
       </div>
@@ -113,7 +115,7 @@ function CompanyOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
         />
       )}
 
-      {/* 1. סקירת חברה */}
+      {/* Context strip — company identity, unchanged from the prior layout */}
       <div className="card">
         <div className="flex gap-14" style={{ alignItems: "flex-start" }}>
           <window.CoLogo company={company} size={48} />
@@ -138,200 +140,141 @@ function CompanyOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
         </div>
       </div>
 
-      {/* 2. הפרופיל שלנו */}
-      <div className="card">
-        <div className="card-hd"><div className="card-title"><span className="dot" /> הפרופיל שלנו</div></div>
-        <div className="muted tiny" style={{ marginBottom: 10 }}>עריכת פרטי הארגון מתבצעת בפרופיל המלא הקיים — אין כפילות נתונים.</div>
-        <button className="btn btn-primary" onClick={() => onOpenCompany && onOpenCompany(company.id)}>
-          <window.I.Building size={13} /> פתח את הפרופיל המלא
-        </button>
-      </div>
-
-      {/* 3. צרכים רלוונטיים */}
-      <div className="card">
-        <div className="card-hd">
-          <div className="card-title"><span className="dot violet" /> צרכים רלוונטיים</div>
-          {!!relevantNeeds.length && <span className="pill">{relevantNeeds.length}</span>}
-        </div>
-        <div className="muted tiny" style={{ marginBottom: 10 }}>מבוסס על יכולות, תגיות, צרכים והצעות · דטרמיניסטי, ללא AI</div>
-        {!relevantNeeds.length ? (
-          <div className="muted" style={{ padding: "8px 0" }}>לא נמצאו צרכים רלוונטיים לחברה זו במאגר המקומי כרגע.</div>
-        ) : (
-          <div className="col gap-8">
-            {relevantNeeds.map((r) => (
-              <div key={r.need.id} style={{ padding: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8 }}>
-                <div className="flex center between" style={{ gap: 8 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)" }}>{r.need.title}</div>
-                  <span className="mono tabnum" style={{ fontSize: 13, fontWeight: 700, color: "var(--blue)", flex: "none" }}>{r.score}%</span>
-                </div>
-                <div className="flex center gap-6 wrap" style={{ marginTop: 4 }}>
-                  <span className="pill" style={{ fontSize: 10.5 }}>{confidenceLabel(r.confidence)}</span>
-                  {r.need.sourceOrgName && <span className="mono tiny" style={{ color: "var(--text-4)" }}>{r.need.sourceOrgName}</span>}
-                </div>
-                {!!r.reasons.length && <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 4 }}>{r.reasons.join(" · ")}</div>}
+      <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 14 }}>
+        {/* Main column — Company Feed */}
+        <div className="col gap-14">
+          <div className="card">
+            <div className="card-hd">
+              <div className="card-title"><span className="dot violet" /> פיד הזדמנויות</div>
+              {!!rankedFeedItems.length && <span className="pill">{rankedFeedItems.length}</span>}
+            </div>
+            <div className="muted tiny" style={{ marginBottom: 10 }}>מבוסס על התאמה מקומית · ללא AI</div>
+            {!rankedFeedItems.length ? (
+              <div className="muted" style={{ padding: "8px 0" }}>אין פריטים להצגה כרגע.</div>
+            ) : (
+              <div className="col gap-8">
+                {rankedFeedItems.map((item) => (
+                  <div key={item.id} style={{ padding: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8 }}>
+                    <div className="flex center between" style={{ gap: 8 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)" }}>{item.title}</div>
+                      {item.ranked && typeof item.score === "number" && (
+                        <span className="mono tabnum" style={{ fontSize: 13, fontWeight: 700, color: "var(--blue)", flex: "none" }}>{item.score}%</span>
+                      )}
+                    </div>
+                    <div className="flex center gap-6 wrap" style={{ marginTop: 4 }}>
+                      <span className="pill" style={{ fontSize: 10.5 }}>{item.type === "opportunity" ? "הזדמנות" : "צורך"}</span>
+                      {item.ranked && item.confidence && <span className="pill" style={{ fontSize: 10.5 }}>{confidenceLabel(item.confidence)}</span>}
+                      <span className="mono tiny" style={{ color: "var(--text-4)" }}>{item.sourceLabel}</span>
+                    </div>
+                    {!!item.reasons.length && <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 4 }}>{item.reasons.join(" · ")}</div>}
+                    {item.type === "opportunity" && (
+                      <button type="button" className="btn btn-ghost" style={{ fontSize: 12, marginTop: 8 }} onClick={() => onOpenOpportunity && onOpenOpportunity(item.raw.id)}>
+                        פתח הזדמנות ←
+                      </button>
+                    )}
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
-        )}
-      </div>
 
-      {/* 4. הצרכים שלנו */}
-      <div className="card">
-        <div className="card-hd">
-          <div className="card-title"><span className="dot green" /> הצרכים שלנו</div>
-          {!!ourNeeds.length && <span className="pill">{ourNeeds.length}</span>}
-        </div>
-        {!ourNeeds.length ? (
-          <div className="muted" style={{ padding: "8px 0" }}>עדיין לא הוגדרו צרכים עבור החברה בתצוגת הדמו.</div>
-        ) : (
-          <div className="col gap-8">
-            {ourNeeds.map((n) => (
-              <div key={n.id} style={{ padding: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)" }}>{n.title}</div>
-                <div className="flex center gap-6 wrap" style={{ marginTop: 4 }}>
-                  <span className="pill" style={{ fontSize: 10.5 }}>{n.sourceLabel}</span>
-                  {n.priority && <span className="pill" style={{ fontSize: 10.5 }}>עדיפות {window.TaxonomyStore ? window.TaxonomyStore.labelFor("priority", n.priority) : n.priority}</span>}
-                  {n.status && <span className="pill" style={{ fontSize: 10.5 }}>{window.TaxonomyStore ? window.TaxonomyStore.labelFor("status", n.status) : n.status}</span>}
-                </div>
+          {/* Growth tools — visually distinct, unranked reference catalog.
+              Never interleaved with the ranked feed above. */}
+          <div className="card">
+            <div className="card-hd">
+              <div className="card-title"><span className="dot amber" /> כלי צמיחה</div>
+              <button type="button" className="btn btn-ghost" style={{ fontSize: 12.5 }} onClick={() => onNav && onNav("growth-tools")}>
+                לכל ההזדמנויות ←
+              </button>
+            </div>
+            <div className="flex center gap-6 wrap" style={{ marginBottom: 8 }}>
+              {window.DemoTag && <window.DemoTag>קטלוג אוצר קבוע</window.DemoTag>}
+              {window.DemoTag && <window.DemoTag>לא בדיקת זכאות</window.DemoTag>}
+            </div>
+            <div className="muted tiny" style={{ marginBottom: 10 }}>
+              קטלוג אחיד לכולם, ללא דירוג אישי. {window.GROWTH_DISCLAIMER || "מאגר הפניות אוצר לצורכי הדגמה · אינו בדיקת זכאות ואינו מחובר למערכות חיצוניות. אמתו מול הגוף הרלוונטי."}
+            </div>
+            {!growthFeedItems.length ? (
+              <div className="muted" style={{ padding: "6px 0" }}>אין כלי צמיחה כרגע.</div>
+            ) : (
+              <div className="col gap-8">
+                {growthFeedItems.map((item) => (
+                  <div key={item.id} style={{ padding: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)" }}>{item.title}</div>
+                    {item.subtitle && <div className="mono tiny" style={{ color: "var(--text-4)", marginTop: 2 }}>{item.subtitle}</div>}
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* 5. הזדמנויות מהאקו-סיסטם — locally published partner opportunities
-          (NeedsStore, sourceType: "opportunity"). Separate feed from Growth
-          Tools below — not merged, not eligibility-checked. */}
-      <div className="card">
-        <div className="card-hd">
-          <div className="card-title"><span className="dot amber" /> הזדמנויות מהאקו-סיסטם</div>
-          {!!ecosystemOpportunities.length && <span className="pill">{ecosystemOpportunities.length}</span>}
-        </div>
-        <div className="flex center gap-6 wrap" style={{ marginBottom: 8 }}>
-          {window.DemoTag && <window.DemoTag>נתוני דמו מקומיים</window.DemoTag>}
-          {window.DemoTag && <window.DemoTag>לא הופץ מחוץ למערכת</window.DemoTag>}
-        </div>
-        <div className="muted tiny" style={{ marginBottom: 10 }}>הזדמנויות שפורסמו על ידי שותפים בתצוגת הדמו המקומית</div>
-        {!ecosystemOpportunities.length ? (
-          <div className="muted" style={{ padding: "8px 0" }}>
-            אין עדיין הזדמנויות שפורסמו בדמו. כשיפורסמו הזדמנויות בתצוגת שותף, הן יופיעו כאן.
+        {/* Side rail — stable, non-discovery items */}
+        <div className="col gap-14">
+          <div className="card">
+            <div className="card-hd"><div className="card-title"><span className="dot" /> הפרופיל שלנו</div></div>
+            <div className="muted tiny" style={{ marginBottom: 10 }}>עריכת פרטי הארגון מתבצעת בפרופיל המלא הקיים — אין כפילות נתונים.</div>
+            <button className="btn btn-primary" onClick={() => onOpenCompany && onOpenCompany(company.id)}>
+              <window.I.Building size={13} /> פתח את הפרופיל המלא
+            </button>
           </div>
-        ) : (
-          <div className="col gap-8">
-            {ecosystemOpportunities.map((o) => (
-              <div key={o.id} style={{ padding: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)" }}>{o.title}</div>
-                {!!o.description && <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>{o.description}</div>}
-                <div className="flex center gap-6 wrap" style={{ marginTop: 6 }}>
-                  {o.needType && <span className="pill" style={{ fontSize: 10.5 }}>{window.TaxonomyStore ? window.TaxonomyStore.labelFor("needType", o.needType) : o.needType}</span>}
-                  {o.priority && <span className="pill" style={{ fontSize: 10.5 }}>עדיפות {window.TaxonomyStore ? window.TaxonomyStore.labelFor("priority", o.priority) : o.priority}</span>}
-                  {o.sourceOrgName && <span className="mono tiny" style={{ color: "var(--text-4)" }}>{o.sourceOrgName}</span>}
-                </div>
-                <div className="muted tiny" style={{ marginTop: 6 }}>מקור: הזדמנות מקומית שפורסמה בתצוגת שותף · פורסם מקומית בדמו · לא הופץ מחוץ למערכת</div>
-                <button type="button" className="btn btn-ghost" style={{ fontSize: 12, marginTop: 6 }} onClick={() => onOpenOpportunity && onOpenOpportunity(o.id)}>
-                  פתח הזדמנות ←
-                </button>
+
+          {/* הזדמנויות שסומנו — locally marked interest (Company Interest v1),
+              joined from OpportunityInterestStore + NeedsStore. Local to this
+              company's view; no partner-side visibility, no contact sent. */}
+          <div className="card">
+            <div className="card-hd">
+              <div className="card-title"><span className="dot violet" /> הזדמנויות שסומנו</div>
+              {!!markedOpportunities.length && <span className="pill">{markedOpportunities.length}</span>}
+            </div>
+            <div className="flex center gap-6 wrap" style={{ marginBottom: 8 }}>
+              {window.DemoTag && <window.DemoTag>נתוני דמו מקומיים</window.DemoTag>}
+              {window.DemoTag && <window.DemoTag>לא נשלחה פנייה</window.DemoTag>}
+            </div>
+            <div className="muted tiny" style={{ marginBottom: 10 }}>
+              הסימון נשמר עבור החברה שנבחרה בתצוגת הדמו · לא נשלחה פנייה לשותף
+            </div>
+            {!markedOpportunities.length ? (
+              <div className="muted" style={{ padding: "8px 0" }}>
+                עדיין לא סומנו הזדמנויות עבור החברה בתצוגת הדמו.
               </div>
-            ))}
-          </div>
-        )}
-        {!!ecosystemOpportunities.length && (
-          <button type="button" className="btn btn-ghost" style={{ fontSize: 12.5, marginTop: 10 }} onClick={() => onNav && onNav("needs")}>
-            פתח בלוח צרכים ←
-          </button>
-        )}
-      </div>
-
-      {/* 6. הזדמנויות שסומנו — locally marked interest (Company Interest v1),
-          joined from OpportunityInterestStore + NeedsStore. Private to this
-          company's local view; no partner-side visibility, no contact sent. */}
-      <div className="card">
-        <div className="card-hd">
-          <div className="card-title"><span className="dot violet" /> הזדמנויות שסומנו</div>
-          {!!markedOpportunities.length && <span className="pill">{markedOpportunities.length}</span>}
-        </div>
-        <div className="flex center gap-6 wrap" style={{ marginBottom: 8 }}>
-          {window.DemoTag && <window.DemoTag>נתוני דמו מקומיים</window.DemoTag>}
-          {window.DemoTag && <window.DemoTag>לא נשלחה פנייה</window.DemoTag>}
-        </div>
-        <div className="muted tiny" style={{ marginBottom: 10 }}>
-          הסימון נשמר עבור החברה שנבחרה בתצוגת הדמו · לא נשלחה פנייה לשותף
-        </div>
-        {!markedOpportunities.length ? (
-          <div className="muted" style={{ padding: "8px 0" }}>
-            עדיין לא סומנו הזדמנויות עבור החברה בתצוגת הדמו.
-          </div>
-        ) : (
-          <div className="col gap-8">
-            {markedOpportunities.map((o) => (
-              <div key={o.id} style={{ padding: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8 }}>
-                <div className="flex center between" style={{ gap: 8 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)" }}>{o.title}</div>
-                  {o.needType && <span className="pill" style={{ fontSize: 10.5, flex: "none" }}>{window.TaxonomyStore ? window.TaxonomyStore.labelFor("needType", o.needType) : o.needType}</span>}
-                </div>
-                {!!o.description && <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>{o.description}</div>}
-                {o.sourceOrgName && <div className="mono tiny" style={{ color: "var(--text-4)", marginTop: 4 }}>{o.sourceOrgName}</div>}
-                <div className="flex center gap-6 wrap" style={{ marginTop: 6 }}>
-                  {window.DemoTag && <window.DemoTag>סומן מקומית בדמו</window.DemoTag>}
-                </div>
-                <button type="button" className="btn btn-ghost" style={{ fontSize: 12, marginTop: 8 }} onClick={() => onOpenOpportunity && onOpenOpportunity(o.id)}>
-                  פתח הזדמנות ←
-                </button>
+            ) : (
+              <div className="col gap-8">
+                {markedOpportunities.map((o) => (
+                  <div key={o.id} style={{ padding: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8 }}>
+                    <div className="flex center between" style={{ gap: 8 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)" }}>{o.title}</div>
+                      {o.needType && <span className="pill" style={{ fontSize: 10.5, flex: "none" }}>{window.TaxonomyStore ? window.TaxonomyStore.labelFor("needType", o.needType) : o.needType}</span>}
+                    </div>
+                    {!!o.description && <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>{o.description}</div>}
+                    {o.sourceOrgName && <div className="mono tiny" style={{ color: "var(--text-4)", marginTop: 4 }}>{o.sourceOrgName}</div>}
+                    <div className="flex center gap-6 wrap" style={{ marginTop: 6 }}>
+                      {window.DemoTag && <window.DemoTag>סומן מקומית בדמו</window.DemoTag>}
+                    </div>
+                    <button type="button" className="btn btn-ghost" style={{ fontSize: 12, marginTop: 8 }} onClick={() => onOpenOpportunity && onOpenOpportunity(o.id)}>
+                      פתח הזדמנות ←
+                    </button>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
-        )}
-      </div>
 
-      {/* 7. הצעדים הבאים */}
-      <div className="card">
-        <div className="card-hd"><div className="card-title"><span className="dot" /> הצעדים הבאים</div></div>
-        <div className="col gap-8">
-          <button type="button" className="btn" style={{ justifyContent: "flex-start" }} onClick={() => onOpenCompany && onOpenCompany(company.id)}>
-            <window.I.Settings size={13} /> עדכנו את פרופיל החברה
-          </button>
-          <button type="button" className="btn" style={{ justifyContent: "flex-start" }} onClick={() => onNav && onNav("needs")}>
-            <window.I.Plus size={13} /> הוסיפו צורך חדש
-          </button>
-          <div className="flex center gap-8" style={{ padding: "6px 2px", color: "var(--text-3)", fontSize: 13 }}>
-            <window.I.Compass size={13} /> בדקו את הצרכים הרלוונטיים למעלה בעמוד זה
-          </div>
-          {/* Growth Tools has its own dedicated entry point in the card
-              directly below — not repeated here to avoid a confusing
-              duplicate CTA to the same destination. */}
-        </div>
-      </div>
-
-      {/* 8. הזדמנויות צמיחה — real preview from GrowthToolsStore, not a mock */}
-      <div className="card">
-        <div className="card-hd">
-          <div className="card-title"><span className="dot amber" /> הזדמנויות צמיחה</div>
-          <button type="button" className="btn btn-ghost" style={{ fontSize: 12.5 }} onClick={() => onNav && onNav("growth-tools")}>
-            לכל ההזדמנויות ←
-          </button>
-        </div>
-        <div className="flex center gap-6 wrap" style={{ marginBottom: 8 }}>
-          {window.DemoTag && <window.DemoTag>קטלוג אוצר קבוע</window.DemoTag>}
-          {window.DemoTag && <window.DemoTag>לא בדיקת זכאות</window.DemoTag>}
-        </div>
-        <div className="muted tiny" style={{ marginBottom: 10 }}>
-          קטלוג אחיד לכולם, שונה מהזדמנויות שפורסמו על ידי שותפים למעלה. {window.GROWTH_DISCLAIMER || "מאגר הפניות אוצר לצורכי הדגמה · אינו בדיקת זכאות ואינו מחובר למערכות חיצוניות. אמתו מול הגוף הרלוונטי."}
-        </div>
-        {!growthPreview.length ? (
-          <div className="muted" style={{ padding: "6px 0" }}>אין כרגע הזדמנויות צמיחה במאגר המקומי.</div>
-        ) : (
-          <div className="col gap-8">
-            {growthPreview.map((g) => (
-              <div key={g.id} style={{ padding: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8 }}>
-                <div className="flex center between" style={{ gap: 8 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)" }}>{g.title}</div>
-                  <span className="pill" style={{ fontSize: 10.5, flex: "none" }}>{g.category}</span>
-                </div>
-                <div className="mono tiny" style={{ color: "var(--text-4)", marginTop: 2 }}>{g.provider}</div>
+          <div className="card">
+            <div className="card-hd"><div className="card-title"><span className="dot" /> הצעדים הבאים</div></div>
+            <div className="col gap-8">
+              <button type="button" className="btn" style={{ justifyContent: "flex-start" }} onClick={() => onOpenCompany && onOpenCompany(company.id)}>
+                <window.I.Settings size={13} /> עדכנו את פרופיל החברה
+              </button>
+              <button type="button" className="btn" style={{ justifyContent: "flex-start" }} onClick={() => onNav && onNav("needs")}>
+                <window.I.Plus size={13} /> הוסיפו צורך חדש
+              </button>
+              <div className="flex center gap-8" style={{ padding: "6px 2px", color: "var(--text-3)", fontSize: 13 }}>
+                <window.I.Compass size={13} /> עברו לפיד למעלה כדי לבדוק הזדמנויות רלוונטיות
               </div>
-            ))}
+            </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
