@@ -420,6 +420,11 @@
       status: null,
       deadline: null,
       applicationUrl: null,
+      // G3A — source-owned per the managed/source-owned boundary (see
+      // growth-tools-sync-service.js): the provider's own display name for
+      // the program, kept deliberately separate from the curated `name`
+      // above so an automatic sync can never silently rename a card.
+      officialName: null,
       lastVerifiedAt: CURATED_AT,
       lastSyncedAt: null,
       syncStatus: "never",
@@ -427,6 +432,11 @@
       title: tool.name,
       category: TYPE_LABELS[tool.type] || tool.type,
       provider: tool.provider ? tool.provider.name : null,
+      // G3A — the flattened `provider` above is a display string
+      // (back-compat for the card/UI); sync/validation code needs the real
+      // provider id it was flattened from, so it's kept alongside rather
+      // than overwritten. Purely additive: no existing key's shape changes.
+      providerId: tool.provider ? tool.provider.id : null,
       stageFit: tool.stages && tool.stages.length ? tool.stages.join(" / ") : null,
       sectorFit: tool.domains && tool.domains.length ? tool.domains.join(" / ") : null,
       tags: (tool.purposes || []).map((p) => PURPOSE_LABELS[p] || p),
