@@ -50,6 +50,25 @@
     events: "אירועים",
   };
 
+  // G2.5 — canonical `purposes` vocabulary (multi-valued; a tool can carry
+  // more than one). Back-compat label per slug, same technique as
+  // TYPE_LABELS — one canonical term per concept, no synonyms
+  // ("international-growth"/"global-expansion"/"export" all collapse to
+  // "international"/"market-access" as appropriate instead of proliferating).
+  const PURPOSE_LABELS = {
+    funding: "מימון",
+    "research-development": "מחקר ופיתוח",
+    "product-development": "פיתוח מוצר",
+    pilot: "פיילוט",
+    infrastructure: "תשתיות",
+    "market-access": "חדירה לשוק",
+    international: "פעילות בינלאומית",
+    commercialization: "מסחור",
+    acceleration: "האצה",
+    "space-access": "גישה לחלל",
+    events: "אירועים",
+  };
+
   const PROVIDERS = {
     innovationAuthority: { id: "innovation-authority", name: "רשות החדשנות" },
     growthAdministration: { id: "growth-administration", name: "מנהלת הצמיחה — משרד הכלכלה" },
@@ -76,7 +95,7 @@
       provider: PROVIDERS.innovationAuthority,
       division: null,
       type: "support",
-      purposes: ["הבנת תהליך הגשת בקשה"],
+      purposes: [],
       stages: [],
       domains: [],
       description: "מדריך רשמי של רשות החדשנות המסביר את שלבי הטיפול בבקשה למענק, מרגע ההגשה ועד ההחלטה.",
@@ -90,7 +109,7 @@
       provider: PROVIDERS.innovationAuthority,
       division: null,
       type: "funding",
-      purposes: ["מענקי מו״פ"],
+      purposes: ["research-development", "funding"],
       stages: [],
       domains: [],
       description: "עמוד מרכז של רשות החדשנות המרכז את מסלולי המענקים למחקר ופיתוח טכנולוגי.",
@@ -104,7 +123,7 @@
       provider: PROVIDERS.innovationAuthority,
       division: "חטיבת הזנק",
       type: "accelerator",
-      purposes: ["חממה טכנולוגית", "מימון שלב מוקדם מאוד"],
+      purposes: ["acceleration", "funding"],
       stages: ["Concept", "Seed"],
       domains: [],
       description: "מסלול מימון של רשות החדשנות (חטיבת ההזנק) הפועל דרך חממות טכנולוגיות מוכרות עבור חברות בשלב מוקדם מאוד.",
@@ -118,7 +137,7 @@
       provider: PROVIDERS.innovationAuthority,
       division: "חטיבת הזנק",
       type: "funding",
-      purposes: ["מימון שלב רעיוני"],
+      purposes: ["funding"],
       stages: ["Concept", "Seed"],
       domains: [],
       description: "מסלול מימון של רשות החדשנות (חטיבת ההזנק) לחברות בשלב הרעיוני, לפני הקמה מלאה.",
@@ -132,7 +151,7 @@
       provider: PROVIDERS.innovationAuthority,
       division: "חטיבת הזנק",
       type: "infrastructure",
-      purposes: ["תשתיות מעבדה לחדשנות"],
+      purposes: ["infrastructure", "research-development"],
       stages: [],
       domains: [],
       description: "מסלול של רשות החדשנות (חטיבת ההזנק) התומך בהקמה ובתפעול של מעבדות לחדשנות טכנולוגית.",
@@ -146,7 +165,7 @@
       provider: PROVIDERS.innovationAuthority,
       division: "חטיבת הזנק",
       type: "funding",
-      purposes: ["מימון שלב הזנק"],
+      purposes: ["funding"],
       stages: ["Seed"],
       domains: [],
       description: "מסלול מימון של רשות החדשנות (חטיבת ההזנק) לחברות הזנק.",
@@ -160,7 +179,7 @@
       provider: PROVIDERS.innovationAuthority,
       division: "חטיבת צמיחה",
       type: "funding",
-      purposes: ["מימון סבב A"],
+      purposes: ["funding"],
       stages: ["Series A"],
       domains: [],
       description: "מסלול מימון של רשות החדשנות (חטיבת הצמיחה) לחברות בשלב גיוס מקביל לסבב A.",
@@ -174,7 +193,7 @@
       provider: PROVIDERS.innovationAuthority,
       division: "חטיבת צמיחה",
       type: "funding",
-      purposes: ["מימון שלב Seed"],
+      purposes: ["funding"],
       stages: ["Seed"],
       domains: [],
       description: "מסלול מימון של רשות החדשנות (חטיבת הצמיחה) לחברות בשלב Seed.",
@@ -188,9 +207,12 @@
       provider: PROVIDERS.innovationAuthority,
       division: "חטיבת צמיחה",
       type: "funding",
-      purposes: ["בחינת היתכנות טכנו-כלכלית"],
+      purposes: ["research-development"],
       stages: [],
-      domains: [],
+      // "Mofet Fund" is the Innovation Authority's manufacturing R&D fund —
+      // confirmed by this program's own English URL slug
+      // ("manufacturing-rnd-mofet-fund-financial-feasability"), not a guess.
+      domains: ["manufacturing"],
       description: "מסלול של קרן מופ\"ת ברשות החדשנות (חטיבת הצמיחה) לבחינת היתכנות טכנו-כלכלית של מיזם ייצור.",
       benefit: null,
       eligibility: null,
@@ -202,7 +224,7 @@
       provider: PROVIDERS.innovationAuthority,
       division: "חטיבת צמיחה",
       type: "pilot",
-      purposes: ["פיילוט ברמת המשק"],
+      purposes: ["pilot"],
       stages: [],
       domains: [],
       description: "מסלול של קרן הפיילוטים ברשות החדשנות (חטיבת הצמיחה) לביצוע פיילוטים ברמה משקית/ענפית.",
@@ -216,9 +238,12 @@
       provider: PROVIDERS.innovationAuthority,
       division: "חטיבת צמיחה",
       type: "funding",
-      purposes: ["פיתוח מוצר בייצור"],
+      purposes: ["funding", "product-development"],
       stages: [],
-      domains: [],
+      // Same "קרן מופ״ת" (Mofet Fund) as gt-iia-mofet-feasibility above —
+      // that fund's manufacturing scope is confirmed via its sibling
+      // program's URL slug; applied consistently here, not re-guessed.
+      domains: ["manufacturing"],
       description: "מסלול של קרן מופ\"ת ברשות החדשנות (חטיבת הצמיחה) למימון פיתוח מוצר.",
       benefit: null,
       eligibility: null,
@@ -230,8 +255,12 @@
       provider: PROVIDERS.innovationAuthority,
       division: "חטיבת צמיחה",
       type: "funding",
-      purposes: ["השקעה בחברות תעשיית החלל"],
+      purposes: ["funding"],
       stages: [],
+      // Space-industry-wide (not one SECTORS subsector) — its space
+      // relevance is carried by the space-focus text signal in
+      // getRecommendedGrowthTools, not by a fabricated "space" domain id
+      // that doesn't exist in the company.sectors taxonomy.
       domains: [],
       description: "מסלול מימון ייעודי של רשות החדשנות (חטיבת הצמיחה) לחברות בתעשיית החלל.",
       benefit: null,
@@ -244,7 +273,7 @@
       provider: PROVIDERS.growthAdministration,
       division: null,
       type: "infrastructure",
-      purposes: ["הקמת תשתיות פיזיות"],
+      purposes: ["infrastructure"],
       stages: [],
       domains: [],
       description: "מענק של מנהלת הצמיחה במשרד הכלכלה להקמת תשתיות פיזיות.",
@@ -258,8 +287,11 @@
       provider: PROVIDERS.growthAdministration,
       division: null,
       type: "infrastructure",
-      purposes: ["הקמת תשתיות דאטא"],
+      purposes: ["infrastructure", "research-development"],
       stages: [],
+      // Verified via official page: explicitly spans six clusters (digital
+      // health, advanced manufacturing, agrotech, foodtech, defense/space,
+      // software/fintech) — genuinely cross-sector, not restricted to one.
       domains: [],
       description: "מענק של מנהלת הצמיחה במשרד הכלכלה להקמת תשתיות דאטא.",
       benefit: null,
@@ -272,7 +304,7 @@
       provider: PROVIDERS.growthAdministration,
       division: null,
       type: "international",
-      purposes: ["עידוד פעילות בחו\"ל"],
+      purposes: ["international"],
       stages: [],
       domains: [],
       description: "תוכנית של מנהלת הצמיחה במשרד הכלכלה לעידוד פעילות חברות בחו\"ל.",
@@ -286,7 +318,7 @@
       provider: PROVIDERS.growthAdministration,
       division: null,
       type: "market-access",
-      purposes: ["כניסה לשווקים בינלאומיים"],
+      purposes: ["market-access"],
       stages: [],
       domains: [],
       description: "תוכנית של מנהלת הצמיחה במשרד הכלכלה לתמיכה בפריצת שווקים בחו\"ל.",
@@ -300,7 +332,10 @@
       provider: PROVIDERS.growthAdministration,
       division: null,
       type: "support",
-      purposes: ["פיתוח כלכלי אזורי"],
+      purposes: ["infrastructure"],
+      // Verified via official page: targets regional authorities/
+      // municipalities, not individual companies at a stage — left without
+      // a stage attribution because none applies, not because it's unclear.
       stages: [],
       domains: [],
       description: "תוכנית של מנהלת הצמיחה במשרד הכלכלה לפיתוח מנועי צמיחה אזוריים.",
@@ -314,7 +349,10 @@
       provider: PROVIDERS.investmentAuthority,
       division: null,
       type: "directory",
-      purposes: ["מדריך למסלולי סיוע"],
+      // Verified via official page: a directory/hub listing multiple
+      // assistance tracks, not itself a single funding/pilot/etc.
+      // mechanism — no canonical purpose concept fits a hub page.
+      purposes: [],
       stages: [],
       domains: [],
       description: "עמוד מרכז (דירקטורי) של הרשות להשקעות המרכז מספר מסלולי סיוע שונים. זהו מקור/דירקטורי כללי ולא מסלול ספציפי — יש לעיין באתר הרשמי לפירוט המסלולים ותנאיהם.",
@@ -328,7 +366,7 @@
       provider: PROVIDERS.rakia,
       division: null,
       type: "events",
-      purposes: ["נראות ותערוכות ענפיות"],
+      purposes: ["events"],
       stages: [],
       domains: [],
       description: "אירועים ותערוכות מטעם רקיע לחברות אקוסיסטם החלל.",
@@ -342,7 +380,11 @@
       provider: PROVIDERS.rakia,
       division: null,
       type: "space-access",
-      purposes: ["הגשת ניסוי לביצוע בחלל"],
+      // Verified via official page: open across companies, researchers,
+      // and academia, "without restricting support to any particular
+      // maturity stage" — stages intentionally left empty, confirmed
+      // rather than merely unclear.
+      purposes: ["space-access"],
       stages: [],
       domains: [],
       description: "ערוץ של רקיע להגשת ניסויים לביצוע בסביבת חלל, בשיתוף תעשייה ואקדמיה.",
@@ -356,8 +398,11 @@
       provider: PROVIDERS.ddrdMafat,
       division: null,
       type: "research-development",
-      purposes: ["מו״פ ביטחוני/דואלי עם הזנקים"],
-      stages: [],
+      purposes: ["research-development"],
+      // Verified via official page: targets TRL 3-5, "pre-product stage
+      // through technological prototype level" — maps to the project's
+      // earliest STAGES values, not inferred from funding amount alone.
+      stages: ["Concept", "Seed"],
       domains: [],
       description: "תוכנית של מפא\"ת (DDR&D) במסגרת הפעילות מול הזנקים.",
       benefit: null,
@@ -384,7 +429,7 @@
       provider: tool.provider ? tool.provider.name : null,
       stageFit: tool.stages && tool.stages.length ? tool.stages.join(" / ") : null,
       sectorFit: tool.domains && tool.domains.length ? tool.domains.join(" / ") : null,
-      tags: (tool.purposes || []).slice(),
+      tags: (tool.purposes || []).map((p) => PURPOSE_LABELS[p] || p),
       url: tool.source ? tool.source.url : null,
     });
   }
@@ -403,16 +448,17 @@
     return Array.from(new Set(NORMALIZED.map((item) => item.category)));
   }
 
-  // --- G2: deterministic, explainable recommendations ------------------
+  // --- G2/G2.5: deterministic, explainable recommendations --------------
   //
-  // Audited inputs (see G1B/G2 batch notes): company.stage is the only
-  // company field reliable enough to match against today — company.needs is
-  // empty on every seeded company and company.sectors has no counterpart in
-  // this dataset yet (every tool.domains is still [], a real data gap, not a
-  // bug: G1A curated real programs but none had a documented sector
-  // restriction, so domain overlap below is wired for when that data exists
-  // but is inert — 0 points — until then). company.readiness is likewise
-  // too sparse/inconsistent across seed companies to score against.
+  // Audited inputs: company.stage is the strongest company field to match
+  // against — company.needs is empty on every seeded company and
+  // company.readiness is too sparse/inconsistent to score against.
+  // company.sectors (the SECTORS taxonomy) is the canonical domain field;
+  // G2.5 enriched two tools (the Mofet Fund manufacturing tracks) with a
+  // real, source-supported tool.domains value, so domain overlap is no
+  // longer purely inert — the other 19 tools are genuinely unrestricted
+  // (confirmed, not merely unenriched) or ecosystem-wide-in-space, which is
+  // why space-focus exists as a separate fallback signal below.
   //
   // Scoring is additive across independent signals, capped at 3 reasons.
   // Numeric score is for ranking only — never rendered to the user.
@@ -421,11 +467,14 @@
     stageDivision: 20, // tool has no stage list, but its Innovation Authority
                        // division ("חטיבת הזנק" / "חטיבת צמיחה") implies an
                        // early- or growth-stage family that fits the company
-    domainOverlap: 25, // tool.domains ∩ company.sectors (inert today, see above)
-    spaceFocus: 15,    // tool's own curated text explicitly names the space
-                       // industry as its target — true of every company in
-                       // this space-only ecosystem, so this rewards tools
-                       // that are unusually on-topic rather than personalizing
+    domainOverlap: 25, // tool.domains ∩ company.sectors — the more specific
+                       // signal; when it fires, spaceFocus below does not
+                       // also fire for the same tool (see domainOrSpaceSignal)
+    spaceFocus: 15,    // fallback when there's no domain overlap: tool's own
+                       // curated text explicitly names the space industry as
+                       // its target — true of every company in this
+                       // space-only ecosystem, so this rewards tools that
+                       // are unusually on-topic rather than personalizing
     broadDefault: 5,   // no stage restriction at all — plausibly useful to
                        // any company; keeps "unknown ≠ incompatible" honest
                        // instead of scoring such tools at 0
@@ -476,13 +525,23 @@
     return { points: GT_SCORE.spaceFocus, reason: "רלוונטי לחברות בתחום החלל" };
   }
 
+  // Domain-fit is a single dimension, same principle as stageSignal above:
+  // a real overlap with the company's own sectors is strictly more specific
+  // than "this tool is generically space-industry-focused", so the two
+  // never stack into two near-duplicate reasons ("רלוונטי לתחום הפעילות"
+  // and "רלוונטי לחברות בתחום החלל" together) — the specific one wins.
+  function domainOrSpaceSignal(tool, company) {
+    const domain = domainSignal(tool, company);
+    if (domain.points > 0) return domain;
+    return spaceSignal(tool);
+  }
+
   function scoreTool(tool, company) {
     const stage = stageSignal(tool, company);
-    const domain = domainSignal(tool, company);
-    const space = spaceSignal(tool);
+    const domainOrSpace = domainOrSpaceSignal(tool, company);
     return {
-      score: stage.points + domain.points + space.points,
-      reasons: [stage.reason, domain.reason, space.reason].filter(Boolean).slice(0, 3),
+      score: stage.points + domainOrSpace.points,
+      reasons: [stage.reason, domainOrSpace.reason].filter(Boolean).slice(0, 3),
     };
   }
 
