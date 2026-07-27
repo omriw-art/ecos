@@ -9,6 +9,18 @@ function getDirectoryCompanies() {
   return window.CompanyStore ? window.CompanyStore.getCompanies() : (window.COMPANIES || []);
 }
 
+// Single shared normalizer for any organization external link (website or
+// LinkedIn) — trims whitespace, treats a blank/missing value as "no link"
+// (never a broken active one), and adds https:// only when the value
+// doesn't already declare a protocol. Every "open the org's site" spot in
+// this file should resolve its href through this, not re-derive its own.
+function toExternalHref(url) {
+  if (!url) return null;
+  const trimmed = String(url).trim();
+  if (!trimmed) return null;
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+}
+
 // P15A — dual organization taxonomy display helpers.
 function orgTypeLabel(id) {
   const found = (window.ORGANIZATION_TYPES || []).find((t) => t.id === id);
@@ -671,7 +683,7 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany, per
   // link — a <button onClick={() => window.open(...)}> can be silently
   // swallowed by some browsers' popup blockers even on a direct click,
   // which is exactly the "nothing happens" report this replaced.
-  const externalHref = linkedInUrl ? (linkedInUrl.startsWith("http") ? linkedInUrl : `https://${linkedInUrl}`) : null;
+  const externalHref = toExternalHref(linkedInUrl);
   // Breadcrumb label must match where onBack actually lands (see app.jsx's
   // companyProfileBackTarget) — Admin returns to the companies directory,
   // Company/Partner return to their own landing feed, not a directory.
@@ -1055,7 +1067,22 @@ function OrgDetailsTab({ c, perspective, onCompaniesChanged, onCompanyLogin }) {
         <div className="col gap-10">
           <KV k="שם" v={org.name} />
           <KV k="מיקום" v={org.hq} />
-          <KV k="אתר" v={org.website || "—"} />
+          <div className="flex between center" style={{ fontSize: 15 }}>
+            <span style={{ color: "var(--text-2)", fontWeight: 600 }}>אתר</span>
+            {toExternalHref(org.website) ? (
+              <a
+                className="mono tabnum"
+                style={{ color: "var(--blue)", fontSize: 16 }}
+                href={toExternalHref(org.website)}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {org.website}
+              </a>
+            ) : (
+              <span className="mono tabnum" style={{ color: "var(--text-1)", fontSize: 16 }}>—</span>
+            )}
+          </div>
           <KV k="שלב" v={STAGE_LABEL_HE[profile.stage] || profile.stage} />
           <KV k="שנת הקמה" v={org.founded} />
           <KV k="מועסקים" v={profile.size} />
