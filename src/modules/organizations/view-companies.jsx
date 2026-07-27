@@ -100,7 +100,11 @@ function getRelevantNeedsForCompany(company) {
 function companyEditorInitial(company) {
   return {
     name: company?.name || "",
-    sector: company?.sectors?.[0] || window.SECTORS[0]?.id || "earth-obs",
+    // Canonical schema stores sectors as an array (company-store.js's
+    // normalizeCompany) — kept as an array here too so multi-sector
+    // companies don't silently collapse to one on edit/save (P13C's
+    // original single-select did exactly that).
+    sectors: (company?.sectors && company.sectors.length) ? company.sectors.slice() : [],
     blurb: company?.blurb || "",
     hq: company?.hq || "",
     website: company?.website || "",
@@ -196,6 +200,12 @@ function CompanyEditor({ company, title, submitLabel, onSave, onCancel }) {
   }, [company?.id]);
 
   const setField = (field, value) => setForm((prev) => Object.assign({}, prev, { [field]: value }));
+  // Reuses the exact same controlled-taxonomy toggle pattern as onboarding's
+  // StepBasics sector picker (view-onboard.jsx) — same window.SECTORS bank,
+  // same click-to-toggle chip semantics — instead of a second sector UI.
+  const toggleSector = (id) => setForm((prev) => Object.assign({}, prev, {
+    sectors: prev.sectors.includes(id) ? prev.sectors.filter((x) => x !== id) : prev.sectors.concat([id]),
+  }));
   const submit = (e) => {
     e.preventDefault();
     if (!form.name.trim()) {
@@ -205,7 +215,7 @@ function CompanyEditor({ company, title, submitLabel, onSave, onCancel }) {
     setError("");
     onSave({
       name: form.name,
-      sectors: [form.sector],
+      sectors: form.sectors,
       blurb: form.blurb,
       hq: form.hq,
       website: form.website,
@@ -248,13 +258,26 @@ function CompanyEditor({ company, title, submitLabel, onSave, onCancel }) {
       </EditorSection>
 
       <EditorSection heading="סיווג">
-        <EditorField label="תחום">
-          <select className="select" value={form.sector} onChange={(e) => setField("sector", e.target.value)}>
-            {window.SECTORS.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
-            {!window.SECTORS.find((s) => s.id === form.sector) && form.sector && (
-              <option value={form.sector}>{form.sector} · מיובא</option>
-            )}
-          </select>
+        <EditorField label="תחומי פעילות" full hint="בחרו תחום אחד או יותר מהרשימה — לא ניתן להקליד תחום חדש כאן.">
+          <div className="flex wrap gap-6">
+            {window.SECTORS.map((s) => (
+              <span key={s.id} className={"chip" + (form.sectors.includes(s.id) ? " active" : "")}
+                    onClick={() => toggleSector(s.id)}>
+                <span style={{ width: 7, height: 7, borderRadius: 50, background: s.color, boxShadow: `0 0 4px ${s.color}` }} />
+                {s.label}{form.sectors.includes(s.id) ? " ×" : ""}
+              </span>
+            ))}
+            {/* Preserves any sector id already on the record that isn't in the
+                current window.SECTORS bank (e.g. legacy/imported data) instead
+                of silently dropping it on save — still removable, never
+                re-selectable from a dropdown, matching the old select's
+                "· מיובא" fallback option. */}
+            {form.sectors.filter((id) => !window.SECTORS.some((s) => s.id === id)).map((id) => (
+              <span key={id} className="chip active" onClick={() => toggleSector(id)}>
+                {id} · מיובא ×
+              </span>
+            ))}
+          </div>
         </EditorField>
         <EditorField label="שלב">
           <select className="select" value={form.stage} onChange={(e) => setField("stage", e.target.value)}>
