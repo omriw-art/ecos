@@ -31,24 +31,13 @@ const GT_STAGE_LABEL_HE = {
   Public: "ציבורי",
 };
 
-// Acting-company resolution — same pattern already duplicated per-file in
-// app.jsx/view-company-overview.jsx/view-opportunity-detail.jsx (same
-// PREFERRED_DEFAULT_COMPANY_IDS list, kept in sync so every "acting company"
-// resolver agrees); GT_-prefixed here to avoid colliding with those files'
-// same-named top-level consts, since every <script> shares one page scope.
-const GT_PARTNER_ORG_TYPES = new Set(["investor", "accelerator", "academic", "research", "government", "service-provider", "nonprofit"]);
-const GT_PREFERRED_DEFAULT_COMPANY_IDS = ["ramon-space", "spacepharma", "spaceil"];
-function gtPreferredDefaultCompany(eligible) {
-  for (const id of GT_PREFERRED_DEFAULT_COMPANY_IDS) {
-    const found = eligible.find((c) => c.id === id);
-    if (found) return found;
-  }
-  return null;
-}
+// "Acting company" resolution centralized in window.ActingCompanyResolver
+// — shared with app.jsx/view-company-overview.jsx/view-opportunity-detail.jsx
+// so every "acting company" resolver agrees, including the demo-default
+// (Rakia, when nothing is explicitly selected yet).
 function resolveActingCompanyForGrowthTools(companies, actingCompanyId) {
-  const eligible = companies.filter((c) => !c.organizationType || !GT_PARTNER_ORG_TYPES.has(c.organizationType));
-  const acting = actingCompanyId ? eligible.find((c) => c.id === actingCompanyId) : null;
-  return acting || gtPreferredDefaultCompany(eligible) || eligible[0] || companies[0] || null;
+  if (!window.ActingCompanyResolver) return companies[0] || null;
+  return window.ActingCompanyResolver.resolve(companies, actingCompanyId);
 }
 
 // Sparse-profile check for the recommendation nudge — recommendations are

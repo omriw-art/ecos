@@ -26,33 +26,14 @@ const CO_STAGE_LABEL_HE = {
   "Unknown": "לא ידוע",
 };
 
-// Same partner organizationType set as view-partner-overview.jsx (duplicated
-// per-file, same convention as the label maps above) — used only to prefer
-// non-partner-like orgs in the "חברה בתצוגה" selector/resolution, never to
-// gate data access.
-const CO_PARTNER_ORG_TYPES = new Set(["investor", "accelerator", "academic", "research", "government", "service-provider", "nonprofit"]);
-
-// Preferred demo default when no acting company is chosen yet — a deliberate
-// pick of a clearly-Israeli space company, not whichever happens to be first
-// in the seed array (that was previously "tomorrow-io" by accident of seed
-// order, not a real choice). Same list duplicated in app.jsx's
-// resolveActingCompanyForNav and view-opportunity-detail.jsx's
-// resolveActingCompanyForInterest so all three "acting company" resolvers
-// agree — falls through safely (to eligible[0]) if none of these ids exist.
-const PREFERRED_DEFAULT_COMPANY_IDS = ["ramon-space", "spacepharma", "spaceil"];
-function preferredDefaultCompany(eligible) {
-  for (const id of PREFERRED_DEFAULT_COMPANY_IDS) {
-    const found = eligible.find((c) => c.id === id);
-    if (found) return found;
-  }
-  return null;
-}
-
+// "Acting company" resolution (eligibility rule + preferred/demo defaults)
+// centralized in window.ActingCompanyResolver — shared with app.jsx/
+// view-opportunity-detail.jsx/view-growth-tools.jsx so every "acting
+// company" call site agrees, including the demo-default (Rakia when
+// nothing is explicitly selected yet).
 function resolveActingCompany(companies, actingCompanyId) {
-  const eligible = companies.filter((c) => !c.organizationType || !CO_PARTNER_ORG_TYPES.has(c.organizationType));
-  const acting = actingCompanyId ? eligible.find((c) => c.id === actingCompanyId) : null;
-  // Safe seeded default — deterministic, not a real "logged in" identity.
-  return acting || preferredDefaultCompany(eligible) || eligible[0] || companies[0] || null;
+  if (!window.ActingCompanyResolver) return companies[0] || null;
+  return window.ActingCompanyResolver.resolve(companies, actingCompanyId);
 }
 
 function CompanyOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
@@ -70,7 +51,7 @@ function CompanyOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
   const [feedFilter, setFeedFilter] = React.useState("all");
   const company = React.useMemo(() => resolveActingCompany(companies, actingCompanyId), [companies, actingCompanyId]);
   const companyOptions = React.useMemo(
-    () => companies.filter((c) => !c.organizationType || !CO_PARTNER_ORG_TYPES.has(c.organizationType)),
+    () => companies.filter((c) => window.ActingCompanyResolver ? window.ActingCompanyResolver.isEligibleActingCompany(c) : true),
     [companies]
   );
   const handleSelectCompany = (id) => {

@@ -6,25 +6,16 @@
 // "Mark interest" (company perspective only) writes to the separate, additive
 // OpportunityInterestStore — never mutates the NeedsStore opportunity record.
 
-// Same partner organizationType set duplicated per-file elsewhere (see
-// view-company-overview.jsx's CO_PARTNER_ORG_TYPES) — used only to keep the
-// acting-company resolution consistent with the Company overview's own
-// exclusion of partner-like orgs, never to gate data access.
-const OD_PARTNER_ORG_TYPES = new Set(["investor", "accelerator", "academic", "research", "government", "service-provider", "nonprofit"]);
-// Same preferred-default list as view-company-overview.jsx's
-// PREFERRED_DEFAULT_COMPANY_IDS — kept in sync so mark-interest always
-// resolves to the same acting company the feed page defaults to. Falls
-// through safely if none of these ids exist.
-const OD_PREFERRED_DEFAULT_COMPANY_IDS = ["ramon-space", "spacepharma", "spaceil"];
-
+// "Acting company" resolution centralized in window.ActingCompanyResolver
+// — shared with app.jsx/view-company-overview.jsx/view-growth-tools.jsx so
+// mark-interest always resolves to the same acting company the feed page
+// defaults to (including the demo-default, Rakia, when nothing is
+// explicitly selected).
 function resolveActingCompanyForInterest() {
-  if (!window.EcosPerspective || !window.CompanyStore) return null;
+  if (!window.EcosPerspective || !window.CompanyStore || !window.ActingCompanyResolver) return null;
   const actingId = window.EcosPerspective.get().actingCompanyId;
   const companies = window.CompanyStore.getCompanies();
-  const eligible = companies.filter((c) => !c.organizationType || !OD_PARTNER_ORG_TYPES.has(c.organizationType));
-  const acting = actingId ? eligible.find((c) => c.id === actingId) : null;
-  const preferred = !acting ? OD_PREFERRED_DEFAULT_COMPANY_IDS.map((id) => eligible.find((c) => c.id === id)).find(Boolean) : null;
-  return acting || preferred || eligible[0] || companies[0] || null;
+  return window.ActingCompanyResolver.resolve(companies, actingId);
 }
 
 function OpportunityDetailView({ id, perspective, onNav }) {

@@ -25,22 +25,14 @@ const VIEW_TITLES = {
   settings:     { title: "הגדרות",           crumb: "ACTIONS · SETTINGS"             },
 };
 
-// Same partner organizationType set duplicated per-file elsewhere (see
-// view-company-overview.jsx's CO_PARTNER_ORG_TYPES) — used only so
 // "הארגון שלי" opens the same acting company the Company Feed page itself
-// shows, never to gate data access.
-const APP_PARTNER_ORG_TYPES = new Set(["investor", "accelerator", "academic", "research", "government", "service-provider", "nonprofit"]);
-// Same preferred-default list as view-company-overview.jsx's
-// PREFERRED_DEFAULT_COMPANY_IDS — kept in sync so "הארגון שלי" always opens
-// the same company the feed page defaults to. Falls through safely if none
-// of these ids exist.
-const APP_PREFERRED_DEFAULT_COMPANY_IDS = ["ramon-space", "spacepharma", "spaceil"];
+// shows — resolution centralized in window.ActingCompanyResolver (shared
+// with view-company-overview.jsx/view-opportunity-detail.jsx/
+// view-growth-tools.jsx) so all "acting company" call sites always agree,
+// including the demo-default (Rakia when nothing is explicitly selected).
 function resolveActingCompanyForNav(companies) {
-  const eligible = companies.filter((c) => !c.organizationType || !APP_PARTNER_ORG_TYPES.has(c.organizationType));
   const actingId = window.EcosPerspective ? window.EcosPerspective.get().actingCompanyId : null;
-  const acting = actingId ? eligible.find((c) => c.id === actingId) : null;
-  const preferred = !acting ? APP_PREFERRED_DEFAULT_COMPANY_IDS.map((id) => eligible.find((c) => c.id === id)).find(Boolean) : null;
-  return acting || preferred || eligible[0] || companies[0] || null;
+  return window.ActingCompanyResolver ? window.ActingCompanyResolver.resolve(companies, actingId) : (companies[0] || null);
 }
 
 function App() {
