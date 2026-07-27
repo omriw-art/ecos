@@ -58,6 +58,67 @@ function hasSufficientProfileForRecommendations(company) {
   return !!(company && company.stage && company.stage !== "Unknown");
 }
 
+// One restrained visual cue per canonical `type` — prefers an existing
+// window.I icon over emoji wherever one is a clean semantic match (keeps
+// the design consistent instead of scattering emoji everywhere); emoji
+// only where no existing icon fits. Covers all 11 `type` values currently
+// in the dataset (verified against GrowthToolsStore's own TYPE_LABELS) —
+// no entry for a hypothetical type that doesn't exist yet.
+const GT_TYPE_ICON_COMPONENT = {
+  pilot: "Rocket",
+  international: "Globe",
+  accelerator: "Bolt",
+  "space-access": "Satellite",
+};
+const GT_TYPE_EMOJI = {
+  funding: "💰",
+  "research-development": "🧪",
+  infrastructure: "🏗️",
+  "market-access": "📈",
+  events: "📅",
+  directory: "🗂️",
+  support: "🤝",
+};
+function TypeCue({ type }) {
+  const iconName = GT_TYPE_ICON_COMPONENT[type];
+  if (iconName && window.I[iconName]) {
+    const Icon = window.I[iconName];
+    return <Icon size={13} style={{ color: "var(--amber)", flex: "none" }} />;
+  }
+  const emoji = GT_TYPE_EMOJI[type];
+  if (emoji) return <span aria-hidden="true" style={{ fontSize: 13, lineHeight: 1, flex: "none" }}>{emoji}</span>;
+  return <span className="dot amber" />; // unseen type — same neutral fallback the card always used
+}
+
+// Provider logo, reusing the exact same CoLogo component/fallback pattern
+// already used for company logos everywhere else (view-companies.jsx,
+// view-company-overview.jsx) — no second logo system. Resolution order:
+//  1. a real organization/company record with this exact id (only Rakia
+//     currently has one — GrowthToolsStore.providerId "rakia" matches a
+//     real CompanyStore record 1:1, so its real logoUrl is used as-is).
+//  2. a small explicit fallback to an already-existing repo asset for the
+//     4 institutional providers with no organization record yet (real
+//     files already present under /logos/, not fabricated paths) — this
+//     is a presentation-only fallback, not a new Growth Tool data field,
+//     and not a claim that these providers have organization profiles.
+//  3. CoLogo's own built-in graceful fallback (initials) if neither
+//     resolves — never a fabricated logo.
+// Missing org records are worth closing later (a small future batch could
+// add real organization entries for these institutional providers), not
+// solved here.
+const GT_PROVIDER_LOGO_FALLBACK = {
+  "innovation-authority": "logos/iia_color.png",
+  "growth-administration": "logos/growth.png",
+  "investment-authority": "logos/invest.png",
+  "ddrd-mafat": "logos/mafat-logo-full.svg",
+};
+function resolveProviderLogoOrg(providerId, providerName) {
+  const companies = window.CompanyStore ? window.CompanyStore.getCompanies() : [];
+  const real = providerId ? companies.find((c) => c.id === providerId) : null;
+  if (real) return real;
+  return { name: providerName || providerId || "", sectors: [], logoUrl: GT_PROVIDER_LOGO_FALLBACK[providerId] || null };
+}
+
 function matchesQuery(tool, q) {
   if (!q) return true;
   const needle = q.trim().toLowerCase();
@@ -74,14 +135,15 @@ function matchesQuery(tool, q) {
 
 function GrowthToolCard({ item }) {
   const hasApplicationUrl = !!item.applicationUrl;
+  const providerOrg = resolveProviderLogoOrg(item.providerId, item.provider);
   return (
     <div className="card">
-      <div className="flex center gap-6" style={{ marginBottom: 6 }}>
-        <window.I.Building size={12} style={{ color: "var(--text-4)", flex: "none" }} />
+      <div className="flex center gap-8" style={{ marginBottom: 6 }}>
+        <window.CoLogo company={providerOrg} size={22} />
         <span className="mono tiny" style={{ color: "var(--text-4)" }}>{item.provider}</span>
       </div>
       <div className="card-hd" style={{ marginBottom: item.division ? 4 : 8 }}>
-        <div className="card-title"><span className="dot amber" /> {item.title}</div>
+        <div className="card-title"><TypeCue type={item.type} /> {item.title}</div>
       </div>
       {item.division && (
         <div style={{ marginBottom: 8 }}>
@@ -121,10 +183,17 @@ function GrowthToolCard({ item }) {
 // spec ("do not duplicate too much information" from the full catalog card).
 function RecommendedToolCard({ rec }) {
   const { tool, reasons } = rec;
+  const providerOrg = resolveProviderLogoOrg(tool.providerId, tool.provider);
   return (
     <div className="card" style={{ padding: 14 }}>
-      <div className="mono tiny" style={{ color: "var(--text-4)" }}>{tool.provider}</div>
-      <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-1)", marginTop: 2 }}>{tool.title}</div>
+      <div className="flex center gap-6">
+        <window.CoLogo company={providerOrg} size={18} />
+        <span className="mono tiny" style={{ color: "var(--text-4)" }}>{tool.provider}</span>
+      </div>
+      <div className="flex center gap-6" style={{ marginTop: 4 }}>
+        <TypeCue type={tool.type} />
+        <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-1)" }}>{tool.title}</div>
+      </div>
       <div className="flex gap-6 wrap" style={{ margin: "6px 0 8px" }}>
         <span className="pill blue" style={{ fontSize: 10.5 }}>{tool.category}</span>
       </div>

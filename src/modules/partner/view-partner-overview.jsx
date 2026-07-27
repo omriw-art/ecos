@@ -19,14 +19,34 @@ const OPPORTUNITY_FORM_DEFAULTS = { title: "", description: "", needType: "partn
 // Consistency v1).
 const LOCAL_DEMO_NOTE = "נשמר מקומית בדמו · לא הופץ מחוץ למערכת";
 
+// Preferred demo default when no acting partner org is chosen yet — same
+// deliberate-pick convention as APP_PREFERRED_DEFAULT_COMPANY_IDS/
+// PREFERRED_DEFAULT_COMPANY_IDS (view-company-overview.jsx etc.) for the
+// Company-perspective "acting company", just for the Partner side: Rakia is
+// a clear, recognizable example partner org, not whichever nonprofit
+// happens to be first in the seed array by accident (that was previously
+// SpaceIL). Rakia's organizationType is "nonprofit" — a partner-like type,
+// never eligible as an "acting company" in the Company-perspective
+// resolvers, which is why this list lives here and not there. Falls
+// through safely to eligible[0] if "rakia" doesn't exist.
+const PARTNER_PREFERRED_DEFAULT_ORG_IDS = ["rakia"];
+function preferredDefaultPartnerOrg(eligible) {
+  for (const id of PARTNER_PREFERRED_DEFAULT_ORG_IDS) {
+    const found = eligible.find((c) => c.id === id);
+    if (found) return found;
+  }
+  return null;
+}
+
 function resolvePartnerOrg(companies, actingCompanyId) {
   // Prefer the selected acting org, but only if it's actually partner-like —
   // EcosPerspective.actingCompanyId is shared across company/partner (see
   // perspective.js), so it may point at a plain company selected in the other
-  // perspective. Falls back to the deterministic first match, same as before.
+  // perspective. Falls back to the deliberate default above, then the
+  // deterministic first match.
   const eligible = companies.filter((c) => PARTNER_ORG_TYPES.has(c.organizationType));
   const acting = actingCompanyId ? eligible.find((c) => c.id === actingCompanyId) : null;
-  return acting || eligible[0] || null;
+  return acting || preferredDefaultPartnerOrg(eligible) || eligible[0] || null;
 }
 
 function PartnerOverviewView({ onNav, onOpenCompany, onOpenOpportunity }) {
