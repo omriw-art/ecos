@@ -667,10 +667,11 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany, per
     window.toast(updated.strategic ? `${updated.name} סומנה כאסטרטגית` : `${updated.name} הוסרה מהרשימה האסטרטגית`, "ok");
   };
   const linkedInUrl = c.linkedin || c.website;
-  const openExternalLink = () => {
-    if (!linkedInUrl) return;
-    window.open(linkedInUrl.startsWith("http") ? linkedInUrl : `https://${linkedInUrl}`, "_blank", "noopener");
-  };
+  // A real anchor (below) is the reliable, standard way to open an external
+  // link — a <button onClick={() => window.open(...)}> can be silently
+  // swallowed by some browsers' popup blockers even on a direct click,
+  // which is exactly the "nothing happens" report this replaced.
+  const externalHref = linkedInUrl ? (linkedInUrl.startsWith("http") ? linkedInUrl : `https://${linkedInUrl}`) : null;
   // Breadcrumb label must match where onBack actually lands (see app.jsx's
   // companyProfileBackTarget) — Admin returns to the companies directory,
   // Company/Partner return to their own landing feed, not a directory.
@@ -700,15 +701,21 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany, per
         <div className="flex gap-20" style={{ alignItems: "flex-start" }}>
           <div className="col gap-8" style={{ alignItems: "center", flex: "none" }}>
             <CoLogo company={c} size={72} />
-            <button
-              className="btn"
-              style={{ fontSize: 12, padding: "5px 10px", color: "var(--blue)" }}
-              onClick={linkedInUrl ? openExternalLink : undefined}
-              disabled={!linkedInUrl}
-              title={linkedInUrl ? undefined : "אין קישור מוגדר לחברה זו"}
-            >
-              <window.I.Linkedin size={12} /> {c.linkedin ? "LinkedIn" : "אתר"}
-            </button>
+            {externalHref ? (
+              <a
+                className="btn"
+                style={{ fontSize: 12, padding: "5px 10px", color: "var(--blue)" }}
+                href={externalHref}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <window.I.Linkedin size={12} /> {c.linkedin ? "LinkedIn" : "אתר"}
+              </a>
+            ) : (
+              <button className="btn" style={{ fontSize: 12, padding: "5px 10px", color: "var(--blue)" }} disabled title="אין קישור מוגדר לחברה זו">
+                <window.I.Linkedin size={12} /> אתר
+              </button>
+            )}
           </div>
           <div className="col grow" style={{ minWidth: 0 }}>
             <div className="flex center gap-8" style={{ marginBottom: 4 }}>
@@ -793,12 +800,12 @@ function CompanyProfile({ id, onBack, onNav, onOpenCompany, onUpdateCompany, per
         </div>
       </div>
 
-      {tab === "overview" && <OverviewTab c={c} onNav={onNav} onEdit={() => setEditing(true)} linkedInUrl={linkedInUrl} openExternalLink={openExternalLink} />}
+      {tab === "overview" && <OverviewTab c={c} onNav={onNav} onEdit={() => setEditing(true)} externalHref={externalHref} />}
       {tab === "tech" && <TechTab c={c} />}
       {tab === "needs" && <NeedsOffersTab c={c} onNav={onNav} />}
       {tab === "matches" && !restrictToOwnOrg && <MatchesTab c={c} onOpenCompany={onOpenCompany} />}
       {tab === "details" && <OrgDetailsTab c={c} perspective={perspective} onCompaniesChanged={onCompaniesChanged} onCompanyLogin={onCompanyLogin} />}
-      {tab === "connections" && !restrictToOwnOrg && <ConnectionsTab c={c} overlapCo={overlapCo} onOpenCompany={onOpenCompany} linkedInUrl={linkedInUrl} openExternalLink={openExternalLink} onEdit={() => setEditing(true)} />}
+      {tab === "connections" && !restrictToOwnOrg && <ConnectionsTab c={c} overlapCo={overlapCo} onOpenCompany={onOpenCompany} externalHref={externalHref} onEdit={() => setEditing(true)} />}
     </div>
   );
 }
@@ -860,7 +867,7 @@ function RelevantNeedsCard({ c, onNav }) {
   );
 }
 
-function OverviewTab({ c, onNav, onEdit, linkedInUrl, openExternalLink }) {
+function OverviewTab({ c, onNav, onEdit, externalHref }) {
   const capabilities = (c.capabilities && c.capabilities.length) ? c.capabilities : (c.tech || []);
   const needs = c.needs || [];
   const offers = c.offers || [];
@@ -927,7 +934,7 @@ function OverviewTab({ c, onNav, onEdit, linkedInUrl, openExternalLink }) {
           <div className="col gap-8">
             <button className="btn" style={{ justifyContent: "flex-start" }} onClick={onEdit}><window.I.Settings size={13} /> ערוך פרטים</button>
             {onNav && <button className="btn" style={{ justifyContent: "flex-start" }} onClick={() => onNav("needs")}><window.I.Compass size={13} /> פתח בלוח צרכים</button>}
-            {linkedInUrl && <button className="btn" style={{ justifyContent: "flex-start" }} onClick={openExternalLink}><window.I.Linkedin size={13} /> פתח אתר</button>}
+            {externalHref && <a className="btn" style={{ justifyContent: "flex-start" }} href={externalHref} target="_blank" rel="noopener noreferrer"><window.I.Linkedin size={13} /> פתח אתר</a>}
           </div>
         </div>
       </div>
@@ -1199,7 +1206,7 @@ function MatchesTab({ c, onOpenCompany }) {
   );
 }
 
-function ConnectionsTab({ c, overlapCo, onOpenCompany, linkedInUrl, openExternalLink, onEdit }) {
+function ConnectionsTab({ c, overlapCo, onOpenCompany, externalHref, onEdit }) {
   const lines = window.CONNECTIONS.filter((cn) => cn.from === c.id || cn.to === c.id);
   const customers = c.customers || [];
   const partners = c.partners || [];
@@ -1275,7 +1282,7 @@ function ConnectionsTab({ c, overlapCo, onOpenCompany, linkedInUrl, openExternal
           {!hasFollowUp && <div className="muted" style={{ padding: "8px 0" }}>אין עדיין פרטי קשר או המשך טיפול במאגר המקומי</div>}
           <div className="flex gap-8 wrap" style={{ marginTop: hasFollowUp ? 10 : 0 }}>
             <button className="btn" onClick={onEdit}><window.I.Settings size={13} /> ערוך פרטים</button>
-            {linkedInUrl && <button className="btn btn-ghost" onClick={openExternalLink}><window.I.Linkedin size={13} /> פתח אתר</button>}
+            {externalHref && <a className="btn btn-ghost" href={externalHref} target="_blank" rel="noopener noreferrer"><window.I.Linkedin size={13} /> פתח אתר</a>}
           </div>
         </div>
       </div>
