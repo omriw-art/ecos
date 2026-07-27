@@ -1,7 +1,11 @@
-// ecos — Growth Tools sync CLI runner (G3B).
+// ecos — Growth Tools sync CLI runner (G3B/G3D).
 //
 // Usage:
 //   node scripts/sync-growth-tools.js --provider=innovation-authority [--dry-run]
+//   node scripts/sync-growth-tools.js --provider=rakia
+//   node scripts/sync-growth-tools.js --provider=growth-administration
+//   node scripts/sync-growth-tools.js --provider=mafat
+//   node scripts/sync-growth-tools.js --provider=all
 //
 // What it does (see src/services/growth-tools-sync-service.js and
 // growth-tools-adapters.js for the pipeline this wires together):
@@ -40,7 +44,21 @@ const SYNC_LOG_PATH = path.join(ROOT, "src", "data", "generated", "growth-tools-
 // real sync run should use.
 const PROVIDER_ADAPTER_ID = {
   "innovation-authority": "innovation-authority-web",
+  "rakia": "rakia-web",
+  "growth-administration": "growth-administration-web",
+  "ddrd-mafat": "mafat-web",
 };
+
+// CLI-friendly provider names that differ from the canonical providerId
+// stored on each GrowthTool record (e.g. every gt-mafat-* tool's
+// `provider.id` is "ddrd-mafat", but "--provider=mafat" reads better on the
+// command line) — resolved once, right after arg parsing, so every other
+// function in this file only ever sees the real canonical providerId.
+const PROVIDER_CLI_ALIASES = { mafat: "ddrd-mafat" };
+
+// The order `--provider=all` runs providers in — also doubles as "every
+// provider this script currently knows how to sync".
+const ALL_PROVIDER_IDS = ["innovation-authority", "rakia", "growth-administration", "ddrd-mafat"];
 
 function parseArgs(argv) {
   const args = { provider: null, dryRun: false };
@@ -48,6 +66,9 @@ function parseArgs(argv) {
     if (arg === "--dry-run") args.dryRun = true;
     else if (arg.indexOf("--provider=") === 0) args.provider = arg.slice("--provider=".length);
   });
+  if (args.provider && args.provider !== "all") {
+    args.provider = PROVIDER_CLI_ALIASES[args.provider] || args.provider;
+  }
   return args;
 }
 
@@ -248,66 +269,113 @@ function runProviderSync({ Store, Adapters, Sync }, providerId, options) {
   });
 }
 
-function main() {
+// Readable display names for CI/console output — a couple of provider ids
+// don't title-case cleanly (e.g. "ddrd-mafat" -> "Ddrd Mafat"), so a small
+// explicit override map beats a fancier auto-formatter for two exceptions.
+const PROVIDER_DISPLAY_NAMES = {
+  "ddrd-mafat": "MAFAT (DDR&D)",
+};
+function providerLabel(providerId) {
+  return PROVIDER_DISPLAY_NAMES[providerId] || providerId.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+// Persists one provider's result — only if it actually changed something
+// (byte-identical no-op guarantee, unchanged from G3B). Safe to call once
+// per provider in a sequential --provider=all run: each call re-reads the
+// overlay fresh from disk, so provider B always sees provider A's already-
+// written changes rather than an in-memory copy going stale.
+function applyResult(result, overlay, allToolIds) {
+  if (!(result.dirty && overlay)) return;
+  const nextText = serializeOverlay(overlay, allToolIds);
+  const prevText = fs.existsSync(SOURCE_DATA_PATH) ? fs.readFileSync(SOURCE_DATA_PATH, "utf8") : null;
+  if (nextText !== prevText) {
+    fs.writeFileSync(SOURCE_DATA_PATH, nextText);
+  }
+  if (result.auditEntries.length) {
+    const log = loadSyncLog().concat(result.auditEntries);
+    fs.writeFileSync(SYNC_LOG_PATH, JSON.stringify(log, null, 2) + "\n");
+  }
+}
+
+// Prints one provider's summary + (G3C) a GitHub Actions ::warning::
+// annotation naming that specific provider whenever any/all of its
+// sources failed this run — never a hard failure, since a blocked
+// provider is a known external condition, not a pipeline bug (see the
+// workflow file's decision doc). Only an unexpected script error (caught
+// in main() below) still fails the job.
+function printProviderSummary(providerId, result, dryRun) {
+  const label = providerLabel(providerId);
+  console.log(`\n${label} sync${dryRun ? " (dry-run)" : ""}`);
+  console.log(`${result.toolsRequested} tools`);
+  console.log(`${result.toolsFetched} fetched`);
+  console.log(`${result.sourceFailures} source failures`);
+  console.log(`${result.validCandidates} valid`);
+  console.log(`${result.invalidCandidates} invalid`);
+  console.log(`${result.toolsChanged} tools changed`);
+  console.log(`${result.fieldsUpdated} fields updated`);
+  console.log(`${result.warnings.length} warnings`);
+  if (result.warnings.length) {
+    result.warnings.forEach((w) => console.log("  - " + w));
+  }
+  if (result.toolsRequested > 0 && result.toolsFetched === 0 && result.sourceFailures === result.toolsRequested) {
+    console.log(`::warning::${label} sync: provider fully unreachable this run (${result.sourceFailures}/${result.toolsRequested} source failures) — existing generated data left untouched.`);
+  } else if (result.sourceFailures > 0) {
+    console.log(`::warning::${label} sync: ${result.sourceFailures}/${result.toolsRequested} sources failed this run — their existing data was left untouched.`);
+  }
+}
+
+function printOverallTotals(results) {
+  const sum = (key) => results.reduce((acc, r) => acc + r[key], 0);
+  console.log(`\nTotal`);
+  console.log(`${sum("toolsRequested")} tools requested`);
+  console.log(`${sum("toolsFetched")} fetched`);
+  console.log(`${sum("sourceFailures")} source failures`);
+  console.log(`${sum("toolsChanged")} tools changed`);
+  console.log(`${sum("fieldsUpdated")} fields updated`);
+  console.log(`${results.reduce((acc, r) => acc + r.warnings.length, 0)} warnings`);
+}
+
+async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (!args.provider) {
-    console.error("Usage: node scripts/sync-growth-tools.js --provider=<id> [--dry-run]");
+    console.error("Usage: node scripts/sync-growth-tools.js --provider=<id>|all [--dry-run]");
     process.exit(1);
+    return;
   }
 
   const runtime = loadRuntime();
   const allToolIds = runtime.Store.getGrowthTools().map((t) => t.id);
+  const providerIds = args.provider === "all" ? ALL_PROVIDER_IDS : [args.provider];
 
-  runProviderSync(runtime, args.provider, { dryRun: args.dryRun }).then(({ result, overlay }) => {
-    if (result.dirty && overlay) {
-      const nextText = serializeOverlay(overlay, allToolIds);
-      const prevText = fs.existsSync(SOURCE_DATA_PATH) ? fs.readFileSync(SOURCE_DATA_PATH, "utf8") : null;
-      if (nextText !== prevText) {
-        fs.writeFileSync(SOURCE_DATA_PATH, nextText);
-      }
-      if (result.auditEntries.length) {
-        const log = loadSyncLog().concat(result.auditEntries);
-        fs.writeFileSync(SYNC_LOG_PATH, JSON.stringify(log, null, 2) + "\n");
-      }
+  try {
+    const results = [];
+    // Sequential, not Promise.all: one provider's fetch failing (or being
+    // fully blocked) must never race with, or abort, another provider's
+    // sync — and running one at a time keeps the log/overlay write for
+    // each provider fully resolved before the next provider re-reads them
+    // from disk.
+    for (const providerId of providerIds) {
+      const { result, overlay } = await runProviderSync(runtime, providerId, { dryRun: args.dryRun });
+      applyResult(result, overlay, allToolIds);
+      printProviderSummary(providerId, result, args.dryRun);
+      results.push(result);
     }
-
-    const label = args.provider.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-    console.log(`\n${label} sync${args.dryRun ? " (dry-run)" : ""}`);
-    console.log(`${result.toolsRequested} tools`);
-    console.log(`${result.toolsFetched} fetched`);
-    console.log(`${result.sourceFailures} source failures`);
-    console.log(`${result.validCandidates} valid`);
-    console.log(`${result.invalidCandidates} invalid`);
-    console.log(`${result.toolsChanged} tools changed`);
-    console.log(`${result.fieldsUpdated} fields updated`);
-    console.log(`${result.warnings.length} warnings`);
-    if (result.warnings.length) {
-      result.warnings.forEach((w) => console.log("  - " + w));
-    }
-    // G3C — GitHub Actions annotation (harmless plain text outside CI):
-    // a fully-blocked provider is a known, expected external condition
-    // (e.g. Innovation Authority's 403), not a bug in this pipeline — the
-    // run still completes/exits 0 (see G3C decision doc in the workflow
-    // file) so a blocked provider never shows as a broken CI run, but it
-    // must still be clearly visible in the Action's own log, not silently
-    // swallowed.
-    if (result.toolsRequested > 0 && result.toolsFetched === 0 && result.sourceFailures === result.toolsRequested) {
-      console.log(`::warning::${label} sync: provider fully unreachable this run (${result.sourceFailures}/${result.toolsRequested} source failures) — existing generated data left untouched.`);
-    } else if (result.sourceFailures > 0) {
-      console.log(`::warning::${label} sync: ${result.sourceFailures}/${result.toolsRequested} sources failed this run — their existing data was left untouched.`);
-    }
+    if (providerIds.length > 1) printOverallTotals(results);
     process.exit(0);
-  }).catch((err) => {
+  } catch (err) {
     console.error("sync-growth-tools: unexpected failure —", err && err.stack || err);
     process.exit(1);
-  });
+  }
 }
 
 function writeOverlay(sourceDataPath, overlay, orderedToolIds) {
   fs.writeFileSync(sourceDataPath, serializeOverlay(overlay, orderedToolIds));
 }
 
-module.exports = { runProviderSync, loadRuntime, loadOverlayRaw, loadSyncLog, serializeOverlay, defaultOverlayEntry, writeOverlay };
+module.exports = {
+  runProviderSync, loadRuntime, loadOverlayRaw, loadSyncLog, serializeOverlay,
+  defaultOverlayEntry, writeOverlay, ALL_PROVIDER_IDS, PROVIDER_CLI_ALIASES,
+};
 
 if (require.main === module) {
   main();

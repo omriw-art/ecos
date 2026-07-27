@@ -1,1 +1,191 @@
-[]
+[
+  {
+    "timestamp": "2026-07-27T06:31:20.353Z",
+    "providerId": "innovation-authority",
+    "toolId": "gt-iia-application-lifecycle",
+    "field": "officialName",
+    "previousValue": null,
+    "newValue": "גלגולה של בקשה - רשות החדשנות",
+    "sourceUrl": "https://innovationisrael.org.il/%d7%92%d7%9c%d7%92%d7%95%d7%9c%d7%94-%d7%a9%d7%9c-%d7%91%d7%a7%d7%a9%d7%94/"
+  },
+  {
+    "timestamp": "2026-07-27T06:31:20.423Z",
+    "providerId": "innovation-authority",
+    "toolId": "gt-iia-rnd-grants",
+    "field": "officialName",
+    "previousValue": null,
+    "newValue": "מענקים למחקר ופיתוח - רשות החדשנות",
+    "sourceUrl": "https://innovationisrael.org.il/%D7%9E%D7%A2%D7%A0%D7%A7%D7%99%D7%9D-%D7%9C%D7%9E%D7%97%D7%A7%D7%A8-%D7%95%D7%A4%D7%99%D7%AA%D7%95%D7%97/"
+  },
+  {
+    "timestamp": "2026-07-27T06:31:20.424Z",
+    "providerId": "innovation-authority",
+    "toolId": "gt-iia-tech-incubators",
+    "field": "officialName",
+    "previousValue": null,
+    "newValue": "קרן החממות הטכנולוגיות - רשות החדשנות",
+    "sourceUrl": "https://innovationisrael.org.il/programs/technological-incubators-funding-program/"
+  },
+  {
+    "timestamp": "2026-07-27T06:31:20.425Z",
+    "providerId": "innovation-authority",
+    "toolId": "gt-iia-preseed",
+    "field": "officialName",
+    "previousValue": null,
+    "newValue": "מסלול Pre-Seed - קרן ההזנק - רשות החדשנות",
+    "sourceUrl": "https://innovationisrael.org.il/programs/preseed/"
+  },
+  {
+    "timestamp": "2026-07-27T06:31:20.425Z",
+    "providerId": "innovation-authority",
+    "toolId": "gt-iia-tech-labs",
+    "field": "officialName",
+    "previousValue": null,
+    "newValue": "מסלול מעבדות לחדשנות טכנולוגית - רשות החדשנות",
+    "sourceUrl": "https://innovationisrael.org.il/programs/%d7%9e%d7%a1%d7%9c%d7%95%d7%9c-%d7%9e%d7%a2%d7%91%d7%93%d7%95%d7%aa-%d7%9c%d7%97%d7%93%d7%a9%d7%a0%d7%95%d7%aa-%d7%98%d7%9b%d7%a0%d7%95%d7%9c%d7%95%d7%92%d7%99%d7%aa/#about_route"
+  },
+  {
+    "timestamp": "2026-07-27T06:31:20.426Z",
+    "providerId": "innovation-authority",
+    "toolId": "gt-iia-momentum",
+    "field": "officialName",
+    "previousValue": null,
+    "newValue": "מסלול תנופה - קרן ההזנק - רשות החדשנות",
+    "sourceUrl": "https://innovationisrael.org.il/programs/%d7%9e%d7%a1%d7%9c%d7%95%d7%9c-%d7%aa%d7%a0%d7%95%d7%a4%d7%94-%d7%a7%d7%a8%d7%9f-%d7%94%d7%94%d7%96%d7%a0%d7%a7/#about_route"
+  },
+  {
+    "timestamp": "2026-07-27T06:31:20.426Z",
+    "providerId": "innovation-authority",
+    "toolId": "gt-iia-round-a",
+    "field": "officialName",
+    "previousValue": null,
+    "newValue": "מסלול Round A - קרן ההזנק - רשות החדשנות",
+    "sourceUrl": "https://innovationisrael.org.il/programs/rounda/"
+  },
+  {
+    "timestamp": "2026-07-27T06:31:20.427Z",
+    "providerId": "innovation-authority",
+    "toolId": "gt-iia-seed-track",
+    "field": "officialName",
+    "previousValue": null,
+    "newValue": "מסלול Seed - קרן ההזנק - רשות החדשנות",
+    "sourceUrl": "https://innovationisrael.org.il/programs/seed/"
+  },
+  {
+    "timestamp": "2026-07-27T06:31:20.427Z",
+    "providerId": "innovation-authority",
+    "toolId": "gt-iia-mofet-feasibility",
+    "field": "officialName",
+    "previousValue": null,
+    "newValue": "מסלול היתכנות טכנו-כלכלית - קרן מופ\"ת - רשות החדשנות",
+    "sourceUrl": "https://innovationisrael.org.il/programs/manufacturing-rnd-mofet-fund-financial-feasability/#about_route"
+  },
+  {
+    "timestamp": "2026-07-27T06:31:20.429Z",
+    "providerId": "innovation-authority",
+    "toolId": "gt-iia-sector-pilots",
+    "field": "officialName",
+    "previousValue": null,
+    "newValue": "מסלול פיילוט משקי – קרן הפיילוטים - רשות החדשנות",
+    "sourceUrl": "https://innovationisrael.org.il/programs/sector-level-pilots/"
+  },
+  {
+    "timestamp": "2026-07-27T06:31:20.429Z",
+    "providerId": "innovation-authority",
+    "toolId": "gt-iia-mofet-product-dev",
+    "field": "officialName",
+    "previousValue": null,
+    "newValue": "מסלול פיתוח מוצר - קרן מופ\"ת - רשות החדשנות",
+    "sourceUrl": "https://innovationisrael.org.il/programs/%d7%9e%d7%a1%d7%9c%d7%95%d7%9c-%d7%a4%d7%99%d7%aa%d7%95%d7%97-%d7%9e%d7%95%d7%a6%d7%a8-%d7%a7%d7%a8%d7%9f-%d7%9e%d7%95%d7%a4%d7%aa/"
+  },
+  {
+    "timestamp": "2026-07-27T06:31:20.430Z",
+    "providerId": "innovation-authority",
+    "toolId": "gt-iia-space-investment",
+    "field": "officialName",
+    "previousValue": null,
+    "newValue": "מסלול השקעה בתחום החלל - רשות החדשנות",
+    "sourceUrl": "https://innovationisrael.org.il/programs/%d7%9e%d7%a1%d7%9c%d7%95%d7%9c-%d7%94%d7%a9%d7%a7%d7%a2%d7%94-%d7%91%d7%aa%d7%97%d7%95%d7%9d-%d7%94%d7%97%d7%9c%d7%9c/"
+  },
+  {
+    "timestamp": "2026-07-27T06:31:21.263Z",
+    "providerId": "rakia",
+    "toolId": "gt-rakia-events-exhibitions",
+    "field": "officialName",
+    "previousValue": null,
+    "newValue": "אירועים ותערוכות",
+    "sourceUrl": "https://www.rakiamission.com/events-and-exhibitions-he"
+  },
+  {
+    "timestamp": "2026-07-27T06:31:21.264Z",
+    "providerId": "rakia",
+    "toolId": "gt-rakia-space-experiment-submission",
+    "field": "officialName",
+    "previousValue": null,
+    "newValue": "תעשיה ואקדמיה",
+    "sourceUrl": "https://www.rakiamission.com/industry-academy-he#industry-join-space"
+  },
+  {
+    "timestamp": "2026-07-27T06:31:21.554Z",
+    "providerId": "growth-administration",
+    "toolId": "gt-growth-admin-physical-infra",
+    "field": "officialName",
+    "previousValue": null,
+    "newValue": "קול קורא תשתיות פיזיות - מנהלת הצמיחה הלאומית",
+    "sourceUrl": "https://israelgrowth.org.il/infrastructure/"
+  },
+  {
+    "timestamp": "2026-07-27T06:31:21.555Z",
+    "providerId": "growth-administration",
+    "toolId": "gt-growth-admin-data-infra",
+    "field": "officialName",
+    "previousValue": null,
+    "newValue": "קול קורא: תשתיות בתחומי הקלאסטרים - מנהלת הצמיחה הלאומית",
+    "sourceUrl": "https://israelgrowth.org.il/calling-voice/"
+  },
+  {
+    "timestamp": "2026-07-27T06:31:21.555Z",
+    "providerId": "growth-administration",
+    "toolId": "gt-growth-admin-overseas-activity",
+    "field": "officialName",
+    "previousValue": null,
+    "newValue": "קול קורא צמיחה לעולם - מנהלת הצמיחה הלאומית",
+    "sourceUrl": "https://israelgrowth.org.il/growth-to-the-world/"
+  },
+  {
+    "timestamp": "2026-07-27T06:31:21.556Z",
+    "providerId": "growth-administration",
+    "toolId": "gt-growth-admin-overseas-market-entry",
+    "field": "officialName",
+    "previousValue": null,
+    "newValue": "קול קורא תוכנית פיילוטים לחברות בחו\"ל - מנהלת הצמיחה הלאומית",
+    "sourceUrl": "https://israelgrowth.org.il/pilot-program/"
+  },
+  {
+    "timestamp": "2026-07-27T06:31:21.556Z",
+    "providerId": "growth-administration",
+    "toolId": "gt-growth-admin-regional-engines",
+    "field": "officialName",
+    "previousValue": null,
+    "newValue": "קול קורא תוכנית לפיתוח צמיחה אזורית - מנהלת הצמיחה הלאומית",
+    "sourceUrl": "https://israelgrowth.org.il/regional-growth/"
+  },
+  {
+    "timestamp": "2026-07-27T06:31:28.408Z",
+    "providerId": "ddrd-mafat",
+    "toolId": "gt-mafat-meimad",
+    "field": "status",
+    "previousValue": null,
+    "newValue": "closed",
+    "sourceUrl": "https://ddrd-mafat.mod.gov.il/he//mafat-for-startups/meimad"
+  },
+  {
+    "timestamp": "2026-07-27T06:31:28.408Z",
+    "providerId": "ddrd-mafat",
+    "toolId": "gt-mafat-meimad",
+    "field": "officialName",
+    "previousValue": null,
+    "newValue": "תוכנית מימד",
+    "sourceUrl": "https://ddrd-mafat.mod.gov.il/he//mafat-for-startups/meimad"
+  }
+]

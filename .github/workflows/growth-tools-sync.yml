@@ -1,11 +1,15 @@
-# ecos — Growth Tools scheduled sync (G3C).
+# ecos — Growth Tools scheduled sync (G3C/G3D).
 #
-# Runs the Israel Innovation Authority pilot sync (scripts/sync-growth-tools.js)
-# on a schedule and on manual dispatch, then commits ONLY the two generated
-# artifacts (src/data/generated/growth-tools-source-data.js and
+# Runs scripts/sync-growth-tools.js --provider=all (Israel Innovation
+# Authority, Rakia, Growth Administration, MAFAT/DDR&D) on a schedule and on
+# manual dispatch, then commits ONLY the two generated artifacts
+# (src/data/generated/growth-tools-source-data.js and
 # growth-tools-sync-log.json) — and only when a real, valid source-owned
-# field actually changed. No Admin approval step: this is the deliberate
-# automatic-apply product decision made for G3B/G3C.
+# field actually changed, for ANY of the four providers. No Admin approval
+# step: this is the deliberate automatic-apply product decision made for
+# G3B/G3C/G3D. One provider's fetch failing (or being fully blocked) never
+# aborts the others — the runner processes all four sequentially and always
+# exits 0 unless something genuinely unexpected happens (see below).
 #
 # This workflow does not build or deploy anything itself. It only pushes a
 # data commit to the default branch; whatever GitHub Pages deployment
@@ -14,22 +18,30 @@
 # branch-based publishing from `main`) reacts to that push exactly like any
 # other commit — unchanged, undisrupted.
 #
-# G3C decision: a fully-blocked provider (e.g. HTTP 403, as already observed
-# locally against Innovation Authority) completes this workflow WITH A
-# WARNING, not a failure. A blocked external site is an expected, already-
-# documented condition — it is not a bug in this pipeline, and treating it
-# as a red/failed run would create daily false-alarm noise indistinguishable
-# from an actual CI break. scripts/sync-growth-tools.js prints a
-# `::warning::` GitHub Actions annotation whenever any/all sources fail, so
-# the condition is always clearly visible in the run's own log without
-# failing it. Any OTHER unexpected error (e.g. the script throwing) still
-# fails the job normally via its non-zero exit code.
+# G3C decision (still in force for every provider added since): a fully-
+# blocked provider (e.g. HTTP 403) completes this workflow WITH A WARNING,
+# not a failure. A blocked external site is an expected, already-documented
+# condition — it is not a bug in this pipeline, and treating it as a red/
+# failed run would create daily false-alarm noise indistinguishable from an
+# actual CI break. scripts/sync-growth-tools.js prints one `::warning::`
+# GitHub Actions annotation per affected provider whenever any/all of its
+# sources fail, so the condition is always clearly visible in the run's own
+# log, naming the specific provider, without failing the job. Any OTHER
+# unexpected error (e.g. the script throwing) still fails the job normally
+# via its non-zero exit code.
 #
-# First run: this workflow has never executed on a GitHub-hosted runner.
-# Innovation Authority blocked every request from this development
-# environment (HTTP 403 on all 12 sources, confirmed locally). Whether
-# GitHub's own runners are also blocked is unknown until the first
-# workflow_dispatch run — see the G3B/G3C report for how to interpret it.
+# G3D update: locally, Innovation Authority unexpectedly returned HTTP 200
+# (not 403) once this batch's shared fetch helper started sending an
+# explicit, honest, self-identifying User-Agent header
+# ("EcosystemOS-GrowthToolsSync/1.0") instead of no header at all — while a
+# bare `curl` from the same environment still gets 403. This is not a
+# deliberate bypass (no UA spoofing, no proxy, no browser impersonation,
+# no CAPTCHA/WAF evasion of any kind) — it's simply Node's own HTTP client
+# behaving differently than curl against whatever heuristic the site's WAF
+# uses. Rakia and Growth Administration were reachable from the start. Local
+# reachability is NOT the same fact as GitHub-runner reachability (separate
+# network path/IP range) — this workflow's first real run is what tells us
+# whether GitHub-hosted runners see the same result for all four providers.
 
 name: Growth Tools Sync
 
@@ -73,14 +85,17 @@ jobs:
         run: |
           node scripts/test-growth-tools-sync.js
           node scripts/test-growth-tools-sync-g3b.js
+          node scripts/test-growth-tools-sync-g3d.js
 
-      # The only network call in this whole workflow — one real fetch per
-      # canonical Innovation Authority Growth Tool, gated inside the
-      # provider adapter (src/services/growth-tools-adapters.js). Exits 0
-      # even when every source is blocked (see the file header above) —
-      # only an unexpected script error fails this step.
-      - name: Sync Innovation Authority
-        run: node scripts/sync-growth-tools.js --provider=innovation-authority
+      # The only network calls in this whole workflow — one real fetch per
+      # canonical Growth Tool, gated inside each provider's own adapter
+      # (src/services/growth-tools-adapters.js). Exits 0 even when every
+      # source for a given provider is blocked (see the file header above)
+      # — only an unexpected script error fails this step. Providers run
+      # sequentially inside the script itself, so one being blocked never
+      # prevents the others from syncing.
+      - name: Sync all providers
+        run: node scripts/sync-growth-tools.js --provider=all
 
       # Detects a real change without relying on timestamps: the generated
       # source-data file only differs from HEAD when a source-owned field
