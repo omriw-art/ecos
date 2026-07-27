@@ -124,7 +124,9 @@ function MatchesView({ onOpenCompany }) {
             </div>
             <div className="flex wrap gap-8">
               <span className="mono tiny" style={{ color: "var(--text-3)", letterSpacing: "0.12em", textTransform: "uppercase", marginInlineEnd: 4 }}>צרכים</span>
-              {(source.needs || []).slice(0, 5).map((need, i) => <span key={i} className="chip">{need}</span>)}
+              {(source.needs || []).slice(0, 5).map((need, i) => (
+                <span key={i} className="chip">{window.OrgClassificationRegistry ? window.OrgClassificationRegistry.labelFor("needs", need) : need}</span>
+              ))}
               {!(source.needs || []).length && <span className="muted tiny">אין צרכים מוגדרים</span>}
             </div>
           </div>

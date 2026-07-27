@@ -60,6 +60,23 @@
     else capabilitySource = source.tech || source.solutions || source.tags;
     const capabilities = asArray(capabilitySource).filter(Boolean);
 
+    // Controlled Company Taxonomies v1 — tech ("technologies") used to be
+    // force-mirrored from capabilities on every normalize (tech was purely a
+    // legacy alias). It's now an independent controlled bank one level more
+    // specific than capabilities (see org-classification-registry.js), so an
+    // explicit tech value — from the Admin technologies picker or the CSV
+    // importer's `tech` column — must win on its own, not get overwritten by
+    // whatever capabilities happens to be. Only mirrors capabilities as a
+    // last-resort fallback when tech has never been explicitly set by this
+    // call or any previous one (new records, and every pre-existing caller
+    // that only ever wrote `capabilities`) — identical output to the old
+    // forced mirror in that one case, so no stored record's shape changes.
+    let techSource;
+    if (hasOwn(input, "tech")) techSource = input.tech;
+    else if (hasOwn(source, "tech")) techSource = source.tech;
+    else techSource = capabilities;
+    const tech = asArray(techSource).filter(Boolean);
+
     return Object.assign({}, source, {
       id: text(source.id),
       name: text(source.name || source.companyName),
@@ -87,7 +104,7 @@
       organizationType: text(source.organizationType) || "other",
       spaceSegment: text(source.spaceSegment) || "other",
       sectors,
-      tech: capabilities.slice(),
+      tech,
       capabilities,
       tags,
       solutions: asArray(source.solutions),

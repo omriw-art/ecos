@@ -16,16 +16,28 @@
     return String(company && company.name || "Unnamed company");
   }
 
+  // Controlled Company Taxonomies v1 compatibility layer — needs/tech/
+  // capabilities may now hold OrgClassificationRegistry ids (e.g.
+  // "multi-spectral-imaging") instead of free text. Token-based matching
+  // below (tokens()/intersect()) was built for human-readable words, so
+  // resolve known ids to their approved label before it ever sees them;
+  // unresolved values (legacy free text, or no registry loaded) pass through
+  // unchanged. Scoring/reasons logic itself is untouched.
+  function resolveLabels(bankKey, values) {
+    if (!window.OrgClassificationRegistry) return toArray(values);
+    return window.OrgClassificationRegistry.resolveLabels(bankKey, toArray(values));
+  }
+
   function getCompanyNeeds(company) {
-    return toArray(company && company.needs);
+    return resolveLabels("needs", company && company.needs);
   }
 
   function getCompanyOffers(company) {
     return []
       .concat(toArray(company && company.offers))
       .concat(toArray(company && company.solutions))
-      .concat(toArray(company && company.tech))
-      .concat(toArray(company && company.capabilities));
+      .concat(resolveLabels("technologies", company && company.tech))
+      .concat(resolveLabels("capabilities", company && company.capabilities));
   }
 
   function tokens(values) {

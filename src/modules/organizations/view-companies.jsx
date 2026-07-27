@@ -40,10 +40,30 @@ function completenessInfo(c) {
     !!(c && c.blurb),
     !!(c && c.hq),
     !!(c && c.capabilities && c.capabilities.length),
-    !!(c && ((c.offers && c.offers.length) || (c.needs && c.needs.length))),
+    // offers dropped from this heuristic (Controlled Company Taxonomies v1)
+    // — it's a partner-only concept now, not a general completeness signal
+    // for every organization type in this table.
+    !!(c && c.needs && c.needs.length),
   ];
   const filled = checks.filter(Boolean).length;
   return { filled, total: checks.length };
+}
+// Resolves a stored capabilities/technologies/needs value to its approved
+// label for display — tries capabilities then technologies (a "capabilities"
+// display list can legacy-fall-back to c.tech, see OverviewTab/TechTab, so
+// either bank may apply) before falling back to the raw stored value
+// unchanged, exactly like OrgClassificationRegistry.labelFor does for a
+// single bank. Never throws, never blanks a legacy free-text value.
+function displayTaxonomyValue(value) {
+  if (!window.OrgClassificationRegistry) return value;
+  const capOption = window.OrgClassificationRegistry.getOption("capabilities", value);
+  if (capOption) return capOption.label;
+  const techOption = window.OrgClassificationRegistry.getOption("technologies", value);
+  if (techOption) return techOption.label;
+  return value;
+}
+function displayNeedValue(value) {
+  return window.OrgClassificationRegistry ? window.OrgClassificationRegistry.labelFor("needs", value) : value;
 }
 function completenessLabel(c) {
   const { filled, total } = completenessInfo(c);
@@ -97,6 +117,15 @@ function getRelevantNeedsForCompany(company) {
   return results;
 }
 
+// Company / partner boundary (Controlled Company Taxonomies v1) — the
+// canonical company profile is sectors/capabilities/technologies/needs;
+// offers is a partner-only concept (what a partner/other ecosystem actor
+// provides to the ecosystem). Same organizationType set as app.jsx's
+// APP_PARTNER_ORG_TYPES / view-partner-overview.jsx's PARTNER_ORG_TYPES —
+// duplicated per this codebase's existing pattern (already duplicated
+// across 4 other files), not a new convention.
+const EDITOR_PARTNER_ORG_TYPES = new Set(["investor", "accelerator", "academic", "research", "government", "service-provider", "nonprofit"]);
+
 function companyEditorInitial(company) {
   return {
     name: company?.name || "",
@@ -111,9 +140,19 @@ function companyEditorInitial(company) {
     stage: company?.stage || "Seed",
     organizationType: company?.organizationType || "other",
     spaceSegment: company?.spaceSegment || "other",
-    capabilitiesText: (company?.capabilities?.length ? company.capabilities : (company?.tech || [])).join(", "),
+    // capabilities/tech ("technologies") are independent controlled banks as
+    // of this batch (company-store.js no longer force-mirrors tech from
+    // capabilities) — kept as separate id arrays, not one shared text field.
+    capabilityIds: (company?.capabilities || []).slice(),
+    technologyIds: (company?.tech || []).slice(),
+    needIds: (company?.needs || []).slice(),
     tagsText: (company?.tags || []).join(", "),
-    needsText: (company?.needs || []).join(", "),
+    // offers is edited here only for partner-type organizations (see
+    // EDITOR_PARTNER_ORG_TYPES) — kept as free text, untouched, since this
+    // batch does not redesign the partner model. Companies never see this
+    // field; onSave omits the key entirely for non-partner org types so any
+    // existing offers value (e.g. from an approved submission) is preserved
+    // rather than cleared, and no new offers can be created for a company.
     offersText: (company?.offers || []).join(", "),
   };
 }
@@ -190,6 +229,57 @@ function EditorField({ label, required, full, hint, children }) {
   );
 }
 
+// Controlled Company Taxonomies v1 — generic closed-selection chip picker
+// against window.OrgClassificationRegistry (capabilities/technologies/
+// needs). Deliberately not a TagInput/free-entry component like
+// onboarding's (src/modules/onboarding/join-app.jsx): clicking a chip only
+// ever toggles membership in the approved bank — there is no text input
+// that can mint a new approved value, per this batch's governance rule.
+// Unknown ids already on the record (legacy free text, or an id no longer
+// in the bank) render as removable-only "לא בבנק המאושר" chips, same
+// preserve-don't-drop pattern as the sector picker's "· מיובא" fallback.
+function TaxonomyPicker({ label, hint, bankKey, addLabel, selectedIds, onToggle }) {
+  const [open, setOpen] = React.useState(false);
+  const [query, setQuery] = React.useState("");
+  const bank = window.OrgClassificationRegistry ? window.OrgClassificationRegistry.getBank(bankKey) : [];
+  const bankById = new Map(bank.map((o) => [o.id, o]));
+  const ids = selectedIds || [];
+  const q = query.trim().toLowerCase();
+  const available = bank.filter((o) => !ids.includes(o.id) && (!q || o.label.toLowerCase().includes(q)));
+
+  return (
+    <EditorField label={label} full hint={hint}>
+      <div className="flex wrap gap-6">
+        {ids.map((id) => {
+          const known = bankById.get(id);
+          return (
+            <span key={id} className="chip active" onClick={() => onToggle(id)}>
+              {known ? known.label : `${id} · לא בבנק המאושר`} ×
+            </span>
+          );
+        })}
+        <span className="chip" onClick={() => setOpen((v) => !v)}>
+          {open ? "סגירה" : `+ ${addLabel}`}
+        </span>
+      </div>
+      {open && (
+        <div style={{ marginTop: 8, padding: 10, border: "1px solid var(--line-3)", borderRadius: 10, background: "var(--bg-1)" }}>
+          {bank.length > 8 && (
+            <input className="input" style={{ marginBottom: 8 }} value={query}
+                   onChange={(e) => setQuery(e.target.value)} placeholder="חיפוש…" />
+          )}
+          <div className="flex wrap gap-6">
+            {!available.length && <span className="muted tiny">אין אפשרויות נוספות</span>}
+            {available.map((o) => (
+              <span key={o.id} className="chip" onClick={() => onToggle(o.id)}>{o.label}</span>
+            ))}
+          </div>
+        </div>
+      )}
+    </EditorField>
+  );
+}
+
 function CompanyEditor({ company, title, submitLabel, onSave, onCancel }) {
   const [form, setForm] = React.useState(() => companyEditorInitial(company));
   const [error, setError] = React.useState("");
@@ -206,6 +296,12 @@ function CompanyEditor({ company, title, submitLabel, onSave, onCancel }) {
   const toggleSector = (id) => setForm((prev) => Object.assign({}, prev, {
     sectors: prev.sectors.includes(id) ? prev.sectors.filter((x) => x !== id) : prev.sectors.concat([id]),
   }));
+  // Generic version of the same toggle for the new controlled banks
+  // (capabilities/technologies/needs) — one function, three fields.
+  const toggleTaxonomy = (fieldKey, id) => setForm((prev) => Object.assign({}, prev, {
+    [fieldKey]: prev[fieldKey].includes(id) ? prev[fieldKey].filter((x) => x !== id) : prev[fieldKey].concat([id]),
+  }));
+  const isPartnerType = EDITOR_PARTNER_ORG_TYPES.has(form.organizationType);
   const submit = (e) => {
     e.preventDefault();
     if (!form.name.trim()) {
@@ -213,7 +309,7 @@ function CompanyEditor({ company, title, submitLabel, onSave, onCancel }) {
       return;
     }
     setError("");
-    onSave({
+    const patch = {
       name: form.name,
       sectors: form.sectors,
       blurb: form.blurb,
@@ -222,12 +318,17 @@ function CompanyEditor({ company, title, submitLabel, onSave, onCancel }) {
       stage: form.stage,
       organizationType: form.organizationType,
       spaceSegment: form.spaceSegment,
-      tech: parseList(form.capabilitiesText),
-      capabilities: parseList(form.capabilitiesText),
+      capabilities: form.capabilityIds,
+      tech: form.technologyIds,
       tags: parseList(form.tagsText),
-      needs: parseList(form.needsText),
-      offers: parseList(form.offersText),
-    });
+      needs: form.needIds,
+    };
+    // offers is partner-only (see EDITOR_PARTNER_ORG_TYPES) — the key is
+    // omitted entirely for company-type orgs so company-store.js's merge
+    // preserves whatever was already there (never clears, never creates)
+    // instead of writing an empty/stale array over it.
+    if (isPartnerType) patch.offers = parseList(form.offersText);
+    onSave(patch);
   };
 
   return (
@@ -300,18 +401,33 @@ function CompanyEditor({ company, title, submitLabel, onSave, onCancel }) {
       </EditorSection>
 
       <EditorSection heading="יכולות והתאמה">
-        <EditorField label="יכולות / Capabilities" full hint="הפרד ערכים בפסיק או נקודה-פסיק · לדוגמה: Earth Observation; Analytics; Communication">
-          <input className="input" value={form.capabilitiesText} onChange={(e) => setField("capabilitiesText", e.target.value)} placeholder="Earth Observation; Analytics; Communication" />
-        </EditorField>
+        <TaxonomyPicker
+          label="יכולות / Capabilities" bankKey="capabilities" addLabel="הוספת יכולת"
+          hint="בחירה מהבנק המאושר בלבד — לא ניתן להקליד יכולת חדשה כאן."
+          selectedIds={form.capabilityIds} onToggle={(id) => toggleTaxonomy("capabilityIds", id)}
+        />
+        <TaxonomyPicker
+          label="טכנולוגיות / Technologies" bankKey="technologies" addLabel="הוספת טכנולוגיה"
+          hint="פירוט ספציפי יותר מהיכולות למעלה — נבחר גם הוא מהבנק המאושר."
+          selectedIds={form.technologyIds} onToggle={(id) => toggleTaxonomy("technologyIds", id)}
+        />
         <EditorField label="תגיות / Tags" full hint="הפרד ערכים בפסיק או נקודה-פסיק · לדוגמה: Satellite, AI, Payload">
           <input className="input" value={form.tagsText} onChange={(e) => setField("tagsText", e.target.value)} placeholder="Satellite, AI, Payload" />
         </EditorField>
-        <EditorField label="צרכים / Needs" full hint="לדוגמה: Funding; Lab access; Pilot customers">
-          <input className="input" value={form.needsText} onChange={(e) => setField("needsText", e.target.value)} placeholder="Funding; Lab access; Pilot customers" />
-        </EditorField>
-        <EditorField label="הצעות / Offers" full hint="לדוגמה: SAR data; Analytics platform">
-          <input className="input" value={form.offersText} onChange={(e) => setField("offersText", e.target.value)} placeholder="SAR data; Analytics platform" />
-        </EditorField>
+        <TaxonomyPicker
+          label="צרכים / Needs" bankKey="needs" addLabel="הוספת צורך"
+          hint="בחירה מהבנק המאושר בלבד — לא ניתן להקליד צורך חדש כאן."
+          selectedIds={form.needIds} onToggle={(id) => toggleTaxonomy("needIds", id)}
+        />
+        {/* Offers is a partner concept, not a company one (Controlled Company
+            Taxonomies v1) — shown only when the selected organization type is
+            in EDITOR_PARTNER_ORG_TYPES, and stays free text since this batch
+            does not redesign the partner model. */}
+        {isPartnerType && (
+          <EditorField label="הצעות / Offers" full hint="לדוגמה: SAR data; Analytics platform · שדה זה רלוונטי לשותפים בלבד">
+            <input className="input" value={form.offersText} onChange={(e) => setField("offersText", e.target.value)} placeholder="SAR data; Analytics platform" />
+          </EditorField>
+        )}
       </EditorSection>
 
       {error && <div className="help" style={{ color: "var(--rose)", marginTop: 10, fontSize: 14 }}>{error}</div>}
@@ -769,7 +885,7 @@ function OverviewTab({ c, onNav, onEdit, linkedInUrl, openExternalLink }) {
           <div className="card-hd"><div className="card-title"><span className="dot" /> יכולות מזוהות ({capabilities.length})</div></div>
           {!capabilities.length && <div className="muted" style={{ padding: "8px 0" }}>לא הוזנו יכולות לארגון זה</div>}
           <div className="flex wrap gap-6">
-            {capabilities.slice(0, 8).map((t, i) => <span key={i} className="pill">{t}</span>)}
+            {capabilities.slice(0, 8).map((t, i) => <span key={i} className="pill">{displayTaxonomyValue(t)}</span>)}
           </div>
         </div>
 
@@ -778,7 +894,7 @@ function OverviewTab({ c, onNav, onEdit, linkedInUrl, openExternalLink }) {
             <div className="card-hd"><div className="card-title"><span className="dot violet" /> צרכים ({needs.length})</div></div>
             {!needs.length && <div className="muted" style={{ padding: "8px 0" }}>לא הוזנו צרכים לארגון זה</div>}
             <div className="col gap-6">
-              {needs.slice(0, 3).map((n, i) => <div key={i} style={{ fontSize: 14, color: "var(--text-1)" }}>{n}</div>)}
+              {needs.slice(0, 3).map((n, i) => <div key={i} style={{ fontSize: 14, color: "var(--text-1)" }}>{displayNeedValue(n)}</div>)}
             </div>
           </div>
           <div className="card">
@@ -996,7 +1112,7 @@ function TechTab({ c }) {
             <div key={i} style={{ padding: 12, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 8 }}>
               <div className="flex center gap-8">
                 <window.I.Cpu size={14} style={{ color: "var(--blue)" }} />
-                <div style={{ fontSize: 15, fontWeight: 500, color: "var(--text-1)" }}>{t}</div>
+                <div style={{ fontSize: 15, fontWeight: 500, color: "var(--text-1)" }}>{displayTaxonomyValue(t)}</div>
               </div>
             </div>
           ))}
@@ -1033,7 +1149,7 @@ function NeedsOffersTab({ c, onNav }) {
           {needs.map((o, i) => (
             <div key={i} className="flex gap-8 center" style={{ fontSize: 15, color: "var(--text-1)" }}>
               <window.I.Compass size={14} style={{ color: "var(--violet)" }} />
-              <span>{o}</span>
+              <span>{displayNeedValue(o)}</span>
             </div>
           ))}
         </div>
