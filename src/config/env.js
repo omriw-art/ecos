@@ -13,9 +13,23 @@
 
   // Map known hostnames to environments. Fill in real hosts when they exist,
   // e.g. "demo.example.com": "demo", "staging.example.com": "staging".
+  //
+  // GitHub Pages (omriw-art.github.io) is this project's current public
+  // deployment — for this development/demo phase it is explicitly mapped to
+  // "demo" rather than being left to fall through to the "production"
+  // default. This is a deliberate, explicit demo-mode decision (see
+  // flags.js's DEFAULTS.demo), not an accidental hostname coupling: without
+  // this entry, an unrecognized host fails closed to "production" (see
+  // fromHostname() below), which would silently disable the perspective
+  // switcher/debug panel/env badge/demo-reset on the deployed app. Remove
+  // this entry (or repoint it to "production") when this project moves
+  // beyond the current internal/demo phase and needs a real, server-side-
+  // authorized production deployment — client-side flag hiding here is
+  // never a security boundary.
   const HOSTNAME_MAP = {
     "localhost": "local",
     "127.0.0.1": "local",
+    "omriw-art.github.io": "demo",
   };
 
   const isValid = (value) => ENV_NAMES.indexOf(value) !== -1;

@@ -12,9 +12,20 @@
 
   // Only flags that gate real, existing code. Add new flags in the same
   // commit that introduces the feature they gate.
+  //
+  // "demo" == "local" for this project phase: the deployed GitHub Pages app
+  // (see env.js's HOSTNAME_MAP) is meant to expose the exact same demo
+  // capabilities as local development — perspective switching, the debug/
+  // tweaks panel, and every other current demo control — not a stripped-
+  // down public-facing subset. This is a deliberate, explicit runtime-flag
+  // decision for the current phase, not a security boundary: none of this
+  // gates real authorization, data validation, or ownership — it only hides
+  // UI. Before any real production deployment, "demo" must be repointed to
+  // "production" (or a real, server-side-authorized tier introduced) rather
+  // than assuming client-side flag hiding protects anything.
   const DEFAULTS = {
     local:      { demoReset: true,  debugPanel: true,  envBadge: true,  perspectiveSwitcher: true  },
-    demo:       { demoReset: true,  debugPanel: false, envBadge: true,  perspectiveSwitcher: true  },
+    demo:       { demoReset: true,  debugPanel: true,  envBadge: true,  perspectiveSwitcher: true  },
     staging:    { demoReset: true,  debugPanel: true,  envBadge: true,  perspectiveSwitcher: true  },
     production: { demoReset: false, debugPanel: false, envBadge: false, perspectiveSwitcher: false },
   };
